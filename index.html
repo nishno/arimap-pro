@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#16a34a" />
+    <title>AgriMap Pro v14</title>
+    <meta name="description" content="Advanced agricultural management platform with live harvest monitoring, payroll controls, and post-harvest supply chain routing." />
+    <meta property="og:title" content="AgriMap Pro v14" />
+    <meta property="og:description" content="Advanced agricultural management platform with live harvest monitoring, payroll controls, and post-harvest supply chain routing." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+      // Filter React internal development warnings
+      (function() {
+        var origConsoleError = console.error;
+        console.error = function() {
+          var firstArg = arguments.length > 0 ? String(arguments[0] || '') : '';
+          if (firstArg.indexOf('Expected static flag was missing') !== -1 ||
+              firstArg.indexOf('Internal React error') !== -1) {
+            console.warn('[React Internal Warning Filtered]:', firstArg);
+            return;
+          }
+          origConsoleError.apply(console, arguments);
+        };
+      })();
+
+      // Earliest possible global error listener to suppress cross-origin framework / environment errors
+      window.onerror = function(message, source, lineno, colno, error) {
+        var msg = String(message || '');
+        var errStr = String(error && error.message || error || msg);
+        if (msg.indexOf('Script error') !== -1 || 
+            errStr.indexOf('Script error') !== -1 || 
+            errStr.indexOf('Expected static flag was missing') !== -1 ||
+            errStr.indexOf('Internal React error') !== -1 ||
+            errStr.indexOf('Failed to fetch') !== -1 || 
+            errStr.indexOf('RPC errored') !== -1 ||
+            errStr.indexOf('network') !== -1 ||
+            errStr.indexOf('disconnected') !== -1 ||
+            errStr.indexOf('INTERNAL ASSERTION FAILED') !== -1 ||
+            errStr.indexOf('INTERNAL UNHANDLED ERROR') !== -1 ||
+            errStr.indexOf('Unexpected state') !== -1) {
+          console.warn('[Window OnError Interceptor] Caught, suppressed, and absorbed script/network error:', msg);
+          if (window.__agrimapSetBackgroundSync) {
+            window.__agrimapSetBackgroundSync(true);
+          }
+          return true; // Completely suppress error propagation in browser
+        }
+      };
+
+      window.onunhandledrejection = function(e) {
+        var reasonStr = String(e.reason && e.reason.message || e.reason || '');
+        if (reasonStr.indexOf('Failed to fetch') !== -1 || 
+            reasonStr.indexOf('RPC errored') !== -1 || 
+            reasonStr.indexOf('network') !== -1 ||
+            reasonStr.indexOf('disconnected') !== -1 ||
+            reasonStr.indexOf('INTERNAL ASSERTION FAILED') !== -1 ||
+            reasonStr.indexOf('INTERNAL UNHANDLED ERROR') !== -1 ||
+            reasonStr.indexOf('Unexpected state') !== -1) {
+          console.warn('[Window Promise Rejection Interceptor] Caught, suppressed, and absorbed async rejection:', reasonStr);
+          if (window.__agrimapSetBackgroundSync) {
+            window.__agrimapSetBackgroundSync(true);
+          }
+          e.preventDefault();
+          return true;
+        }
+      };
+
+      window.addEventListener('error', function(e) {
+        var msg = e.message || '';
+        var errStr = String(e.error && e.error.message || e.error || msg);
+        if (msg.indexOf('Script error') !== -1 || 
+            errStr.indexOf('Script error') !== -1 || 
+            errStr.indexOf('Failed to fetch') !== -1 || 
+            errStr.indexOf('RPC errored') !== -1 ||
+            errStr.indexOf('network') !== -1 ||
+            errStr.indexOf('disconnected') !== -1 ||
+            errStr.indexOf('INTERNAL ASSERTION FAILED') !== -1 ||
+            errStr.indexOf('INTERNAL UNHANDLED ERROR') !== -1 ||
+            errStr.indexOf('Unexpected state') !== -1) {
+          console.warn('[Earliest Global Interceptor] Caught, suppressed, and absorbed script/network error:', msg);
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          if (window.__agrimapSetBackgroundSync) {
+            window.__agrimapSetBackgroundSync(true);
+          }
+          return true;
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(e) {
+        var reasonStr = String(e.reason && e.reason.message || e.reason || '');
+        if (reasonStr.indexOf('Failed to fetch') !== -1 || 
+            reasonStr.indexOf('RPC errored') !== -1 || 
+            reasonStr.indexOf('network') !== -1 ||
+            reasonStr.indexOf('disconnected') !== -1 ||
+            reasonStr.indexOf('INTERNAL ASSERTION FAILED') !== -1 ||
+            reasonStr.indexOf('INTERNAL UNHANDLED ERROR') !== -1 ||
+            reasonStr.indexOf('Unexpected state') !== -1) {
+          console.warn('[Earliest Global Interceptor] Caught, suppressed, and absorbed async rejection:', reasonStr);
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          if (window.__agrimapSetBackgroundSync) {
+            window.__agrimapSetBackgroundSync(true);
+          }
+          return true;
+        }
+      }, true);
+    </script>
+  </head>
+  <body style="margin: 0; background-color: #0f172a; color: #f8fafc; font-family: Inter, system-ui, sans-serif;">
+    <script>
+      // Automatically clean up stale or conflicting Service Workers in dev / preview iframe environments
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            for (var i = 0; i < regs.length; i++) {
+              regs[i].unregister();
+            }
+          });
+        }
+      } catch (e) {}
+
+      window.__BOOT_ERRORS__ = [];
+      window.__agrimapReportError = function(err) {
+        var msg = (err && (err.stack || err.message)) || String(err);
+        window.__BOOT_ERRORS__.push(msg);
+        var errEl = document.getElementById('agrimap-boot-error-text');
+        var errBox = document.getElementById('agrimap-recovery-box');
+        if (errEl) errEl.textContent = msg;
+        if (errBox) errBox.style.display = 'block';
+      };
+
+      window.__agrimapOnMounted = function() {
+        window.__AGRIMAP_MOUNTED__ = true;
+        var loader = document.getElementById('agrimap-boot-loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          loader.style.transition = 'opacity 0.3s ease-out';
+          setTimeout(function() {
+            if (loader && loader.parentNode) {
+              loader.parentNode.removeChild(loader);
+            }
+          }, 300);
+        }
+      };
+    </script>
+    <div id="root">
+      <div id="agrimap-boot-loader" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 100%); padding: 24px; text-align: center;">
+        <div style="position: relative; margin-bottom: 24px;">
+          <div style="width: 72px; height: 72px; border-radius: 20px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(22, 163, 74, 0.4);">
+            <svg style="width: 40px; height: 40px; color: #ffffff;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div style="position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px; border: 2px dashed rgba(34, 197, 94, 0.4); border-radius: 26px; animation: agrimap-spin 12s linear infinite;"></div>
+        </div>
+        <h1 style="font-size: 22px; font-weight: 900; letter-spacing: -0.025em; margin: 0 0 8px 0; color: #f8fafc;">AgriMap <span style="color: #4ade80;">Pro</span></h1>
+        <p id="agrimap-boot-status" style="font-size: 13px; font-weight: 600; color: #94a3b8; margin: 0 0 20px 0; min-height: 20px;">Loading Agricultural Workspace & Precision Engine...</p>
+        <div style="width: 200px; height: 4px; background: #1e293b; border-radius: 9999px; overflow: hidden; position: relative;">
+          <div id="agrimap-boot-progress-bar" style="position: absolute; left: 0; top: 0; bottom: 0; width: 50%; background: linear-gradient(90deg, #16a34a, #4ade80); border-radius: 9999px; animation: agrimap-progress 1.5s ease-in-out infinite;"></div>
+        </div>
+        <div id="agrimap-recovery-box" style="display: none; margin-top: 24px; background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(51, 65, 85, 0.8); border-radius: 16px; padding: 18px; max-width: 360px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
+          <p style="font-size: 13px; font-weight: 800; color: #fbbf24; margin: 0 0 8px 0;">Startup Taking Longer Than Expected</p>
+          <p id="agrimap-boot-error-text" style="font-size: 11px; font-family: monospace; color: #f87171; background: rgba(15, 23, 42, 0.8); padding: 8px; border-radius: 8px; max-height: 80px; overflow-y: auto; text-align: left; margin: 0 0 12px 0; display: none;"></p>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="window.__agrimapEmergencyReset()" style="flex: 1; padding: 10px 14px; background: #16a34a; color: #ffffff; border: none; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;">
+              Clear Cache & Reboot
+            </button>
+            <button onclick="window.location.reload()" style="flex: 1; padding: 10px 14px; background: #334155; color: #f8fafc; border: none; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;">
+              Reload
+            </button>
+          </div>
+        </div>
+        <style>
+          @keyframes agrimap-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes agrimap-progress { 0% { left: -50%; width: 50%; } 50% { left: 25%; width: 60%; } 100% { left: 100%; width: 50%; } }
+        </style>
+      </div>
+    </div>
+    <script>
+      window.__agrimapEmergencyReset = async function() {
+        try {
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) await r.unregister();
+          }
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            for (const k of keys) await caches.delete(k);
+          }
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (e) {}
+        window.location.reload();
+      };
+
+      // Progressive status updates to keep user informed during large initial compilation
+      setTimeout(function() {
+        if (!window.__AGRIMAP_MOUNTED__) {
+          var s = document.getElementById('agrimap-boot-status');
+          if (s) s.textContent = 'Compiling farm geospatial & agronomy modules...';
+        }
+      }, 3500);
+
+      setTimeout(function() {
+        if (!window.__AGRIMAP_MOUNTED__) {
+          var s = document.getElementById('agrimap-boot-status');
+          if (s) s.textContent = 'Connecting database and mounting workspace...';
+        }
+      }, 8000);
+
+      setTimeout(function() {
+        if (!window.__AGRIMAP_MOUNTED__) {
+          var box = document.getElementById('agrimap-recovery-box');
+          if (box) box.style.display = 'block';
+          if (window.__BOOT_ERRORS__ && window.__BOOT_ERRORS__.length > 0) {
+            var errEl = document.getElementById('agrimap-boot-error-text');
+            if (errEl) {
+              errEl.textContent = window.__BOOT_ERRORS__.join('\n');
+              errEl.style.display = 'block';
+            }
+          }
+        }
+      }, 16000);
+    </script>
+    <script type="module" src="/src/index.tsx" onerror="window.__agrimapReportError('Failed to load entry module /src/index.tsx. Please refresh.')"></script>
+  </body>
+</html>

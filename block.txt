@@ -1,0 +1,11 @@
+
+                            {addMode === 'existing' ? (
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider">
+                                            {isKa ? 'აირჩიეთ მუშა' : 'Select Worker'} ({filteredUnassignedEmployees.length})
+                                        </label>
+                                        {selectedEmpId && (
+                                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                                ✓ {isKa ? 'არჩეულია' : 'Selected'}
+                                            </span>

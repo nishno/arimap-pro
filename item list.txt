@@ -1,0 +1,304 @@
+================================================================================
+                    AGRIMAP APPLICATION - MASTER ITEM REGISTRY
+================================================================================
+File Name: item list.txt
+Purpose: Comprehensive classification, grouping, and listing of all application 
+         modules, sub-components, action tools, topbar indicators, and control 
+         items for structured application management and architecture analysis.
+================================================================================
+
+--------------------------------------------------------------------------------
+[1] TOPBAR TELEMETRY & GLOBAL SYSTEM CONTROLS
+--------------------------------------------------------------------------------
+• Brand / Startup Showcase Logo:
+  - Display: "AgriMap V2" + Version Badge (e.g. "v14.0 (Live Hybrid Mesh)")
+  - Action: Triggers Startup Showcase / Homepage presentation modal.
+
+• Organization / Tenant Context Switcher:
+  - Display: "EMPLOYEE AT [Org Name]" / "PERSONAL ACCOUNT" / "ALL TICKETS"
+  - Function: Lets user switch active multi-tenant workspace context (Personal vs Organization).
+
+• Offline Sync Queue Indicator:
+  - Display: "PUSH [Count]" (e.g. "Push 304")
+  - Function: Real-time counter of pending local mutations stored in IndexedDB/localStorage waiting to be committed to Cloud Firestore.
+
+• Mesh / Local Node Status:
+  - Display: "LOCAL NODE" / "CLOUD SYNC"
+  - Function: Indicates status of private local edge server, LAN multicast discovery, and direct peer-to-peer data sync.
+
+• Local Storage Cache Meter:
+  - Display: Progress bar + percentage (e.g. "Local Cache: 12.4%")
+  - Function: Displays browser localStorage quota usage (max 5MB safety limit).
+
+• Quick Help & Architecture Guide Action (Tablet / Desktop / Mobile):
+  - Display: Book icon / "Help & Guide"
+  - Function: Direct jump to the Help & Architecture Guide (`guide`) module.
+
+• Global Notifications Bell:
+  - Display: Bell Icon with unread badge counter (e.g. "3")
+  - Function: Displays operational alerts, worker check-ins, weather warnings, and urgent tasks.
+
+• User Profile Quick Avatar & Hat Selector:
+  - Display: Profile photo / Initials badge / Dropdown menu
+  - Menu Items:
+    * Active Workspace Name
+    * My Profile (`profile`)
+    * My Projects (Project Manager)
+    * Go to Homepage (Startup Showcase Modal)
+    * Help & Architecture Guide (`guide`)
+    * Logout / Login / Register
+
+--------------------------------------------------------------------------------
+[2] 17 PRIMARY APPLICATION MODULES & SUB-COMPONENTS
+--------------------------------------------------------------------------------
+
+1. DASHBOARD (`dashboard`):
+   - Executive operational overview, live interactive map widget, plant statistics,
+     seedling health, field weather pulse, daily news briefing, and worker attendance summaries.
+   - Sub-components:
+     * Daily Briefing Widget (`daily_news`)
+     * Seedling & Plantation Summary (`seedling_summary`)
+     * Global Stats & KPIs (`guest_stats`)
+     * Interactive Farm Map Preview (`map_preview`)
+     * Urgent Alerts & Task Feed (`alerts_feed`)
+
+2. PLANNER AND REMAINDER (`tasks`):
+   - Work assignments calendar, reminder notifications, recurring task scheduling,
+     priority tagging, and alert management.
+   - Sub-components:
+     * Task Calendar & Scheduler
+     * Work Assignments Dispatcher
+     * Operational Reminders & Alerts
+     * Priority & Status Filtering (Pending, In Progress, Completed)
+     * Direct Map Feature Linking
+
+3. MAP PLANNER (`design`):
+   - High-precision GIS mapping engine, vector layer creation (cadastral boundary,
+     blocks, sectors, trenches, seedling rows, irrigation lines, infrastructure, checkpoints),
+     GPS tracking, and spatial layer export.
+   - Sub-components:
+     * Cadastral Boundary Drawing Tool
+     * Plantation Blocks & Sectors Manager
+     * Trench & Planting Row Geometry Generator
+     * Seedling Auto-Plotter & Density Estimator
+     * Drip & Spray Irrigation Polyline Generator
+     * Infrastructure, Road & Checkpoint Markers
+     * Spatial Layer Manager (Visibility, Ordering, Opacity)
+     * Coordinate Projection & GeoJSON Import/Export
+
+4. AGRONOMY (`agronomy`):
+   - Fertigation & spraying recipes, tank blueprint configurations, multi-tank EC/pH
+     formulation, execution logging, and automated stock deductions.
+   - Sub-components:
+     * Nutrition & Spraying Plan Creator
+     * Multi-Tank EC & pH Formulation Calculator
+     * Fertigation Execution Logger
+     * Automatic Agro-Chemical Stock Depletion
+     * Crop Nutritional Deficiency Advisor
+     * Agronomy History & Batch Tracking
+
+5. HARVEST (`harvesting`):
+   - Real-time field weighing station, QR/barcode harvest loggers, pallet assembly,
+     cold storage (refrigerator) transfer, quality grading, and worker piece-rate calculation.
+   - Sub-components:
+     * Field Weighing Station & Scale Integration
+     * QR / Barcode Harvest Box Logger
+     * Pallet Aggregation & Weight Consolidation
+     * Cold Storage (Refrigerator) Transfer
+     * Quality Grading & Defect Rejection Inspector
+     * Piece-Rate Worker Compensation Logger
+
+6. STOCK (`stock`):
+   - Inventory warehouse management, stock items catalog, batch movements, supplier
+     catalog, purchase orders, asset management (machinery), and automated reorder alerts.
+   - Sub-components:
+     * Harvest Produce Inventory (`harvest_produce`)
+     * Sales & Outgoing Orders (`sales`)
+     * Cold Storage / Refrigerator Inventory (`cold_storage`)
+     * Post-Harvest Archive (`post_harvest_archive`)
+     * Live Stock Ledger (`live_ledger`)
+     * Agro-Inputs (Fertilizers & Chemicals) (`agro_inputs`)
+     * Machinery & Physical Assets (`assets`)
+     * General Supplies & Packaging (`supplies`)
+     * Purchase Orders (`purchase_orders`)
+     * Directory / Direct Cost Charges (`direct_charges`)
+
+7. ACCOUNTS (`accounting`):
+   - Financial ledger, double-entry bookkeeping, wage & payroll processing, harvest
+     revenue calculations, expense tracking, and P&L financial balance reports.
+   - Sub-components:
+     * Master Chart of Accounts
+     * General Ledger & Journal Transactions
+     * Payroll Processing & Worker Wage Distribution
+     * Harvest Revenue & Sales Invoicing
+     * Operational Expense Tracking (OPEX)
+     * Real-time Profit & Loss (P&L) Balance Sheet
+
+8. TASKS AND WORKS (`system`):
+   - Field operations management, daily logbooks, machinery utilization, spatial task
+     logging directly on map polygons, and team daily shift tracking.
+   - Sub-components:
+     * Daily Shift Logbook
+     * Spatial Task Logging (Draw Polygon on Map to log work)
+     * Tractor & Machinery Utilization Tracker
+     * Brigade & Worker Attendance Checklist
+     * Field Operation Verification & Sign-off
+
+9. MARKET (`marketplace`):
+   - B2B agricultural trading portal, harvest listings, buyer tenders, supplier quotes,
+     interactive route planner, and peer reviews.
+   - Sub-components:
+     * Harvest Produce Market Listings
+     * Buyer Sourcing Tenders & Quotes
+     * Price Bidding & Counter-Offer Negotiation
+     * Interactive Route & Logistics Planner
+     * Verified Merchant & Farm Ratings
+
+10. AI AGRO ANALYST (`ai`):
+    - Multi-modal agronomic intelligence: Gemini-powered soil diagnosis, plant disease
+      image scanner, document comparison & analysis, satellite crop health, and market trend forecasts.
+    - Sub-components:
+      * Gemini Soil Chemistry & pH Diagnostics
+      * Computer Vision Crop Disease & Pathogen Scanner
+      * Multi-Document Agricultural Contract Comparison
+      * Satellite Vegetation & NDVI Health Map
+      * Market Price Forecasting & Sourcing Advisor
+
+11. COMMUNICATOR (`community`):
+    - Team hub discussion feed, direct messaging, technical agronomy forum, partner
+      sharing, and operational alert broadcasts.
+    - Sub-components:
+      * General Agronomy Technical Forum
+      * Direct 1-on-1 and Group Team Chat
+      * Field Alert Broadcasts & Weather Warnings
+      * Knowledge Base & Agronomic FAQ
+      * Expert Consultation Feed
+
+12. TOOLS (`tools`):
+    - Administrative operations hub: Human Resources (HR) worker registry, Teams & Brigades,
+      Privileges & RBAC, AI analysis suite, Team Hub, and System & Database Backups.
+    - Sub-components:
+      * Human Resources (HR) Master Worker Registry
+      * Teams, Units & Field Brigades
+      * Role-Based Access Control (RBAC) Permissions Matrix
+      * AI Tool Suite (Docs, Plant Disease, Soil)
+      * Team Hub Discussions & Noticeboard
+      * Database Backups, Restores & Local Cache Reset
+
+13. HELP & ARCHITECTURE GUIDE (`guide`):
+    - Interactive system tour, Manual Architecture inspection engine, visual module dependency
+      graph, presentation generator, categorized AI analysis, and exportable PDF/JSON technical documentation.
+    - Sub-components:
+      * Manual Architecture Module & Component Explorer
+      * Multi-Module Synthesis & Dependency Graph
+      * Categorized AI Analysis Triggers (Guide, Presentation, Global, Live HUD)
+      * "Other" Custom Feature Builder & Architecture Extender
+      * Standard Operating Procedures (SOPs) & Interactive Guides
+      * Exportable Architecture Documentation (JSON / Markdown / Text)
+
+14. EXPERIMENTAL LABS (`labs`):
+    - Hardware integration testing, IoT sensor simulation (LoRaWAN, BLE), weather station feeds,
+      and automated drip valve controls.
+    - Sub-components:
+      * IoT Hardware & Weather Station Manager
+      * LoRaWAN & Bluetooth Soil Moisture Sensor Stream
+      * Smart Drip Irrigation Solenoid Valve Controls
+      * Sensor Diagnostic & Calibration Console
+
+15. SYSTEM LOGS (`logs`):
+    - Immutable audit logs, offline mutation inspector, data state auditor, system restore points,
+      and export/import tools.
+    - Sub-components:
+      * Immutable System Activity Audit Trail
+      * Offline Mutation Queue & Sync Inspector
+      * Data State Conflict Auditor
+      * Emergency System Restore & JSON Snapshot Importer
+
+16. FOUNDERS VAULT (`founders`):
+    - Multi-organization creation, enterprise registration, corporate legal documentation,
+      cadastral map registration, and ownership governance.
+    - Sub-components:
+      * Organization / Cooperative Registration Form
+      * Cadastral Map Boundary Plotter & Registry Link
+      * Multi-Tenant Ownership & Governance Settings
+      * Legal Tax Number & Agriculture Sector Classification
+
+17. SUPER ADMIN (`admin`):
+    - Root system oversight, global tenant isolation, cross-organization user management,
+      and subscription approvals.
+    - Sub-components:
+      * Global Multi-Tenant User Registry
+      * Enterprise Organization Deletion & Nuclear Cleanup
+      * Subscription Tier Approvals & Billing Controls
+      * Global Security Audit & Token Invalidation
+
+--------------------------------------------------------------------------------
+[3] SUB-MODULE TABS & SECTION DETAILS (TOOLS MODULE)
+--------------------------------------------------------------------------------
+• TAB 1: HUMAN RESOURCES (HR):
+  - Global Worker Registry: Master identity list of all registered employees and daily workers.
+  - Identification & Digital Passport: Worker National ID, G-I-C-W unique ID, and digital ID card.
+  - Payment & Wage Configuration: Per Weight (GEL/kg), Hourly, Per Tree, or Fixed Daily rate.
+
+• TAB 2: TEAMS & UNITS:
+  - Field Brigades: Grouping workers into specialized operational teams (e.g. Pruning Team, Harvesting Brigade, Irrigation Unit).
+  - Unit Assignment: Assigning teams to specific plantation blocks or tractors.
+
+• TAB 3: PRIVILEGES (RBAC):
+  - Role-Based Access Control matrix: Custom toggleable permissions per role/user (View, Edit, Delete, Export, Admin).
+
+• TAB 4: AI ANALYSIS TOOLS:
+  - Document Analyzer: PDF/DOC contract and agricultural report analyzer.
+  - Plant Disease Scanner: Visual diagnosis of leaf damage and pathogen symptoms.
+  - Soil & Nutrient Intelligence: Soil composition and fertilizer recommendation engine.
+
+• TAB 5: TEAM HUB:
+  - Announcements, field notices, internal discussion boards, and shift handovers.
+
+• TAB 6: SYSTEM & BACKUP:
+  - Database snapshot export (JSON/ZIP), restore points, state synchronization, and emergency cache reset.
+
+--------------------------------------------------------------------------------
+[4] ACTION BUTTONS & INTERACTIVE TOOLS (HR SUB-MODULE)
+--------------------------------------------------------------------------------
+• [SCAN ID]:
+  - Fast QR / Barcode / NFC scanner to quickly pull up a worker's digital passport, verify identity, and check in.
+
+• [GLOBAL SEARCH]:
+  - Searches the nationwide/global worker database to find available agricultural labor by region, skill, and rating.
+
+• [DOWNLOAD TEMPLATE]:
+  - Generates a pre-formatted Excel (.xlsx) template for batch importing worker profiles.
+
+• [IMPORT LIST]:
+  - Bulk imports worker records from an Excel spreadsheet into the local and cloud database.
+
+• [EXPORT HR]:
+  - Exports the current worker registry, attendance records, and wage settings to Excel.
+
+• [ADD DAILY WORKER ACCOUNT]:
+  - Opens modal to register a new individual or seasonal worker with national ID, contact details, and default payment rate.
+
+--------------------------------------------------------------------------------
+[5] BATCH AUTOMATION & COMPENSATION CONTROLS
+--------------------------------------------------------------------------------
+• BULK WAGE & PAYMENT METHOD UPDATES PANEL:
+  - Selection Counter: Shows count of selected workers (e.g. "0 Selected").
+  - [SELECT ALL FILTERED]: Selects all workers matching current search/filter.
+  - PAYMENT METHOD Dropdown:
+    * Per Weight (GEL/kg or USD/kg)
+    * Hourly (GEL/hr or USD/hr)
+    * Per Tree / Plant (GEL/unit)
+    * Fixed Daily Rate (GEL/day)
+  - PAYMENT RATE Input: Number field for setting the monetary rate.
+  - [APPLY TO SELECTED]: Commits wage changes to chosen workers.
+  - [APPLY TO ALL]: Applies wage calculation model across the entire visible roster.
+
+--------------------------------------------------------------------------------
+[6] IDENTITY & ROLE ARCHITECTURE (G-I-C-W SYSTEM)
+--------------------------------------------------------------------------------
+• G - Global Identity: Unique digital passport per person (National ID / Global UUID).
+• I - Individual / Freelancer Hat: Tools, independent machinery owner, seasonal worker.
+• C - Company / Enterprise Hat: Plantation owner, Ltd., Cooperative founder.
+• W - Worker Hat: Internal employee or hired daily laborer tied to a specific tenant ticket.
+================================================================================

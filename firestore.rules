@@ -1,0 +1,423 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // 
+    // Collection: users
+    // Fields: id, name, email, roles, status, isGuest, createdAt, currentOrgId
+    //
+    // Collection: organizations
+    // Fields: id, name, type, location, isDiscoverable, creatorId, createdBy
+    //
+    // Collection: memberships
+    // Fields: id, userId, organizationId, role
+    //
+    // Collection: plantationFeatures
+    // Fields: id, name, type, layerId, organizationId
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isAuthenticated();
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email != null && (
+          request.auth.token.email.lower() == "ggwall@yandex.com" ||
+          request.auth.token.email.lower() == "magrakvelidzesopio@gmail.com" ||
+          request.auth.token.email.lower() == "admin@agrimap.io" ||
+          request.auth.token.email.lower() == "nishno@agrimap.pro" ||
+          request.auth.token.email.lower() == "giorgi.nishno@gmail.com" ||
+          request.auth.token.email.lower() == "giorgi@agrimap.pro" ||
+          request.auth.token.email.matches('(?i).*@agrimap\\.pro') ||
+          request.auth.token.email.matches('(?i).*@agrimap\\.io')
+        )) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('roles', []).hasAny(['Admin', 'ROOT_SUPER_ADMIN', 'founder', 'Founder']))
+      );
+    }
+
+    function isMemberOf(orgId) {
+      return isAuthenticated() && (
+        (orgId != null && (
+          exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) ||
+          (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
+           (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
+            get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid))
+        )) ||
+        isAdmin()
+      );
+    }
+
+    function isOrgAdmin(orgId) {
+      return isAuthenticated() && (
+        isAdmin() ||
+        (orgId != null && (
+          (exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && 
+           get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder']) ||
+          (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
+           (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
+            get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid))
+        ))
+      );
+    }
+
+    // Validation Helpers
+    function isValidString(val, maxLen) {
+      return val is string && val.size() <= maxLen;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.size() > 5;
+    }
+
+    function hasOnlyAllowedFields(allowedFields) {
+      return request.resource.data.keys().hasOnly(allowedFields);
+    }
+
+    function fieldUnchanged(field) {
+      return !(field in request.resource.data) || request.resource.data[field] == resource.data[field];
+    }
+
+    // Domain Validators
+    function isValidUser(data) {
+      return true;
+    }
+
+    function isValidOrg(data) {
+      return true;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /test/connection {
+      allow get: if true;
+    }
+
+    match /_connection_test_/{id} {
+      allow read: if true;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        isAdmin() || 
+        (resource != null && request.auth.token.email == resource.data.get('email', '')) ||
+        (resource != null && resource.data.get('status', '') == 'active')
+      );
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin()) && 
+                    isValidUser(request.resource.data) &&
+                    (request.resource.data.get('roles', []) == [] || 
+                     request.resource.data.get('roles', []) == ['User'] || 
+                     request.resource.data.get('roles', []) == ['Guest'] || 
+                     request.resource.data.get('roles', []) == ['worker'] || 
+                     request.resource.data.get('roles', []).hasAll(['Guest']) ||
+                     request.resource.data.get('roles', []).hasAll(['worker'])); 
+      allow update: if isAuthenticated() && (
+                      (isOwner(userId) && isValidUser(request.resource.data) && 
+                       (fieldUnchanged('roles') || 
+                        (!request.resource.data.get('roles', []).hasAny(['Admin', 'ROOT_SUPER_ADMIN']) && 
+                         (resource.data.get('roles', []) == ['Guest'] || 
+                          request.resource.data.get('roles', []).hasAll(resource.data.get('roles', []).removeAll(['Guest']))
+                         )
+                        )
+                       )
+                      ) || 
+                      isAdmin()
+                    );
+      allow delete: if isAdmin();
+    }
+
+    match /organizations/{orgId} {
+      allow list, get: if true;
+      allow create: if isAuthenticated() && 
+                    (request.resource.data.get('creatorId', '') == request.auth.uid || request.resource.data.get('createdBy', '') == request.auth.uid) &&
+                    isValidOrg(request.resource.data);
+      allow update: if isAdmin() || (isAuthenticated() && isOrgAdmin(orgId) && isValidOrg(request.resource.data));
+      allow delete: if isAdmin();
+    }
+
+    match /memberships/{membershipId} {
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated() && (resource.data.userId == request.auth.uid || isMemberOf(resource.data.organizationId) || isAdmin());
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOrgAdmin(request.resource.data.organizationId) ||
+        (request.resource.data.userId == request.auth.uid)
+      );
+      allow update: if isAdmin() || (isAuthenticated() && isOrgAdmin(resource.data.organizationId));
+      allow delete: if isAdmin() || (isAuthenticated() && (isOrgAdmin(resource.data.organizationId) || resource.data.userId == request.auth.uid));
+    }
+
+    match /projects/{projectId} {
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated() && (resource.data.userId == request.auth.uid || isMemberOf(resource.data.organizationId) || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /{collection}/{docId} {
+      allow list: if isAuthenticated() && 
+        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
+        isAdmin() || 
+        (resource != null && (isMemberOf(resource.data.get('organizationId', null)) || resource.data.get('createdBy', '') == request.auth.uid))
+      );
+      allow get: if isAuthenticated() && 
+        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
+        isAdmin() ||
+        resource == null || 
+        isMemberOf(resource.data.get('organizationId', null)) ||
+        resource.data.get('createdBy', '') == request.auth.uid
+      );
+      allow create: if isAuthenticated() && 
+        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
+        isAdmin() ||
+        isMemberOf(request.resource.data.get('organizationId', null)) ||
+        request.resource.data.get('createdBy', '') == request.auth.uid
+      );
+      allow update: if isAuthenticated() && 
+        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
+        isAdmin() ||
+        isMemberOf(resource.data.get('organizationId', null)) ||
+        resource.data.get('createdBy', '') == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && 
+        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
+        isAdmin() ||
+        isOrgAdmin(resource.data.get('organizationId', null)) ||
+        resource.data.get('createdBy', '') == request.auth.uid
+      );
+    }
+
+    // Explicitly handle collections that were in the previous rules to ensure no regression
+    match /plantationFeatures/{id} {
+      allow read, write: if isAuthenticated() && (
+        isAdmin() ||
+        (resource == null || isMemberOf(resource.data.get('organizationId', null)) || resource.data.get('createdBy', '') == request.auth.uid) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', null)) || request.resource.data.get('createdBy', '') == request.auth.uid)
+      );
+    }
+    
+    match /layers/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /inventoryItems/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /harvestEvents/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /accounts/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /transactions/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /workAssignments/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /employees/{id} {
+      allow read, write: if isVerified() && (
+        id.startsWith('emp-' + request.auth.uid) ||
+        (request.resource != null && request.resource.data.get('email', '') == request.auth.token.email) ||
+        (resource != null && resource.data.get('email', '') == request.auth.token.email) ||
+        (
+          (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+          (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+        )
+      );
+    }
+
+    match /machinery/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /nutritionPlans/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /planExecutions/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /dailyLogs/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /employeeGroups/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /forumPosts/{id} {
+      allow read, write: if isAuthenticated(); // Posts can be made by anyone authenticated for now? Or verified? Let's use isVerified for writes.
+      allow write: if isVerified();
+      allow get: if isAuthenticated();
+    }
+
+    match /listings/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isVerified();
+    }
+
+    match /bids/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isVerified();
+    }
+
+    match /reviews/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isVerified();
+    }
+
+    match /alerts/{id} {
+      allow read: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
+      allow read: if isAuthenticated() && resource.data.get('recipientId', '') == request.auth.uid;
+      allow read: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
+      allow read: if isAuthenticated() && resource.data.get('createdBy', '') == request.auth.uid;
+      allow read: if isAuthenticated() && isMemberOf(resource.data.get('organizationId', ''));
+      allow write: if isAuthenticated() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', '')) || resource.data.get('recipientId', '') == request.auth.uid || resource.data.get('createdBy', '') == request.auth.uid) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')) || request.resource.data.get('recipientId', '') == request.auth.uid || request.resource.data.get('createdBy', '') == request.auth.uid)
+      );
+    }
+
+    match /cropVarieties/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    match /harvestEntries/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /pallets/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /harvestLogs/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /inventoryTransactions/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /suppliers/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /purchaseOrders/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /notes/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /checkpoints/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /crops/{id} {
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
+      );
+    }
+
+    match /systemLogs/{id} {
+      allow list: if isAdmin();
+      allow get: if isAdmin() || (isAuthenticated() && resource.data.organizationId != null && isMemberOf(resource.data.organizationId));
+      allow write: if isAuthenticated();
+    }
+
+    match /systemSettings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /unique_identifiers/{id} {
+      allow get: if true;
+      allow create: if isAuthenticated();
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "gen-lang-client-0798297761",
+    "wmda": "gen-lang-client-0798297761",
+    "agrimap": "gen-lang-client-0940403208",
+    "agrimap-pro": "agrimap-pro"
+  }
+}

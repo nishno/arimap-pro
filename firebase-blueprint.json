@@ -1,0 +1,239 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uniqueId": { "type": "string" },
+        "name": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "roles": { "type": "array", "items": { "type": "string" } },
+        "role": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "blocked", "free", "busy"] },
+        "isGuest": { "type": "boolean" },
+        "isVerified": { "type": "boolean" },
+        "personalNumber": { "type": "string" },
+        "identificationNumber": { "type": "string" },
+        "taxNumber": { "type": "string" },
+        "currentOrgId": { "type": "string" },
+        "subscriptionType": { "type": "string" },
+        "region": { "type": "string" },
+        "country": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "uniqueId", "name", "email", "roles", "status"]
+    },
+    "Organization": {
+      "title": "Organization",
+      "description": "Farm or agricultural business entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uniqueId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "taxNumber": { "type": "string" },
+        "legalStructure": { "type": "string" },
+        "subscriptionPlan": { "type": "string" },
+        "region": { "type": "string" },
+        "country": { "type": "string" },
+        "areaHa": { "type": "number" },
+        "location": { "type": "array", "items": { "type": "number" } },
+        "isDiscoverable": { "type": "boolean" },
+        "creatorId": { "type": "string" },
+        "identificationNumber": { "type": "string" }
+      },
+      "required": ["id", "uniqueId", "name", "type", "creatorId"]
+    },
+    "Membership": {
+      "title": "Membership",
+      "description": "User membership in an organization",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "role": { "type": "string" },
+        "isGlobalRegistrationAgreed": { "type": "boolean" }
+      },
+      "required": ["id", "userId", "organizationId", "role"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "User-created project data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "name": { "type": "string" },
+        "data": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "data"]
+    },
+    "InventoryItem": {
+      "title": "Inventory Item",
+      "description": "Stock item in an organization",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "currentStock": { "type": "number" },
+        "unitOfMeasure": { "type": "string" }
+      },
+      "required": ["id", "organizationId", "name", "category"]
+    },
+    "HarvestEvent": {
+      "title": "Harvest Event",
+      "description": "Harvest activity in an organization",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string" },
+        "plannedStartDate": { "type": "string" }
+      },
+      "required": ["id", "organizationId", "name", "status"]
+    },
+    "Account": {
+      "title": "Account",
+      "description": "Financial account in an organization",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "balance": { "type": "number" }
+      },
+      "required": ["id", "organizationId", "name", "type", "balance"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction in an organization",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "date": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "organizationId", "date", "amount", "description"]
+    },
+    "SystemLog": {
+      "title": "System Log",
+      "description": "Activity log entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" },
+        "action": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" },
+        "details": { "type": "string" },
+        "organizationId": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "userId", "action", "role", "status", "details"]
+    },
+    "PlantationFeature": {
+      "title": "Plantation Feature",
+      "description": "Map feature like a field, sector, or seedling",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "layerId": { "type": "string" },
+        "organizationId": { "type": "string" }
+      },
+      "required": ["id", "name", "type", "layerId"]
+    },
+    "Layer": {
+      "title": "Layer",
+      "description": "Map layer or folder",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "isFolder": { "type": "boolean" },
+        "isVisible": { "type": "boolean" },
+        "parentId": { "type": "string" },
+        "organizationId": { "type": "string" }
+      },
+      "required": ["id", "name", "isFolder", "isVisible"]
+    },
+    "Crop": {
+      "title": "Crop",
+      "description": "Agricultural crop and its varieties",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "varieties": { "type": "array", "items": { "type": "string" } },
+        "organizationId": { "type": "string" }
+      },
+      "required": ["id", "name", "organizationId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/organizations/{orgId}": {
+      "schema": "Organization",
+      "description": "Organization documents"
+    },
+    "/memberships/{membershipId}": {
+      "schema": "Membership",
+      "description": "Membership documents"
+    },
+    "/plantationFeatures/{featureId}": {
+      "schema": "PlantationFeature",
+      "description": "Map feature documents"
+    },
+    "/layers/{layerId}": {
+      "schema": "Layer",
+      "description": "Map layer documents"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Project documents"
+    },
+    "/inventoryItems/{itemId}": {
+      "schema": "InventoryItem",
+      "description": "Inventory item documents"
+    },
+    "/harvestEvents/{eventId}": {
+      "schema": "HarvestEvent",
+      "description": "Harvest event documents"
+    },
+    "/accounts/{accountId}": {
+      "schema": "Account",
+      "description": "Financial account documents"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Financial transaction documents"
+    },
+    "/systemLogs/{logId}": {
+      "schema": "SystemLog",
+      "description": "System activity logs"
+    },
+    "/crops/{cropId}": {
+      "schema": "Crop",
+      "description": "Crop and variety definitions"
+    }
+  }
+}
