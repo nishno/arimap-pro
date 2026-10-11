@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postinstall": "node scripts/patch-firestore.cjs",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "update": "git pull origin main && npm install",
@@ -20,7 +19,17 @@
     "deploy:rules:agrimap-pro": "firebase deploy --only firestore:rules --project agrimap-pro",
     "deploy:all:agrimap": "npm run build && firebase deploy --project agrimap",
     "deploy:all:wmda": "npm run build && firebase deploy --project wmda",
-    "deploy:all:agrimap-pro": "npm run build && firebase deploy --project agrimap-pro"
+    "deploy:all:agrimap-pro": "npm run build && firebase deploy --project agrimap-pro",
+    "test:weather": "node --experimental-strip-types --test tests/weather-data.mjs",
+    "test:demo": "node tests/demo-browser.cjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-agrimap --config firebase.emulator.json \"node tests/firestore-security.mjs\"",
+    "local:init": "node server/init.mjs",
+    "local:start": "node server/local-server.mjs",
+    "local:backup": "node server/backup.mjs",
+    "test:local": "node --test tests/local-server.mjs",
+    "test:local:browser": "node tests/local-browser.mjs",
+    "local:recover-owner": "node server/recover.mjs",
+    "local:revoke-sessions": "node server/recover.mjs --revoke-sessions"
   },
   "dependencies": {
     "@google/genai": "1.42.0",
@@ -32,6 +41,7 @@
     "d3": "^7.9.0",
     "firebase": "^12.11.0",
     "framer-motion": "^12.35.1",
+    "hls.js": "^1.7.3",
     "jsdom": "^29.1.1",
     "jspdf": "^4.2.1",
     "jsqr": "1.4.0",
@@ -52,11 +62,17 @@
     "three": "^0.186.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "firebase-tools": "^15.33.0",
+    "playwright": "^1.64.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vite-plugin-pwa": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=24 <25"
   }
 }

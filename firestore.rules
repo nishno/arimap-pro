@@ -34,31 +34,21 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Only a trusted server may set Firebase custom claims.
     function isAdmin() {
-      return isAuthenticated() && (
-        (request.auth.token.email != null && (
-          request.auth.token.email.lower() == "ggwall@yandex.com" ||
-          request.auth.token.email.lower() == "magrakvelidzesopio@gmail.com" ||
-          request.auth.token.email.lower() == "admin@agrimap.io" ||
-          request.auth.token.email.lower() == "nishno@agrimap.pro" ||
-          request.auth.token.email.lower() == "giorgi.nishno@gmail.com" ||
-          request.auth.token.email.lower() == "giorgi@agrimap.pro" ||
-          request.auth.token.email.matches('(?i).*@agrimap\\.pro') ||
-          request.auth.token.email.matches('(?i).*@agrimap\\.io')
-        )) ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('roles', []).hasAny(['Admin', 'ROOT_SUPER_ADMIN', 'founder', 'Founder']))
-      );
+      return isAuthenticated() && request.auth.token.get('admin', false) == true;
     }
 
     function isMemberOf(orgId) {
       return isAuthenticated() && (
-        (orgId != null && (
-          exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) ||
-          (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
-           (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
-            get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid))
-        )) ||
+        exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) ||
+        existsAfter(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) ||
+        (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
+         (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
+          get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid)) ||
+        (existsAfter(/databases/$(database)/documents/organizations/$(orgId)) && 
+         (getAfter(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
+          getAfter(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid)) ||
         isAdmin()
       );
     }
@@ -66,13 +56,16 @@ service cloud.firestore {
     function isOrgAdmin(orgId) {
       return isAuthenticated() && (
         isAdmin() ||
-        (orgId != null && (
-          (exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && 
-           get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder']) ||
-          (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
-           (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
-            get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid))
-        ))
+        (exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && 
+         get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder']) ||
+        (existsAfter(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && 
+         getAfter(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder']) ||
+        (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
+         (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
+          get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid)) ||
+        (existsAfter(/databases/$(database)/documents/organizations/$(orgId)) && 
+         (getAfter(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
+          getAfter(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid))
       );
     }
 
@@ -110,59 +103,44 @@ service cloud.firestore {
       allow get: if true;
     }
 
-    match /_connection_test_/{id} {
-      allow read: if true;
-    }
-
     match /users/{userId} {
-      allow read: if isAuthenticated() && (
-        request.auth.uid == userId || 
-        isAdmin() || 
-        (resource != null && request.auth.token.email == resource.data.get('email', '')) ||
-        (resource != null && resource.data.get('status', '') == 'active')
-      );
-      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin()) && 
-                    isValidUser(request.resource.data) &&
-                    (request.resource.data.get('roles', []) == [] || 
-                     request.resource.data.get('roles', []) == ['User'] || 
-                     request.resource.data.get('roles', []) == ['Guest'] || 
-                     request.resource.data.get('roles', []) == ['worker'] || 
-                     request.resource.data.get('roles', []).hasAll(['Guest']) ||
-                     request.resource.data.get('roles', []).hasAll(['worker'])); 
-      allow update: if isAuthenticated() && (
-                      (isOwner(userId) && isValidUser(request.resource.data) && 
-                       (fieldUnchanged('roles') || 
-                        (!request.resource.data.get('roles', []).hasAny(['Admin', 'ROOT_SUPER_ADMIN']) && 
-                         (resource.data.get('roles', []) == ['Guest'] || 
-                          request.resource.data.get('roles', []).hasAll(resource.data.get('roles', []).removeAll(['Guest']))
-                         )
-                        )
-                       )
-                      ) || 
-                      isAdmin()
-                    );
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) &&
+        request.resource.data.get('id', userId) == userId &&
+        request.resource.data.get('roles', []).hasOnly(['Guest', 'worker', 'User']) &&
+        !request.resource.data.keys().hasAny(['password', 'newPassword', 'confirmPassword']);
+      allow update: if !request.resource.data.keys().hasAny(['password', 'newPassword', 'confirmPassword']) &&
+        (isAdmin() || (isOwner(userId) &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+           'id', 'roles', 'email', 'verificationStatus', 'kycStatus', 'status',
+           'subscriptionType', 'subscriptionStatus', 'subscriptionExpiry', 'isPaid'
+         ])));
       allow delete: if isAdmin();
     }
 
     match /organizations/{orgId} {
-      allow list, get: if true;
-      allow create: if isAuthenticated() && 
+      allow list: if resource.data.get('isDiscoverable', false) == true || isAuthenticated();
+      allow get: if isMemberOf(orgId) || isAdmin() || resource.data.get('isDiscoverable', false) == true;
+      allow create: if isVerified() && 
                     (request.resource.data.get('creatorId', '') == request.auth.uid || request.resource.data.get('createdBy', '') == request.auth.uid) &&
                     isValidOrg(request.resource.data);
-      allow update: if isAdmin() || (isAuthenticated() && isOrgAdmin(orgId) && isValidOrg(request.resource.data));
+      allow update: if isAdmin() || (isVerified() && isOrgAdmin(orgId) && isValidOrg(request.resource.data));
       allow delete: if isAdmin();
     }
 
     match /memberships/{membershipId} {
-      allow list: if isAuthenticated();
-      allow get: if isAuthenticated() && (resource.data.userId == request.auth.uid || isMemberOf(resource.data.organizationId) || isAdmin());
-      allow create: if isAuthenticated() && (
-        isAdmin() || 
-        isOrgAdmin(request.resource.data.organizationId) ||
-        (request.resource.data.userId == request.auth.uid)
-      );
-      allow update: if isAdmin() || (isAuthenticated() && isOrgAdmin(resource.data.organizationId));
-      allow delete: if isAdmin() || (isAuthenticated() && (isOrgAdmin(resource.data.organizationId) || resource.data.userId == request.auth.uid));
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isOrgAdmin(resource.data.organizationId));
+      allow create: if isAuthenticated() &&
+        membershipId == request.resource.data.userId + '_' + request.resource.data.organizationId &&
+        request.resource.data.role in ['Founder', 'Admin', 'Manager', 'Employee', 'worker', 'Agronomist', 'Accountant', 'Guest'] &&
+        (isAdmin() || isOrgAdmin(request.resource.data.organizationId));
+      allow update: if isOrgAdmin(resource.data.organizationId) &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.organizationId == resource.data.organizationId &&
+        request.resource.data.role in ['Founder', 'Admin', 'Manager', 'Employee', 'worker', 'Agronomist', 'Accountant', 'Guest'];
+      allow delete: if isOrgAdmin(resource.data.organizationId) ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
     match /projects/{projectId} {
@@ -172,45 +150,14 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
-    match /{collection}/{docId} {
-      allow list: if isAuthenticated() && 
-        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
-        isAdmin() || 
-        (resource != null && (isMemberOf(resource.data.get('organizationId', null)) || resource.data.get('createdBy', '') == request.auth.uid))
-      );
-      allow get: if isAuthenticated() && 
-        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
-        isAdmin() ||
-        resource == null || 
-        isMemberOf(resource.data.get('organizationId', null)) ||
-        resource.data.get('createdBy', '') == request.auth.uid
-      );
-      allow create: if isAuthenticated() && 
-        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
-        isAdmin() ||
-        isMemberOf(request.resource.data.get('organizationId', null)) ||
-        request.resource.data.get('createdBy', '') == request.auth.uid
-      );
-      allow update: if isAuthenticated() && 
-        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
-        isAdmin() ||
-        isMemberOf(resource.data.get('organizationId', null)) ||
-        resource.data.get('createdBy', '') == request.auth.uid
-      );
-      allow delete: if isAuthenticated() && 
-        !(collection in ['alerts', 'cropVarieties', 'listings', 'bids', 'reviews', 'forumPosts']) && (
-        isAdmin() ||
-        isOrgAdmin(resource.data.get('organizationId', null)) ||
-        resource.data.get('createdBy', '') == request.auth.uid
-      );
-    }
+    // Never use a wildcard rule for user profiles or memberships: Firestore
+    // combines all matching allow rules with OR, not with AND.
 
     // Explicitly handle collections that were in the previous rules to ensure no regression
     match /plantationFeatures/{id} {
-      allow read, write: if isAuthenticated() && (
-        isAdmin() ||
-        (resource == null || isMemberOf(resource.data.get('organizationId', null)) || resource.data.get('createdBy', '') == request.auth.uid) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', null)) || request.resource.data.get('createdBy', '') == request.auth.uid)
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
       );
     }
     
@@ -258,13 +205,8 @@ service cloud.firestore {
 
     match /employees/{id} {
       allow read, write: if isVerified() && (
-        id.startsWith('emp-' + request.auth.uid) ||
-        (request.resource != null && request.resource.data.get('email', '') == request.auth.token.email) ||
-        (resource != null && resource.data.get('email', '') == request.auth.token.email) ||
-        (
-          (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-          (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-        )
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
       );
     }
 
@@ -311,34 +253,33 @@ service cloud.firestore {
 
     match /listings/{id} {
       allow read: if isAuthenticated();
-      allow write: if isVerified();
+      allow create: if isAuthenticated() && request.resource.data.get('sellerId', '') == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.get('sellerId', '') == request.auth.uid &&
+        request.resource.data.get('sellerId', '') == request.auth.uid;
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.get('sellerId', '') == request.auth.uid);
     }
 
     match /bids/{id} {
       allow read: if isAuthenticated();
-      allow write: if isVerified();
+      allow create: if isAuthenticated() && request.resource.data.get('bidderId', '') == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.get('bidderId', '') == request.auth.uid &&
+        request.resource.data.get('bidderId', '') == request.auth.uid;
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.get('bidderId', '') == request.auth.uid);
     }
 
     match /reviews/{id} {
       allow read: if isAuthenticated();
-      allow write: if isVerified();
+      allow create: if isAuthenticated() && request.resource.data.get('authorId', '') == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.get('authorId', '') == request.auth.uid &&
+        request.resource.data.get('authorId', '') == request.auth.uid;
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.get('authorId', '') == request.auth.uid);
     }
 
     match /alerts/{id} {
-      allow read: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
-      allow read: if isAuthenticated() && resource.data.get('recipientId', '') == request.auth.uid;
-      allow read: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
-      allow read: if isAuthenticated() && resource.data.get('createdBy', '') == request.auth.uid;
-      allow read: if isAuthenticated() && isMemberOf(resource.data.get('organizationId', ''));
-      allow write: if isAuthenticated() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', '')) || resource.data.get('recipientId', '') == request.auth.uid || resource.data.get('createdBy', '') == request.auth.uid) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')) || request.resource.data.get('recipientId', '') == request.auth.uid || request.resource.data.get('createdBy', '') == request.auth.uid)
+      allow read, write: if isVerified() && (
+        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
+        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
       );
-    }
-
-    match /cropVarieties/{id} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
     }
 
     match /harvestEntries/{id} {
@@ -410,14 +351,14 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
-    match /systemSettings/{id} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
     match /unique_identifiers/{id} {
       allow get: if true;
       allow create: if isAuthenticated();
     }
+    match /cropVarieties/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
   }
 }

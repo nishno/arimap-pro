@@ -1,0 +1,40 @@
+import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
+import { doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { readFileSync } from 'node:fs';
+const env = await initializeTestEnvironment({projectId:'demo-agrimap',firestore:{host:'127.0.0.1',port:8080,rules:readFileSync('firestore.rules','utf8')}});
+try {
+ await env.withSecurityRulesDisabled(async context => {
+  const db=context.firestore();
+  await setDoc(doc(db,'organizations','farm-a'),{createdBy:'owner-a'});
+  await setDoc(doc(db,'organizations','farm-b'),{createdBy:'owner-b'});
+  await setDoc(doc(db,'memberships','member-a_farm-a'),{userId:'member-a',organizationId:'farm-a',role:'Employee'});
+  await setDoc(doc(db,'users','member-a'),{id:'member-a',roles:['Guest'],email:'member@example.com',status:'active'});
+  await setDoc(doc(db,'harvestEntries','entry-a'),{organizationId:'farm-a',kg:240});
+  await setDoc(doc(db,'harvestEntries','entry-b'),{organizationId:'farm-b',kg:400});
+ });
+ const attacker=env.authenticatedContext('attacker').firestore();
+ await assertFails(setDoc(doc(attacker,'users','attacker'),{id:'attacker',roles:['Guest','ROOT_SUPER_ADMIN']}));
+ await assertFails(setDoc(doc(attacker,'users','attacker'),{id:'attacker',roles:['Guest'],password:'fake-test-value'}));
+ await assertSucceeds(setDoc(doc(attacker,'users','attacker'),{id:'attacker',roles:['Guest']}));
+ await assertFails(updateDoc(doc(attacker,'users','attacker'),{roles:['Admin']}));
+ await assertFails(setDoc(doc(attacker,'memberships','attacker_farm-a'),{userId:'attacker',organizationId:'farm-a',role:'Founder'}));
+ await assertFails(setDoc(doc(attacker,'users','attacker'),{roles:['Admin'],organizationId:'farm-a'}));
+ await assertFails(getDoc(doc(attacker,'harvestEntries','entry-a')));
+ await assertFails(setDoc(doc(attacker,'x','y','plantationFeatures','z'),{organizationId:'farm-a'}));
+ const member=env.authenticatedContext('member-a').firestore();
+ await assertSucceeds(getDoc(doc(member,'harvestEntries','entry-a')));
+ await assertFails(getDoc(doc(member,'harvestEntries','entry-b')));
+ await assertFails(getDocs(collection(member,'harvestEntries')));
+ await assertSucceeds(getDocs(query(collection(member,'harvestEntries'),where('organizationId','==','farm-a'))));
+ await assertFails(updateDoc(doc(member,'harvestEntries','entry-a'),{organizationId:'farm-b'}));
+ await assertSucceeds(setDoc(doc(member,'harvestEntries','new'),{organizationId:'farm-a',kg:50}));
+ const owner=env.authenticatedContext('owner-a').firestore();
+ await assertSucceeds(setDoc(doc(owner,'memberships','invited_farm-a'),{userId:'invited',organizationId:'farm-a',role:'Employee'}));
+ await assertFails(updateDoc(doc(owner,'memberships','invited_farm-a'),{organizationId:'farm-b'}));
+ const admin=env.authenticatedContext('trusted-admin',{admin:true}).firestore();
+ await assertSucceeds(updateDoc(doc(admin,'users','attacker'),{roles:['Admin']}));
+ const guest=env.unauthenticatedContext().firestore();
+ await assertFails(getDoc(doc(guest,'harvestEntries','entry-a')));
+ await assertFails(setDoc(doc(guest,'harvestEntries','new-guest'),{organizationId:'farm-a'}));
+ console.log('PASS: 21 Firestore authorization scenarios, including role escalation, self-membership, tenant isolation, wildcard paths, profile password denial, and trusted-admin access.');
+} finally { await env.cleanup(); }
