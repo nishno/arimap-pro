@@ -9,6 +9,7 @@ npm run dev -- --port 3001
 
 Explore sample fields, harvest entries and frost scenarios at the `/demo` path. This route does not import Firebase or production modules. Workspace links open `/start` to choose cloud registration or local installation.
 
+- [Guest features, proposed plans and super-admin setup](docs/GUEST_SUBSCRIPTIONS_ADMIN.md)
 - [Local farm server: installation, HTTPS, backups and migration plan](docs/LOCAL_SERVER.md)
 - [Review, verification and handoff](docs/REVIEW_AND_HANDOFF.md)
 - [Guria pilot: LoRaWAN sensors with LTE backhaul](docs/GURIA_PILOT.md)

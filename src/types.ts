@@ -5,7 +5,7 @@ export type NetworkMode = 'cloud' | 'local' | 'offline';
 
 export type UserRole = 'Guest' | 'Employee' | 'Buyer' | 'Agro-Agent' | 'Accountant' | 'Agronomist' | 'Admin' | 'Founder' | 'Co-Founder' | 'ROOT_SUPER_ADMIN' | 'seller' | 'planter' | 'worker' | 'Agro-Shop' | 'company' | 'Independent' | 'Field Manager' | 'Daily Worker' | 'Foreman';
 export type SubscriptionTier = 'Free' | 'Pro' | 'Enterprise';
-export type SubscriptionStatus = 'Trial' | 'Paid' | 'Unpaid';
+export type SubscriptionStatus = 'Trial' | 'Paid' | 'Unpaid' | 'Manual';
 
 export type OrganizationType = 'LTD' | 'Cooperative' | 'Individual Entrepreneur';
 export type AgricultureType = 'Blueberry' | 'Lemon' | 'Hazelnut' | 'Grape' | 'General' | 'Other';
@@ -1855,7 +1855,8 @@ export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?
     if (activeOrg) {
         const isPaidModule = !['dashboard', 'ai', 'community', 'marketplace', 'profile', 'onboarding', 'settings', 'personalization'].includes(module);
         if (isPaidModule) {
-            const status: SubscriptionStatus = new Date(activeOrg.trialExpiry) > new Date() ? 'Trial' : activeOrg.isPaid ? 'Paid' : 'Unpaid';
+            const manualValid = activeOrg.subscriptionStatus === 'Manual' && new Date(activeOrg.subscriptionExpiry || '').getTime() > Date.now();
+            const status: SubscriptionStatus = manualValid ? 'Manual' : new Date(activeOrg.trialExpiry) > new Date() ? 'Trial' : activeOrg.isPaid ? 'Paid' : 'Unpaid';
             if (status === 'Unpaid' && baseAccess === 'full') {
                 return 'read'; // Downgrade access if subscription is unpaid for paid modules
             }

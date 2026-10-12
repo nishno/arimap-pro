@@ -29,7 +29,11 @@
     "test:local": "node --test tests/local-server.mjs",
     "test:local:browser": "node tests/local-browser.mjs",
     "local:recover-owner": "node server/recover.mjs",
-    "local:revoke-sessions": "node server/recover.mjs --revoke-sessions"
+    "local:revoke-sessions": "node server/recover.mjs --revoke-sessions",
+    "platform:grant-admin": "node server/platform-admin.mjs",
+    "test:platform": "node --test tests/platform-management.mjs tests/platform-api.mjs",
+    "test:billing-locale": "node --experimental-strip-types --test tests/billing-locale.mjs",
+    "test:platform:integration": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/platform-integration.mjs\""
   },
   "dependencies": {
     "@google/genai": "1.42.0",
@@ -40,6 +44,7 @@
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
     "firebase": "^12.11.0",
+    "firebase-admin": "^13.10.0",
     "framer-motion": "^12.35.1",
     "hls.js": "^1.7.3",
     "jsdom": "^29.1.1",

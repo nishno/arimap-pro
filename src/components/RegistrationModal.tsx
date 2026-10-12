@@ -246,11 +246,11 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
               createdBy: currentUser.id,
               createdAt: new Date().toISOString(),
               status: 'active',
-              trial_start_date: new Date().toISOString(),
-              trialExpiry: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days
+              trial_start_date: '',
+              trialExpiry: '',
               isPaid: false,
               tier: 'Free',
-              subscriptionStatus: 'Trial',
+              subscriptionStatus: 'Unpaid',
               phoneNumber: newCompanyData.phoneNumber || ''
           };
 

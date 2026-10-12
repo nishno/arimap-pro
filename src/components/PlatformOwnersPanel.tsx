@@ -1,0 +1,14 @@
+import React,{useState} from 'react';
+import {auth} from '../firebase';
+export default function PlatformOwnersPanel(){
+ const [target,setTarget]=useState(''),[reason,setReason]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[confirmation,setConfirmation]=useState('');
+ async function change(action:'grant'|'revoke'|'delete'){
+  if(action==='delete'&&!window.confirm('Delete this super-admin Firebase login account? Farm records will remain. The user will need a new account to log in again.'))return;
+  setBusy(true);setMessage('');try{const user=auth.currentUser;if(!user)throw new Error('Sign in required');
+   const response=await fetch('/api/platform/admins',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${await user.getIdToken()}`},body:JSON.stringify({action,targetUid:target.trim(),reason,confirmationUid:confirmation.trim()})});
+   if(!response.headers.get('content-type')?.includes('application/json'))throw new Error('Platform backend is not connected on this installation.');
+   const result=await response.json();if(!response.ok)throw new Error(result.error||'Operation failed');setMessage(action==='delete'?'Super-admin login deleted. Farm records and audit history retained.':'Super-admin access updated. The target must sign in again.');
+  }catch(e){setMessage((e as Error).message);}finally{setBusy(false);}
+ }
+ return <section className="bg-white border rounded-2xl p-6"><h2 className="font-bold text-xl">Platform owner · God mode</h2><p>Grant or revoke super-admin access for existing registered users. Farm ownership is separate. Grant/revoke changes only authority. Deleting a login account retains farm records and audit history.</p><label>Target Firebase UID<input className="border block w-full p-2 my-3" value={target} onChange={e=>setTarget(e.target.value)} maxLength={128}/></label><label>Reason<input className="border block w-full p-2 my-3" value={reason} onChange={e=>setReason(e.target.value)} maxLength={500}/></label><button disabled={busy||!target.trim()||reason.trim().length<5} onClick={()=>change('grant')}>Grant super-admin access</button> · <button disabled={busy||!target.trim()||reason.trim().length<5} onClick={()=>change('revoke')}>Revoke super-admin access</button><div className="border-t mt-6 pt-4"><label>Confirm UID to delete the login<input className="border block w-full p-2 my-3" value={confirmation} onChange={e=>setConfirmation(e.target.value)} maxLength={128}/></label><button disabled={busy||!target.trim()||confirmation.trim()!==target.trim()||reason.trim().length<5} onClick={()=>change('delete')}>Delete super-admin login account</button></div>{message&&<p role="status">{message}</p>}<p>Only the trusted backend can change claims. Owner accounts are protected from these actions. Console provisioning and backend credentials must be configured first.</p></section>;
+}

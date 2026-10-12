@@ -1,3 +1,5 @@
+import PlatformOwnersPanel from './PlatformOwnersPanel';
+import BillingRequestsPanel from './BillingRequestsPanel';
 
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
@@ -26,6 +28,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { USE_FIREBASE } from '../config';
 
 interface RootAdminViewProps {
+    isPlatformOwner?: boolean;
     currentUser: User | null;
     organizations: Organization[];
     users: User[]; // Added users prop
@@ -39,6 +42,7 @@ interface RootAdminViewProps {
 
 const RootAdminView: React.FC<RootAdminViewProps> = ({ 
     currentUser, 
+    isPlatformOwner = false,
     organizations = [], 
     users: initialUsers = [], 
     plantationFeatures = [],
@@ -57,7 +61,7 @@ const RootAdminView: React.FC<RootAdminViewProps> = ({
     const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'users' | 'orgs' | 'handshakes' | 'plantations' | 'subscriptions' | 'logs' | 'roles' | 'stats' | 'registry'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'orgs' | 'handshakes' | 'plantations' | 'subscriptions' | 'logs' | 'roles' | 'stats' | 'registry' | 'platform-admins'>('users');
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
     const [editingRoles, setEditingRoles] = useState<UserRole[]>([]);
 
@@ -943,7 +947,7 @@ const RootAdminView: React.FC<RootAdminViewProps> = ({
                                 <td className="px-6 py-4">
                                     {editingUserId === user.id ? (
                                         <div className="flex flex-wrap gap-1 max-w-xs">
-                                            {['Admin', 'Founder', 'Employee', 'Accountant', 'Agronomist', 'ROOT_SUPER_ADMIN'].map(r => (
+                                            {['Admin', 'Founder', 'Employee', 'Accountant', 'Agronomist'].map(r => (
                                                 <button
                                                     key={r}
                                                     onClick={() => setEditingRoles(prev => prev.includes(r as UserRole) ? prev.filter(x => x !== r) : [...prev, r as UserRole])}
@@ -1587,6 +1591,7 @@ const RootAdminView: React.FC<RootAdminViewProps> = ({
 
             <div className="flex flex-wrap gap-2 mb-8 bg-slate-100 p-1.5 rounded-2xl w-fit">
                 {[
+                    ...(isPlatformOwner ? [{ id: 'platform-admins', label: 'Super-admin access', icon: ShieldCheckIcon }] : []),
                     { id: 'users', label: 'Users', icon: UsersIcon },
                     { id: 'orgs', label: 'Organizations', icon: BuildingStorefrontIcon },
                     { id: 'handshakes', label: 'Handshake Links', icon: ShieldCheckIcon },
@@ -1614,12 +1619,13 @@ const RootAdminView: React.FC<RootAdminViewProps> = ({
                 </div>
             ) : (
                 <>
+                    {activeTab === 'platform-admins' && isPlatformOwner && <PlatformOwnersPanel/>}
                     {activeTab === 'users' && renderUsersTab()}
                     {activeTab === 'orgs' && renderOrgsTab()}
                     {activeTab === 'handshakes' && renderHandshakesTab()}
                     {activeTab === 'plantations' && renderPlantationsTab()}
                     {activeTab === 'registry' && renderRegistryTab()}
-                    {activeTab === 'subscriptions' && renderSubscriptionsTab()}
+                    {activeTab === 'subscriptions' && <BillingRequestsPanel organizations={organizations}/>}
                     {activeTab === 'logs' && renderLogsTab()}
                     {activeTab === 'roles' && renderRolesTab()}
                     {activeTab === 'stats' && renderStatsTab()}

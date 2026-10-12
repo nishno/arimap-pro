@@ -1,3 +1,4 @@
+import { usePlatformAdmin } from './hooks/usePlatformAdmin';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import Sidebar from './components/Sidebar';
@@ -177,7 +178,7 @@ const executeDecoupledPresenceUpdate = async (updateFn: () => Promise<void>) => 
 };
 
 const App: React.FC = () => {
-    const { language } = useLanguage();
+    const { language, setRegion } = useLanguage();
     const lastValidPermissionsRef = React.useRef<Set<Permission>>(new Set<Permission>());
     const [appMode, setAppMode] = useState<AppMode>(() => {
         const saved = localStorage.getItem('agri-planter-mode');
@@ -234,8 +235,9 @@ const App: React.FC = () => {
         }
     }, [currentUser]);
 
-    const isSystemAdmin = Boolean(currentUser && !currentUser.isGuest &&
-        auth.currentUser?.uid === currentUser.id && currentUser.roles?.includes('ROOT_SUPER_ADMIN'));
+    const platformClaims = usePlatformAdmin(currentUser?.id);
+    const hasPlatformAdminClaim = platformClaims.isAdmin;
+    const isSystemAdmin = Boolean(currentUser && !currentUser.isGuest && hasPlatformAdminClaim);
     const isRoot = isSystemAdmin;
 
     // Firebase Connection Test
@@ -1417,9 +1419,9 @@ const App: React.FC = () => {
                     status: 'active',
                     createdAt: new Date().toISOString(),
                     createdBy: currentUser.id,
-                    subscriptionStatus: 'Trial',
-                    trial_start_date: new Date().toISOString(),
-                    trialExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    subscriptionStatus: 'Unpaid',
+                    trial_start_date: '',
+                    trialExpiry: '',
                     isPaid: false,
                     tier: 'Free',
                     country: 'Georgia',
@@ -1489,6 +1491,7 @@ const App: React.FC = () => {
 
     // Derived State
     const activeOrg = useMemo(() => organizations.find(o => o.id === activeOrgId), [organizations, activeOrgId]);
+    useEffect(() => { if (activeOrg?.country) setRegion(['georgia','ge','საქართველო'].includes(activeOrg.country.toLowerCase()) ? 'Georgia' : 'Global'); }, [activeOrg?.id, activeOrg?.country]);
 
     useEffect(() => {
         if (appMode === 'onboarding') {
@@ -2561,9 +2564,9 @@ const App: React.FC = () => {
                     status: 'active',
                     createdAt: new Date().toISOString(),
                     createdBy: currentUser.id,
-                    subscriptionStatus: 'Trial',
-                    trial_start_date: new Date().toISOString(),
-                    trialExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    subscriptionStatus: 'Unpaid',
+                    trial_start_date: '',
+                    trialExpiry: '',
                     isPaid: false,
                     tier: 'Free',
                     country: 'Georgia',
@@ -5867,6 +5870,7 @@ const App: React.FC = () => {
             );
             case 'admin': return isSystemAdmin ? (
                 <RootAdminView 
+                    isPlatformOwner={platformClaims.isOwner}
                     currentUser={currentUser} 
                     organizations={organizations}
                     users={allUsers}

@@ -23,7 +23,9 @@ service cloud.firestore {
     // Helper Functions
     // ===============================================================
     function isAuthenticated() {
-      return request.auth != null;
+      return request.auth != null &&
+        (!exists(/databases/$(database)/documents/platformAccess/$(request.auth.uid)) ||
+         get(/databases/$(database)/documents/platformAccess/$(request.auth.uid)).data.get('accountDisabled', false) == false);
     }
 
     function isVerified() {
@@ -36,7 +38,18 @@ service cloud.firestore {
 
     // Only a trusted server may set Firebase custom claims.
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.get('admin', false) == true;
+      return isAuthenticated() && (request.auth.token.get('admin', false) == true || request.auth.token.get('platformOwner', false) == true) &&
+        (!exists(/databases/$(database)/documents/platformAccess/$(request.auth.uid)) ||
+         get(/databases/$(database)/documents/platformAccess/$(request.auth.uid)).data.get('disabled', false) == false);
+    }
+
+    function isPlatformOwner() {
+      return isAdmin() && request.auth.token.get('platformOwner', false) == true;
+    }
+    function protectedPlatformUser(userId) {
+      return exists(/databases/$(database)/documents/platformAccess/$(userId)) &&
+        (get(/databases/$(database)/documents/platformAccess/$(userId)).data.get('owner', false) == true ||
+         get(/databases/$(database)/documents/platformAccess/$(userId)).data.get('admin', false) == true);
     }
 
     function isMemberOf(orgId) {
@@ -58,8 +71,6 @@ service cloud.firestore {
         isAdmin() ||
         (exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && 
          get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder']) ||
-        (existsAfter(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && 
-         getAfter(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder']) ||
         (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
          (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
           get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid)) ||
@@ -108,23 +119,38 @@ service cloud.firestore {
       allow create: if isOwner(userId) &&
         request.resource.data.get('id', userId) == userId &&
         request.resource.data.get('roles', []).hasOnly(['Guest', 'worker', 'User']) &&
-        !request.resource.data.keys().hasAny(['password', 'newPassword', 'confirmPassword']);
+        !request.resource.data.keys().hasAny(['password', 'newPassword', 'confirmPassword']) &&
+        request.resource.data.get('tier', 'Free') == 'Free' &&
+        request.resource.data.get('isPaid', false) == false &&
+        request.resource.data.get('subscriptionType', 'Free') == 'Free' &&
+        request.resource.data.get('subscriptionStatus', 'Unpaid') == 'Unpaid' &&
+        request.resource.data.get('trialExpiry', '') == '' && request.resource.data.get('trial_start_date', '') == '' &&
+        !request.resource.data.keys().hasAny(['subscriptionExpiry','subscriptionPlan','grantSource','grantedBy','grantedAt']);
       allow update: if !request.resource.data.keys().hasAny(['password', 'newPassword', 'confirmPassword']) &&
-        (isAdmin() || (isOwner(userId) &&
+        (isAdmin() && (!protectedPlatformUser(userId) || isPlatformOwner()) || (isOwner(userId) &&
          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
            'id', 'roles', 'email', 'verificationStatus', 'kycStatus', 'status',
-           'subscriptionType', 'subscriptionStatus', 'subscriptionExpiry', 'isPaid'
+           'subscriptionType', 'subscriptionStatus', 'subscriptionExpiry', 'isPaid',
+           'tier','subscriptionPlan','price','discount','trialExpiry','trial_start_date','grantSource','grantedBy','grantedAt'
          ])));
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && !protectedPlatformUser(userId);
     }
 
     match /organizations/{orgId} {
       allow list: if resource.data.get('isDiscoverable', false) == true || isAuthenticated();
       allow get: if isMemberOf(orgId) || isAdmin() || resource.data.get('isDiscoverable', false) == true;
-      allow create: if isVerified() && 
+      allow create: if isAdmin() || (isVerified() &&
                     (request.resource.data.get('creatorId', '') == request.auth.uid || request.resource.data.get('createdBy', '') == request.auth.uid) &&
-                    isValidOrg(request.resource.data);
-      allow update: if isAdmin() || (isVerified() && isOrgAdmin(orgId) && isValidOrg(request.resource.data));
+                    isValidOrg(request.resource.data) &&
+                    request.resource.data.get('tier', 'Free') == 'Free' &&
+                    request.resource.data.get('isPaid', false) == false &&
+                    request.resource.data.get('subscriptionStatus', 'Unpaid') == 'Unpaid' &&
+                    request.resource.data.get('trialExpiry', '') == '' &&
+                    request.resource.data.get('trial_start_date', '') == '' &&
+                    request.resource.data.get('price', 0) == 0 && request.resource.data.get('discount', 0) == 0 &&
+                    !request.resource.data.keys().hasAny(['subscriptionPlan','subscriptionType','subscriptionExpiry','trialStartedAt','grantSource','grantedBy','grantedAt']));
+      allow update: if isAdmin() || (isVerified() && isOrgAdmin(orgId) && isValidOrg(request.resource.data) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tier','subscriptionPlan','subscriptionStatus','subscriptionType','subscriptionExpiry','isPaid','price','discount','trialExpiry','trial_start_date','trialStartedAt','grantSource','grantedBy','grantedAt']));
       allow delete: if isAdmin();
     }
 
@@ -155,94 +181,94 @@ service cloud.firestore {
 
     // Explicitly handle collections that were in the previous rules to ensure no regression
     match /plantationFeatures/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
     
     match /layers/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /inventoryItems/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /harvestEvents/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /accounts/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /transactions/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /workAssignments/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /employees/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /machinery/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /nutritionPlans/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /planExecutions/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /dailyLogs/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /employeeGroups/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /forumPosts/{id} {
@@ -276,73 +302,100 @@ service cloud.firestore {
     }
 
     match /alerts/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /harvestEntries/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /pallets/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /harvestLogs/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /inventoryTransactions/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /suppliers/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /purchaseOrders/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /notes/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /checkpoints/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
     }
 
     match /crops/{id} {
-      allow read, write: if isVerified() && (
-        (resource == null || isMemberOf(resource.data.get('organizationId', ''))) &&
-        (request.resource == null || isMemberOf(request.resource.data.get('organizationId', '')))
-      );
+      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
+      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
+        isMemberOf(request.resource.data.get('organizationId', ''));
+    }
+
+    match /subscriptionRequests/{id} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && isOrgAdmin(request.resource.data.organizationId) &&
+        request.resource.data.keys().hasOnly(['id','userId','organizationId','planId','status','requestedCurrency','requestedAt']) &&
+        request.resource.data.id == id && request.resource.data.userId == request.auth.uid &&
+        id == request.auth.uid + '_' + request.resource.data.organizationId + '_' + request.resource.data.planId &&
+        request.resource.data.planId in ['trial','starter','pro','enterprise'] &&
+        request.resource.data.get('requestedCurrency', 'USD') in ['USD','GEL'] &&
+        request.resource.data.status == 'pending' && request.resource.data.requestedAt is string;
+      allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt','reason']) &&
+        request.resource.data.reviewedBy == request.auth.uid && request.resource.data.status in ['approved','rejected'];
+      allow delete: if isAdmin();
+    }
+    match /platformAccess/{uid} {
+      allow read: if isAdmin() || isOwner(uid);
+      allow write: if false;
+    }
+    match /platformAudit/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    match /billingAudit/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && request.resource.data.actorId == request.auth.uid;
+      allow update, delete: if false;
     }
 
     match /systemLogs/{id} {

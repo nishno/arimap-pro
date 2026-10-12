@@ -51,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { language, setLanguage, currency, setCurrency, t } = useLanguage();
+  const { language, setLanguage, region, setRegion, currency, setCurrency, t } = useLanguage();
   const { isDark, currentTheme } = useAppTheme();
   const [storageUsage, setStorageUsage] = useState(0);
 
@@ -92,7 +92,7 @@ const Header: React.FC<HeaderProps> = ({
   const toggleLanguage = () => {
     const newLang = language === 'en' ? 'ka' : 'en';
     setLanguage(newLang);
-    setCurrency(newLang === 'ka' ? 'GEL' : 'USD');
+
   };
 
   return (
@@ -262,7 +262,8 @@ const Header: React.FC<HeaderProps> = ({
                 <span className="hidden sm:inline font-bold">{language === 'en' ? 'EN' : 'GE'}</span>
             </button>
 
-            <button
+            <select aria-label="Pricing region" value={region} onChange={e=>setRegion(e.target.value as 'Georgia'|'Global')} className="bg-transparent max-w-[95px] text-xs"><option value="Global">🌐 Global</option><option value="Georgia">🇬🇪 Georgia</option></select>
+              <button
                 onClick={() => setCurrency(currency === 'USD' ? 'GEL' : 'USD')}
                 className={`px-2 sm:px-2.5 py-1.5 rounded-xl border text-[10px] sm:text-xs font-black flex items-center gap-1 sm:gap-1.5 transition-all flex-shrink-0 snap-end standing-light standing-beam ${
                   isDark 

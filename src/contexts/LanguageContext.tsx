@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { translations, Language } from '../translations';
+import { defaultBillingCurrency } from '../billing/locale';
 import { safeStorage } from '../services/storageService';
 
 export type Currency = 'USD' | 'GEL';
@@ -8,6 +9,8 @@ export type Currency = 'USD' | 'GEL';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  region: 'Georgia' | 'Global';
+  setRegion: (region: 'Georgia' | 'Global') => void;
   currency: Currency;
   setCurrency: (c: Currency) => void;
   formatCurrency: (amount: number) => string;
@@ -35,10 +38,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   });
 
+  const [region, setRegionState] = useState<'Georgia' | 'Global'>(() => safeStorage.getItem('agri-app-region') === 'Georgia' ? 'Georgia' : 'Global');
+
   const [currency, setCurrencyState] = useState<Currency>(() => {
     try {
       const saved = safeStorage.getItem('agri-app-currency');
-      return (saved === 'USD' || saved === 'GEL') ? saved : 'USD';
+      return (saved === 'USD' || saved === 'GEL') ? saved : defaultBillingCurrency(region, language);
     } catch (e) {
       return 'USD';
     }
@@ -47,6 +52,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     safeStorage.setItem('agri-app-lang', lang);
+    const automatic = defaultBillingCurrency(region, lang);
+    setCurrencyState(automatic);
+    safeStorage.setItem('agri-app-currency', automatic);
+  };
+
+  const setRegion = (next: 'Georgia' | 'Global') => {
+    setRegionState(next); safeStorage.setItem('agri-app-region', next);
+    const automatic = defaultBillingCurrency(next, language);
+    setCurrencyState(automatic); safeStorage.setItem('agri-app-currency', automatic);
   };
 
   const setCurrency = (c: Currency) => {
@@ -126,7 +140,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, currency, setCurrency, formatCurrency, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, region, setRegion, currency, setCurrency, formatCurrency, t }}>
       {children}
     </LanguageContext.Provider>
   );
