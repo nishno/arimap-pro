@@ -17,6 +17,14 @@ npm run local:start
 
 Initialization asks for a farm name, IANA timezone (Asia/Tbilisi is suggested), owner username and a hidden password. There are no default credentials. Open `http://localhost:3100` on that computer. The first owner creates worker accounts inside local mode. Initialization refuses to overwrite an existing farm.
 
+If your terminal makes the text prompts difficult to use, provide the non-secret values explicitly:
+
+```sh
+npm run local:init -- --farm-name "My Guria Farm" --timezone "Asia/Tbilisi" --owner-name "nishno" --username "nishno"
+```
+
+Only the hidden password and confirmation are then prompted. Do not supply passwords as command arguments. Empty interactive names now trigger an immediate retry instead of an error after password entry.
+
 By default the server binds only to loopback. Data is stored under `.local-data/farm.sqlite`, with WAL durability and foreign keys. `LOCAL_DATA_DIR` can select a persistent absolute directory outside the installation folder. Keep the same directory when updating the application. It is ignored by Git.
 
 ## Connect farm tablets safely
