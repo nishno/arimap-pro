@@ -33,7 +33,9 @@
     "platform:grant-admin": "node server/platform-admin.mjs",
     "test:platform": "node --test tests/platform-management.mjs tests/platform-api.mjs",
     "test:billing-locale": "node --experimental-strip-types --test tests/billing-locale.mjs",
-    "test:platform:integration": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/platform-integration.mjs\""
+    "test:platform:integration": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/platform-integration.mjs\"",
+    "test:modern": "node tests/modern-browser.mjs",
+    "test:modern:cloud": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/modern-cloud-browser.mjs\""
   },
   "dependencies": {
     "@google/genai": "1.42.0",

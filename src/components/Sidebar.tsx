@@ -13,7 +13,7 @@ import type { AppMode, User, Organization, Membership } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAppTheme } from '../contexts/ThemeContext';
 import ContextualStatusEngine from './ContextualStatusEngine';
-import { APP_VERSION_CODE, APP_VERSION_NAME } from '../utils/version';
+import { APP_VERSION_CODE, APP_VERSION_NAME, MODERN_UI_VERSION } from '../utils/version';
 
 interface SidebarProps {
   appMode: AppMode;
@@ -150,6 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         borderColor: currentTheme.borderColor || undefined
       }}
     >
+      <div className="shrink-0">
       <button 
         type="button"
         onClick={onOpenHomepage} 
@@ -168,6 +169,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           {APP_VERSION_NAME}
         </span>
       </button>
+      <a href="/modern?from=classic" className="block px-5 py-3 text-xs text-emerald-700 hover:underline" style={{minHeight:44}}>{MODERN_UI_VERSION} · Try new UI</a>
+      </div>
       <nav className="flex-1 p-3 overflow-y-auto custom-scrollbar">
         <div className="mb-5 px-1">
           <div 

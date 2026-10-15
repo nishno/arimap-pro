@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../demo/demo.css';
 import './local.css';
+import { MODERN_UI_VERSION } from '../utils/version';
 
 type User = { id: string; name: string; username: string; role: 'owner' | 'worker'; active?: number };
 type Farm = { id: string; name: string; timezone: string };
@@ -38,7 +39,7 @@ export default function LocalApp() {
     event.preventDefault(); const form = event.currentTarget; setBusy(true); setError(''); setNotice('');
     try { await task(new FormData(form)); form.reset(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   };
-  return <div className="demo-shell local-shell"><header className="demo-header"><a className="demo-brand" href="/local">✦ AgriMap <b>Local</b></a><span className="demo-tag">Farm server · cloud not connected</span><a href="/demo">Explore demo</a></header>
+  return <div className="demo-shell local-shell"><header className="demo-header"><div><a className="demo-brand" href="/local">✦ AgriMap <b>Local</b></a><a href="/modern?from=local" style={{display:"block",fontSize:12,minHeight:44,paddingTop:8}}>{MODERN_UI_VERSION} · Try new UI</a></div><span className="demo-tag">Farm server · cloud not connected</span><a href="/demo">Explore demo</a></header>
     <main className="local-main"><p className="demo-eyebrow">YOUR FARM, ON YOUR NETWORK</p><h1>{session ? session.farm.name : 'Connect to your farm'}</h1>
       <p>Local mode currently supports fields, harvest records, and owner-managed worker accounts. Other farm modules remain in the cloud application.</p>
       {error && <p className="local-message local-error" role="alert">{error}</p>}{notice && <p className="local-message" role="status">{notice}</p>}

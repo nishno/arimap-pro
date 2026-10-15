@@ -1,3 +1,4 @@
+export const MODERN_UI_VERSION = 'sonik g2.0.1.4';
 export const APP_VERSION_CODE = "G2.0.1.3";
 export const APP_VERSION_NAME = "sonik G2.0.1.3";
 
