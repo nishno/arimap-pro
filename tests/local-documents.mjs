@@ -28,7 +28,43 @@ test("full local document store: durable writes, role boundary, transactions, tr
     const read = (path, user = owner, constraints = []) =>
       docs.read(user, { path, constraints });
     assert.equal(read("organizations").documents[0].id, farm.id);
-    commit([{type:"set",path:"employees/credentials-test",data:{name:"Worker record",password:"test-only-not-for-storage"}}]);assert.equal(read("employees/credentials-test").document.password,undefined);
+    commit([
+      {
+        type: "set",
+        path: "employees/credentials-test",
+        data: { name: "Worker record", password: "test-only-not-for-storage" },
+      },
+    ]);
+    assert.equal(
+      read("employees/credentials-test").document.password,
+      undefined,
+    );
+    commit([
+      {
+        type: "set",
+        path: `organizations/${farm.id}`,
+        merge: true,
+        data: {
+          country: "Italy",
+          shareholders: [{ name: "Owner", share: 100 }],
+          createdBy: "forged-owner",
+        },
+      },
+    ]);
+    assert.equal(read("organizations").documents[0].country, "Italy");
+    assert.equal(read("organizations").documents[0].shareholders[0].share, 100);
+    assert.equal(read("organizations").documents[0].createdBy, owner.id);
+    commit([
+      {
+        type: "set",
+        path: "agronomistDiagnoses/one",
+        data: { title: "Saved diagnosis", organizationId: farm.id },
+      },
+    ]);
+    assert.equal(
+      read("agronomistDiagnoses/one").document.title,
+      "Saved diagnosis",
+    );
     assert.equal(docs.profile(owner).isGuest, false);
     assert.deepEqual(docs.profile(owner).roles, ["Founder"]);
     for (const col of [

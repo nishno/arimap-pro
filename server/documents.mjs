@@ -1,7 +1,7 @@
 import { FarmError } from "./farm-store.mjs";
 import { randomUUID } from "node:crypto";
 const collections = new Set(
-  "plantationFeatures layers inventoryItems harvestEvents accounts transactions workAssignments employees machinery projects harvestEntries pallets harvestLogs operationalLogs inventoryTransactions employeeGroups dailyLogs nutritionPlans planExecutions forumPosts listings bids reviews alerts purchaseOrders suppliers notes checkpoints systemLogs crops stockTransactions harvestedProduce cropVarieties roles systemSettings conversations messages agronomicLedger _connection_test_".split(
+  "plantationFeatures layers inventoryItems harvestEvents accounts transactions workAssignments employees machinery projects harvestEntries pallets harvestLogs operationalLogs inventoryTransactions employeeGroups dailyLogs nutritionPlans planExecutions forumPosts listings bids reviews alerts purchaseOrders suppliers notes checkpoints systemLogs crops stockTransactions harvestedProduce cropVarieties roles systemSettings conversations messages agronomicLedger agronomistDiagnoses _connection_test_".split(
     " ",
   ),
 );
@@ -18,7 +18,15 @@ function clean(value, depth = 0) {
   if (value && typeof value === "object") {
     const out = {};
     for (const [key, v] of Object.entries(value)) {
-      if(["password","password_hash","newPassword","confirmPassword"].includes(key))continue;
+      if (
+        [
+          "password",
+          "password_hash",
+          "newPassword",
+          "confirmPassword",
+        ].includes(key)
+      )
+        continue;
       if (forbidden.has(key)) throw new FarmError(400, "Invalid document key");
       out[key] = clean(v, depth + 1);
     }
@@ -107,7 +115,12 @@ export function documentStore(store) {
           name: farm.name,
           createdBy: people.find((p) => p.role === "owner")?.id,
           type: "Farm",
-          country: "Georgia",
+          country:
+            JSON.parse(
+              db
+                .prepare("SELECT body FROM documents WHERE path=?")
+                .get(`organizations/${farm.id}`)?.body || "{}",
+            ).country || "Georgia",
           timezone: farm.timezone,
           status: "active",
           isDiscoverable: false,
@@ -285,23 +298,27 @@ export function documentStore(store) {
           if (kind === "organizations") {
             if (operation.path.split("/")[1] !== store.farm().id)
               throw new FarmError(403, "This server has one farm workspace");
+            const protectedFields = new Set([
+              "id",
+              "createdBy",
+              "creatorId",
+              "ownerId",
+              "roles",
+              "role",
+              "status",
+              "isPaused",
+              "isDiscoverable",
+              "subscriptionType",
+              "subscriptionStatus",
+              "subscription",
+              "tier",
+              "isPaid",
+              "trial_start_date",
+              "trial_end_date",
+            ]);
             payload = Object.fromEntries(
-              Object.entries(payload).filter(([key]) =>
-                [
-                  "name",
-                  "legalName",
-                  "country",
-                  "region",
-                  "description",
-                  "phone",
-                  "address",
-                  "logo",
-                  "areaGeometry",
-                  "center",
-                  "area",
-                  "agricultureType",
-                  "taxNumber",
-                ].includes(key),
+              Object.entries(payload).filter(
+                ([key]) => !protectedFields.has(key),
               ),
             );
             if (payload.name) {

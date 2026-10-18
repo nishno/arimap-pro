@@ -46,7 +46,12 @@ export async function restoreDocuments(directory, snapshot, confirmedFarm) {
     const current = store.db.prepare("SELECT path FROM documents").all();
     const incoming = new Set(operations.map((o) => o.path));
     const deletes = current
-      .filter((r) => !incoming.has(r.path))
+      .filter(
+        (r) =>
+          !incoming.has(r.path) &&
+          !r.path.startsWith("users/") &&
+          !r.path.startsWith("organizations/"),
+      )
       .map((r) => ({ type: "delete", path: r.path }));
     if (operations.length + deletes.length)
       docs.write(owner, { operations: [...deletes, ...operations] }, 1000000);
