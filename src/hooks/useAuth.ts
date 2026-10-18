@@ -1,3 +1,4 @@
+import {isLocalRuntime,localRequest,localSession} from '../local/runtime';
 import { useState, useEffect } from 'react';
 import { auth, db, doc, getDocFromServer, setDoc, collection, query, where, getDocsFromServer, deleteDoc, getDoc, getDocs, updateDoc } from '../firebase';
 import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from 'firebase/auth';
@@ -26,6 +27,12 @@ export const useAuth = () => {
     }, [currentUser]);
 
     useEffect(() => {
+        if(isLocalRuntime){
+            let active=true;const expired=()=>window.location.assign('/local');
+            window.addEventListener('agrimap-local-session-expired',expired);
+            localRequest('profile').then(profile=>{if(active){setCurrentUser(profile);setIsAuthReady(true);}}).catch(()=>window.location.assign('/local'));
+            return()=>{active=false;window.removeEventListener('agrimap-local-session-expired',expired);};
+        }
         let unsubDoc: (() => void) | null = null;
         
         // Rapid safety timeout for fast startup: if Auth takes > 2.5s, fall back immediately
@@ -356,6 +363,7 @@ export const useAuth = () => {
     }, []);
 
     const handleUpdateUser = async (updatedUser: User) => {
+        if(isLocalRuntime){await setDoc(doc(db,'users',localSession().user.id),sanitizeObject(updatedUser),{merge:true});setCurrentUser(await localRequest('profile'));toast.success('Profile saved on farm server');return;}
         setCurrentUser(updatedUser);
         try {
             const cache = JSON.parse(localStorage.getItem('agrimap-user-profiles-cache') || '{}');
@@ -388,6 +396,7 @@ export const useAuth = () => {
     };
 
     const handleLogout = async () => {
+        if(isLocalRuntime){await localRequest('logout',{});window.location.assign('/local');return;}
         // Clear all session and registration related data
         localStorage.removeItem('agri-planter-session');
         localStorage.removeItem('agri-planter-active-org');
@@ -412,6 +421,7 @@ export const useAuth = () => {
     };
 
     const handleEmailLogin = async (email: string, pass: string) => {
+        if(isLocalRuntime){await localRequest('login',{username:email,password:pass});window.location.reload();return;}
         const formattedEmail = email.trim().toLowerCase();
         
         // 1. Check for Offline Fallback (even before Firebase if Navigator is offline, or as a catch-all)
@@ -584,7 +594,7 @@ export const useAuth = () => {
     };
 
     useEffect(() => {
-        if (USE_FIREBASE) {
+        if (USE_FIREBASE && !isLocalRuntime) {
             getRedirectResult(auth).then(async (result) => {
                 if (result && result.user) {
                     console.log("[Auth] Redirect sign-in successful:", result.user.uid);
@@ -606,6 +616,7 @@ export const useAuth = () => {
     }, []);
 
     const handleGoogleLogin = async () => {
+        if(isLocalRuntime){toast.info('Use your farm server account. Cloud backup has a separate connection.');return;}
         if (!USE_FIREBASE) {
             handleEmailLogin('google-user@example.com', '');
             return;
@@ -663,6 +674,7 @@ export const useAuth = () => {
     };
 
     const handleResetPassword = async (email: string) => {
+        if(isLocalRuntime){toast.info('Use Local accounts & records in the top bar for server account controls.');return;}
         if (!USE_FIREBASE) {
             toast.success(`Password reset link sent to ${email} (Mock Mode)`);
             return;
@@ -754,6 +766,7 @@ export const useAuth = () => {
     };
 
     const handleDeleteAccount = async () => {
+        if(isLocalRuntime){toast.info('Use Local accounts & records in the top bar for server account controls.');return;}
         if (!currentUser) return;
         
         const confirmDelete = window.confirm("Are you SURE you want to delete your profile? This will permanently remove your global identity and all associated private data. This action CANNOT be undone.");
@@ -796,6 +809,7 @@ export const useAuth = () => {
     };
 
     const handleSendVerification = async () => {
+        if(isLocalRuntime){toast.info('Use Local accounts & records in the top bar for server account controls.');return;}
         if (!auth.currentUser) {
             toast.error("No active session found.");
             return;
@@ -814,6 +828,7 @@ export const useAuth = () => {
     };
 
     const handleRefreshUser = async () => {
+        if(isLocalRuntime){setCurrentUser(await localRequest('profile'));return;}
         if (!auth.currentUser) return;
         try {
             await auth.currentUser.reload();

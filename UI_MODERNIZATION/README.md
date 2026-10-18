@@ -1,19 +1,23 @@
-# sonik g2.0.1.4 — parallel Modern UI
+# sonik g2.0.1.4 — full application, two interfaces
 
-The first Modern preview lives at `/modern`. Click **sonik g2.0.1.4 · Try new UI** beneath the Classic/local logo. Click the version beneath the Modern logo to return. `/modern/login` and `/modern/register` open the account screens directly.
+Updated 2026-10-18. `/modern` now opens the **original full application**, with the Modern visual layer. `/classic` opens the same components and the same authenticated farm records using Classic styling. Switching no longer opens a separate small demo or changes the data provider. The earlier limited Modern sample remains at `/modern-preview`; the public isolated demo remains at `/demo`.
 
-Classic remains the complete interface. Modern uses a separate lazy entry and scoped stylesheet. It shares the existing local API and Firebase identities; it does not copy databases or migrate schemas. Switching is explicit, without changing Classic's theme preferences. Opening a Classic module updates the existing navigation preference only.
+## Run on your farm computer
 
-## Available now
+Requires Node 24. In the extracted `demo-preview` folder:
 
-- Isolated, clearly labelled guest sample workspace.
-- Local server sign-in, real overview, field creation, harvest recording, owner-managed workers and simple harvest totals.
-- Cloud registration/sign-in with the existing Firebase account system. New profiles are free and unprivileged; existing profiles are retained. Cloud module editing remains in Classic.
-- Proposed per-farm plans, region/language/currency selectors, responsive tablet/mobile navigation.
-- Explicit Classic bridges for unmigrated modules. English is the primary preview language; Georgian navigation is partial.
+```powershell
+npm ci --include=dev
+npm run build
+npm run local:start
+```
 
-See [ROADMAP.md](ROADMAP.md), [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), [DECISIONS.md](DECISIONS.md), [CHANGELOG.md](CHANGELOG.md) and [TESTING.md](TESTING.md). Add an entry here whenever the Modern UI changes.
+Open `http://localhost:3100`. Sign in using the **local username/password created by `local:init`**, then choose **Open full application**. Run `local:init` only once for a new farm. Existing installations must retain `.local-data` and their backups. Stop the running server before updating application source. Do not copy an old `dist` directory over a newly built one.
 
-## Run
+The local server, not Firebase, now supplies authentication and the original modules' document reads, queries, subscriptions, writes and batches. The SQLite database adds a `documents` table without deleting existing accounts, fields or harvests. The older quick field/harvest tables remain accessible in **Local accounts & records**; they are separate from the full application's richer harvest events and mapped geometries. Historical cloud farm data is not automatically imported or merged.
 
-Use Node 24, then `npm ci` and `npm run build`. For an existing local installation, run `npm run local:start` and visit `http://localhost:3100/modern`. Run `npm run local:init` only for a new farm server. Preserve `.local-data` and your backups when updating application files. For UI development, `npm run dev` serves the preview; real local workflows need the farm server serving the built app.
+## Backup and recovery
+
+The farm owner's top bar has **Cloud backup**. This requires an existing Firebase account, internet, and deployed private snapshot rules in the configured project/database. Upload is explicit: no automatic background Firebase synchronization occurs in local runtime. The snapshot is separate from operational cloud collections and excludes passwords and login sessions. The panel can download and verify the latest completed snapshot for this farm.
+
+See [LOCAL_RUNTIME.md](LOCAL_RUNTIME.md) for deployment, restores, role boundaries and external dependencies. See [TESTING.md](TESTING.md) for executed checks. Startup instructions saved in cloud environment settings are separate from deploying this app or Firebase rules.

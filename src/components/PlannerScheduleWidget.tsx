@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import React, { useState } from 'react';
 import type { WorkAssignment, Alert } from '../types';
 import { Calendar, Clock, AlertTriangle, CheckCircle2, ChevronRight, Plus, Droplet, Sparkles, Filter } from 'lucide-react';
@@ -20,6 +21,7 @@ export const PlannerScheduleWidget: React.FC<PlannerScheduleWidgetProps> = ({
 
     // Milestones and plans derived from work assignments and alerts
     const scheduledItems = [
+        ...(!isLocalRuntime?[
         {
             id: 'plan-1',
             title: 'Foliar Nutrient Spray (Calcium & Boron)',
@@ -50,6 +52,7 @@ export const PlannerScheduleWidget: React.FC<PlannerScheduleWidgetProps> = ({
             parcels: 'Sectors C1 - C4',
             notes: 'Contractor crew 6 workers assigned'
         },
+        ]:[]),
         ...workAssignments.slice(0, 3).map((w, idx) => ({
             id: `task-${w.id || idx}`,
             title: w.workName || w.taskType || 'Scheduled Agro Operation',

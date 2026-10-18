@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { db, auth } from '../firebase';
 import { onSnapshot, collection, query, where, limit, orderBy, doc, setDoc } from '../firebase';
@@ -317,6 +318,7 @@ export const useFirebaseData = (
     const membershipIdsHash = memberships.map(m => m.id).sort().join(',');
 
     const mergePendingLocalSyncs = (colName: string, cloudList: any[]): any[] => {
+        if(isLocalRuntime)return cloudList;
         try {
             const queueStr = localStorage.getItem('agrimap-pending-sync');
             if (!queueStr) return cloudList;
@@ -369,6 +371,7 @@ export const useFirebaseData = (
     const cacheTimerMap = useRef<Map<string, any>>(new Map());
 
     const saveToCache = (key: string, data: any[]) => {
+        if(isLocalRuntime)return;
         if (cacheTimerMap.current.has(key)) {
             clearTimeout(cacheTimerMap.current.get(key));
         }
@@ -376,7 +379,7 @@ export const useFirebaseData = (
             try {
                 // Defensive guard: do not wipe local cache with an empty array if cached data exists
                 if (Array.isArray(data) && data.length === 0) {
-                    const existingStr = safeStorage.getItem(`fb_cache_${key}`);
+                    const existingStr = safeStorage.getItem(`${isLocalRuntime?'local_'+((window as any).__AGRIMAP_LOCAL_SESSION__?.farm.id||'')+'_':''}fb_cache_${key}`);
                     if (existingStr) {
                         try {
                             const existing = JSON.parse(existingStr);
@@ -396,6 +399,7 @@ export const useFirebaseData = (
     };
 
     useEffect(() => {
+        if(isLocalRuntime)return;
         // Initial recovery from cache to ensure UI is not blank if over quota or offline
         const recoveryMap: { [key: string]: React.Dispatch<React.SetStateAction<any[]>> } = {
             'plantationFeatures': setPlantationFeatures,
@@ -431,7 +435,7 @@ export const useFirebaseData = (
 
         Object.entries(recoveryMap).forEach(([key, setter]) => {
             try {
-                const cached = safeStorage.getItem(`fb_cache_${key}`);
+                const cached = safeStorage.getItem(`${isLocalRuntime?'local_'+((window as any).__AGRIMAP_LOCAL_SESSION__?.farm.id||'')+'_':''}fb_cache_${key}`);
                 let listToSet: any[] = [];
                 if (cached) {
                     const data = JSON.parse(cached);
@@ -712,7 +716,7 @@ export const useFirebaseData = (
             
             if (orgs.length === 0) {
                 console.log("[useFirebaseData] organizations empty in Cloud. Launching auto-seed with default companies...");
-                setDiscoverableOrganizations(DEFAULT_COMPANIES);
+                setDiscoverableOrganizations(isLocalRuntime?[]:DEFAULT_COMPANIES);
                 saveToCache('discoverableOrganizations', DEFAULT_COMPANIES);
                 
                 // Seed them in the background
@@ -741,7 +745,7 @@ export const useFirebaseData = (
                     }
                 }
             } catch (e) {}
-            setDiscoverableOrganizations(DEFAULT_COMPANIES);
+            setDiscoverableOrganizations(isLocalRuntime?[]:DEFAULT_COMPANIES);
         });
 
         return () => unsubscribeDiscoverable();
@@ -781,7 +785,8 @@ export const useFirebaseData = (
         if (!isAuthReady || !currentUser || currentUser.isGuest) return;
 
         const hydrateFromCache = (key: string, setter: (data: any[]) => void, transform?: (data: any) => any) => {
-            let all = safeStorage.safeParse(safeStorage.getItem(`fb_cache_${key}`), []);
+            if(isLocalRuntime)return;
+            let all = safeStorage.safeParse(safeStorage.getItem(`${isLocalRuntime?'local_'+((window as any).__AGRIMAP_LOCAL_SESSION__?.farm.id||'')+'_':''}fb_cache_${key}`), []);
             if (!Array.isArray(all) || all.length === 0) {
                 all = safeStorage.safeParse(localStorage.getItem(`mock_${key}`), []);
             }
@@ -906,6 +911,7 @@ export const useFirebaseData = (
                     return true;
                 });
                 
+                if(isLocalRuntime){setter(prev=>areCollectionsEqual(prev,data)?prev:data);return;}
                 if (data.length > 0) {
                     saveToCache(`live_${colName}`, data);
                     saveToCache(colName, data);
@@ -999,6 +1005,7 @@ export const useFirebaseData = (
             const q = orgFilter ? query(collection(db, colName), orgFilter) : query(collection(db, colName));
             const unsub = onSnapshot(q, (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                if(isLocalRuntime){setter(prev=>areCollectionsEqual(prev,data)?prev:data);return;}
                 if (data.length > 0) {
                     const merged = mergePendingLocalSyncs(colName, data);
                     setter(prev => areCollectionsEqual(prev, merged) ? prev : merged);
@@ -1062,6 +1069,7 @@ export const useFirebaseData = (
             const q = filter ? query(collection(db, colName), filter) : query(collection(db, colName));
             const unsub = onSnapshot(q, (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                if(isLocalRuntime){setter(prev=>areCollectionsEqual(prev,data)?prev:data);return;}
                 if (data.length > 0) {
                     const merged = mergePendingLocalSyncs(colName, data);
                     setter(prev => areCollectionsEqual(prev, merged) ? prev : merged);
@@ -1103,6 +1111,7 @@ export const useFirebaseData = (
                 : query(collection(db, colName), limit(limitCount));
             const unsub = onSnapshot(q, (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                if(isLocalRuntime){setter(prev=>areCollectionsEqual(prev,data)?prev:data);return;}
                 if (data.length > 0) {
                     const merged = mergePendingLocalSyncs(colName, data);
                     setter(prev => areCollectionsEqual(prev, merged) ? prev : merged);

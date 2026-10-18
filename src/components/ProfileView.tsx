@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import React, { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import type { User, Organization, Membership, UserGoal, UserRole, AppMode, WorkExperience, Review, Employee, OrganizationType, AgricultureType, ForumPost } from '../types';
@@ -1209,6 +1210,7 @@ const ProfileView: React.FC<ProfileViewProps> = (props) => {
         setIsChangingPassword(true);
         try {
             if (auth.currentUser) {
+                if(isLocalRuntime){toast.info('Change your password in Local accounts & records in the top bar.');return;}
                 await updatePassword(auth.currentUser, newPassword);
                 // Password is managed by Firebase Auth, never written to a profile.
                 setIsPasswordModalOpen(false);
@@ -1517,7 +1519,8 @@ const ProfileView: React.FC<ProfileViewProps> = (props) => {
                                             if (!auth.currentUser) return toast.error("Not authenticated");
                                             setIsChangingPassword(true);
                                             try {
-                                                await updatePassword(auth.currentUser, newPassword);
+                                                if(isLocalRuntime){toast.info('Change your password in Local accounts & records in the top bar.');return;}
+                await updatePassword(auth.currentUser, newPassword);
                                                 toast.success("Password updated successfully!");
                                                 setIsPasswordModalOpen(false);
                                                 setNewPassword('');

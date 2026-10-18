@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
@@ -621,6 +622,7 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
 
             // Only create Global User if requested
             if (emp.isGlobalUser && emp.email && emp.password) {
+                if(isLocalRuntime){toast.info('Employee saved. Create their server login in Local accounts & records.');return;}
                 toast.info("Provisioning global identity...", { duration: 2000 });
                 const uniqueNum = Math.floor(100000 + Math.random() * 900000).toString();
                 const targetOrgId = emp.organizationId || activeOrgId || 'personal';

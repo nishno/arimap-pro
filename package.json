@@ -35,7 +35,10 @@
     "test:billing-locale": "node --experimental-strip-types --test tests/billing-locale.mjs",
     "test:platform:integration": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/platform-integration.mjs\"",
     "test:modern": "node tests/modern-browser.mjs",
-    "test:modern:cloud": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/modern-cloud-browser.mjs\""
+    "test:modern:cloud": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/modern-cloud-browser.mjs\"",
+    "test:local:documents": "node --test tests/local-documents.mjs",
+    "local:restore-documents": "node server/restore-documents.mjs",
+    "test:backup:cloud": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/cloud-backup.mjs\""
   },
   "dependencies": {
     "@google/genai": "1.42.0",

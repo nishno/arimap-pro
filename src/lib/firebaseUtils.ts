@@ -10,7 +10,7 @@ export const handleFirestoreError = (error: unknown, operationType: string, path
             emailVerified: auth.currentUser?.emailVerified || false,
             isAnonymous: auth.currentUser?.isAnonymous || false,
             tenantId: (auth.currentUser as any)?.tenantId || 'none',
-            providerInfo: auth.currentUser?.providerData.map(p => ({
+            providerInfo: auth.currentUser?.providerData?.map(p => ({
                 providerId: p.providerId,
                 displayName: p.displayName || '',
                 email: p.email || '',

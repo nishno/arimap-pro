@@ -1,3 +1,4 @@
+import {isLocalRuntime} from './local/runtime';
 import { usePlatformAdmin } from './hooks/usePlatformAdmin';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import L from 'leaflet';
@@ -299,6 +300,7 @@ const App: React.FC = () => {
     const [isHeadlessSyncing, setIsHeadlessSyncing] = useState(false);
 
     const triggerHeadlessBackgroundSync = useCallback(async () => {
+        if(isLocalRuntime)return;
         if (isHeadlessSyncing) return;
         setIsHeadlessSyncing(true);
         
@@ -343,6 +345,7 @@ const App: React.FC = () => {
     }, [isHeadlessSyncing]);
 
     const handleToggleOffline = useCallback(async () => {
+        if(isLocalRuntime){toast.info('Local server mode is already active. Cloud backup is always manual.');return;}
         const nextState = !isManualOffline;
         setIsManualOffline(nextState);
         localStorage.setItem('agrimap-manual-offline', String(nextState));
@@ -387,12 +390,12 @@ const App: React.FC = () => {
     const dirtyLayersRef = React.useRef<Map<string, Layer>>(new Map());
 
     const flushSyncQueue = useCallback(async () => {
-        if (!USE_FIREBASE || isManualOffline) return;
+        if (!USE_FIREBASE || (isManualOffline&&!isLocalRuntime)) return;
         
         const dirtyFeaturesMap = new Map(dirtyFeaturesRef.current);
         const dirtyLayersMap = new Map(dirtyLayersRef.current);
         
-        if (dirtyFeaturesMap.size === 0 && dirtyLayersMap.size === 0) return;
+        if (dirtyFeaturesMap.size === 0 && dirtyLayersMap.size === 0) return true;
         
         dirtyFeaturesRef.current.clear();
         dirtyLayersRef.current.clear();
@@ -414,12 +417,16 @@ const App: React.FC = () => {
             });
             
             await batch.commit();
+            if(isLocalRuntime)return true;
             console.log(`[BatchSync] Successfully committed ${dirtyFeaturesMap.size} features and ${dirtyLayersMap.size} layers as ${syncStatus}.`);
         } catch (error) {
+            if(isLocalRuntime){dirtyFeaturesMap.forEach((value,key)=>{if(!dirtyFeaturesRef.current.has(key))dirtyFeaturesRef.current.set(key,value);});dirtyLayersMap.forEach((value,key)=>{if(!dirtyLayersRef.current.has(key))dirtyLayersRef.current.set(key,value);});return false;}
             console.error("Debounced sync failed:", error);
             handleFirestoreError(error, 'write', 'batch-sync');
         }
     }, [isManualOffline]);
+
+    useEffect(()=>{if(!isLocalRuntime)return;(window as any).__AGRIMAP_FLUSH__=flushSyncQueue;return()=>{delete (window as any).__AGRIMAP_FLUSH__;};},[flushSyncQueue]);
 
     const handlePushToFirestore = useCallback(async () => {
         if (!USE_FIREBASE) return;
@@ -937,6 +944,7 @@ const App: React.FC = () => {
     }, [triggerHeadlessBackgroundSync]);
 
     useEffect(() => {
+        if(isLocalRuntime)return;
         let failureCount = 0;
         const checkConnection = async () => {
             const healthy = await testFirestoreConnection();
@@ -1227,7 +1235,7 @@ const App: React.FC = () => {
         if (!auth.currentUser || !currentUser) return;
         
         // Load from fb_cache_users initially for instant load and offline resiliency
-        const cachedUsersStr = localStorage.getItem('fb_cache_users');
+        const cachedUsersStr = isLocalRuntime?null:localStorage.getItem('fb_cache_users');
         if (cachedUsersStr) {
             try {
                 const cachedUsers = JSON.parse(cachedUsersStr);
@@ -1240,7 +1248,7 @@ const App: React.FC = () => {
         }
         
         let q;
-        if (isSystemAdmin || isRoot) {
+        if (isLocalRuntime || isSystemAdmin || isRoot) {
             // Root/Admins can see all users
             q = query(collection(db, 'users'));
         } else {
@@ -1384,7 +1392,7 @@ const App: React.FC = () => {
     }, [appMode]);
 
     useEffect(() => {
-        if (USE_FIREBASE) {
+        if (USE_FIREBASE && !isLocalRuntime) {
             const unsubscribe = onAuthStateChanged(auth, (user) => {
                 if (user) {
                     console.log("[App] Auth State Changed: USER_LOGGED_IN", {
@@ -1474,6 +1482,7 @@ const App: React.FC = () => {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(() => new URLSearchParams(window.location.search).get('register') === '1');
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+    useEffect(()=>{if(isLocalRuntime&&isRegisterModalOpen){setIsRegisterModalOpen(false);toast.info('This farm is already initialized. Manage logins in Local accounts & records; edit the farm in Founders Vault.');}},[isRegisterModalOpen]);
 
     useEffect(() => {
         if (isAuthReady && currentUser?.id === 'guest') {

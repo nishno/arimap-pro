@@ -384,6 +384,18 @@ service cloud.firestore {
         request.resource.data.reviewedBy == request.auth.uid && request.resource.data.status in ['approved','rejected'];
       allow delete: if isAdmin();
     }
+    // Explicit, private snapshots. Local operational writes never use these paths.
+    match /localBackups/{uid}/snapshots/{backupId} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && request.resource.data.keys().hasOnly(['id','farmId','farmName','createdAt','status','chunks','sha256','format','version']) &&
+        request.resource.data.id == backupId && request.resource.data.format == 'agrimap-farm-data' && request.resource.data.version == 2 &&
+        request.resource.data.status in ['uploading','complete'] && request.resource.data.chunks is int && request.resource.data.chunks > 0 && request.resource.data.chunks <= 10000 && request.resource.data.sha256 is string;
+      match /chunks/{chunkId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && request.resource.data.keys().hasOnly(['index','data']) && request.resource.data.index is int && request.resource.data.index >= 0 && request.resource.data.data is string && request.resource.data.data.size() <= 600000;
+      }
+    }
+
     match /platformAccess/{uid} {
       allow read: if isAdmin() || isOwner(uid);
       allow write: if false;

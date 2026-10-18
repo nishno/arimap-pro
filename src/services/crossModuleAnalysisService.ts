@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import { Type } from "@google/genai";
 import { executeGeminiCall, getActiveGeminiApiKey } from "./geminiService";
 import { 
@@ -118,7 +119,7 @@ export const detectCrossModuleAnomalies = (params: {
         unitCost: 6.5
     };
 
-    alerts.push({
+    if(!isLocalRuntime)alerts.push({
         id: 'anomaly-stock-nails-2x',
         module: 'stock',
         title: isKa ? 'მარაგის გაზრდილი ჩამოწერა: ლურსმანი (2.1x მატება)' : 'Inventory Spike: Nails Depletion Rate Running 2.1x Higher',
@@ -145,7 +146,7 @@ export const detectCrossModuleAnomalies = (params: {
     const depletedItems = inventoryItems.filter(i => i.currentStock <= (i.minStockThreshold || 10));
     if (depletedItems.length > 0) {
         const topDepleted = depletedItems[0];
-        alerts.push({
+        if(!isLocalRuntime)alerts.push({
             id: `anomaly-stock-depleted-${topDepleted.id}`,
             module: 'stock',
             title: isKa ? `კრიტიკული ნაშთი: ${topDepleted.name}` : `Low Stock Alert: ${topDepleted.name}`,
@@ -165,7 +166,7 @@ export const detectCrossModuleAnomalies = (params: {
     // ----------------------------------------------------
     // 2. AGRONOMY ANOMALIES (e.g. Monopotassium over-usage)
     // ----------------------------------------------------
-    alerts.push({
+    if(!isLocalRuntime)alerts.push({
         id: 'anomaly-agro-monopotassium',
         module: 'agronomy',
         title: isKa 
@@ -193,7 +194,7 @@ export const detectCrossModuleAnomalies = (params: {
     // ----------------------------------------------------
     // 3. TASKS & WORKFORCE ANOMALIES (Cutting vs Planting 9x ratio)
     // ----------------------------------------------------
-    alerts.push({
+    if(!isLocalRuntime)alerts.push({
         id: 'anomaly-tasks-cutting-planting-9x',
         module: 'tasks',
         title: isKa 
@@ -220,7 +221,7 @@ export const detectCrossModuleAnomalies = (params: {
     // ----------------------------------------------------
     // 4. HARVEST & COLD STORAGE WEIGHING DRIFT
     // ----------------------------------------------------
-    alerts.push({
+    if(!isLocalRuntime)alerts.push({
         id: 'anomaly-harvest-tare-drift',
         module: 'harvest',
         title: isKa 

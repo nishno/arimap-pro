@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import React, { useState } from 'react';
 import type { Employee } from '../types';
 import { 
@@ -36,6 +37,7 @@ export const TeamHubsWidget: React.FC<TeamHubsWidgetProps> = ({
     const handleSendBroadcast = (e: React.FormEvent) => {
         e.preventDefault();
         if (!broadcastMsg.trim()) return;
+        if(isLocalRuntime){toast.info('Open the communication module and connect a messaging service to send a broadcast.');return;}
         setIsBroadcasting(true);
         setTimeout(() => {
             setIsBroadcasting(false);
@@ -44,7 +46,7 @@ export const TeamHubsWidget: React.FC<TeamHubsWidgetProps> = ({
         }, 600);
     };
 
-    const defaultStaff = [
+    const defaultStaff = isLocalRuntime ? employees.map(employee=>({name:employee.name,role:employee.employeeType||'Farm worker',status:'Presence not connected',online:false})) : [
         { name: 'David Beridze', role: 'Chief Agronomist', status: 'In Sector B', online: true },
         { name: 'Levan M.', role: 'Trench Supervisor', status: 'Active (Line 12)', online: true },
         { name: 'Nino K.', role: 'Quality & Weigh Master', status: 'Scale Station 1', online: true },
@@ -64,7 +66,7 @@ export const TeamHubsWidget: React.FC<TeamHubsWidgetProps> = ({
                             </span>
                         </div>
                         <p className="text-xl font-black text-slate-800 tracking-tight mt-0.5">
-                            {t('team_widget.on_duty_count', { count: String(employees.length || 8) })}
+                            {t('team_widget.on_duty_count', { count: String(isLocalRuntime?employees.length:employees.length||8) })}
                         </p>
                     </div>
 

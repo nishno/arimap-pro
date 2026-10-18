@@ -69,6 +69,17 @@ try {
  await env.withSecurityRulesDisabled(async context=>setDoc(doc(context.firestore(),'platformAccess','member-a'),{accountDisabled:true}));
  await assertFails(getDoc(doc(member,'harvestEntries','entry-a')));
 
- console.log('PASS: existing authorization scenarios plus owner billing escalation denial, request ownership, admin review and immutable billing audit.');
+ const backupPath='localBackups/owner-a/snapshots/backup-test';
+ const backupManifest={id:'backup-test',farmId:'farm-a',farmName:'Farm A',createdAt:new Date().toISOString(),status:'complete',chunks:1,sha256:'a'.repeat(64),format:'agrimap-farm-data',version:2};
+ await assertSucceeds(setDoc(doc(owner,backupPath),backupManifest));
+ await assertSucceeds(setDoc(doc(owner,backupPath+'/chunks/0'),{index:0,data:'private-farm-data'}));
+ await assertSucceeds(getDoc(doc(owner,backupPath+'/chunks/0')));
+ await assertFails(getDoc(doc(attacker,backupPath)));
+ await assertFails(getDoc(doc(attacker,backupPath+'/chunks/0')));
+ await assertFails(setDoc(doc(attacker,backupPath+'/chunks/1'),{index:1,data:'tamper'}));
+ await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),backupPath)));
+ await assertFails(setDoc(doc(owner,'localBackups/owner-a/snapshots/invalid'),{...backupManifest,id:'invalid',version:1}));
+
+ console.log('PASS: existing authorization scenarios plus owner billing escalation denial, request ownership, admin review immutable billing audit and private backup manifest/chunk isolation.');
 
 } finally { await env.cleanup(); }

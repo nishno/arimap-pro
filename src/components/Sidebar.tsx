@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -169,7 +170,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {APP_VERSION_NAME}
         </span>
       </button>
-      <a href="/modern?from=classic" className="block px-5 py-3 text-xs text-emerald-700 hover:underline" style={{minHeight:44}}>{MODERN_UI_VERSION} · Try new UI</a>
+      <a href={location.pathname.startsWith('/modern')?'/classic':'/modern?from=classic'} className="block px-5 py-3 text-xs text-emerald-700 hover:underline" style={{minHeight:44}}>{MODERN_UI_VERSION} · {location.pathname.startsWith('/modern')?'Classic UI':'Try new UI'}</a>
       </div>
       <nav className="flex-1 p-3 overflow-y-auto custom-scrollbar">
         <div className="mb-5 px-1">
@@ -209,7 +210,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${isConnectionHealthy ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
                       <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {isLocalMode ? 'Local Node' : 'Cloud Sync'}
+                          {isLocalRuntime?'Farm server':isLocalMode ? 'Local Node' : 'Cloud Sync'}
                       </span>
                   </div>
                   {!isConnectionHealthy && (

@@ -1,21 +1,18 @@
-# Migration roadmap
+# Readiness and follow-up roadmap — 2026-10-18
 
-This release is the foundation, not a finished replacement of the whole system.
+The initial partial-screen migration was replaced: `/modern` and `/classic` now share the original full application and authenticated local documents. The Modern styling layer can be refined module by module while retaining working workflows.
 
-| Area | Current Modern coverage | Next work |
+| Area | Implemented | Still required |
 | --- | --- | --- |
-| Guest | Labelled sample dashboard, fields and harvests | Guided product tour and safe map drawing sandbox |
-| Account entry | Local sign-in; cloud sign-in/registration | Password reset, session restoration and complete onboarding |
-| Overview | Real local metrics; cloud account status | Authorized cloud adapters and empty states |
-| Fields | Local list/create/search | Actual map drawing, varieties and cloud editing |
-| Harvest | Local list/create | Full yield-control workflow, QR, labor, packaging and payroll |
-| Team | Local owner-managed workers/access | Cloud roles, invitations and farm switching |
-| Reports | Local recorded totals | Filters, exports and annual/monthly reporting |
-| Plans | Draft per-farm pricing and locale selectors | Final quotas, checkout, server-verified entitlements |
-| Tasks, inventory | Classic links | Native workflows using existing service contracts |
-| Weather/devices | Classic link | Sensor ingestion, locations, forecast and alerts |
-| Market, AI, communication | Classic links | Native screens and safe guest capabilities |
-| Super-admin/root | Existing Classic controls | Claim-authorized Modern platform console |
-| Preferences | Region/language/currency selectors | Persistence and complete Georgian localization |
+| Local identity | Trusted owner initialization, shared session, original Founder context, worker restrictions | Granular local roles for rich module editing |
+| Full modules | Original screens and local document adapter, atomic batches and persistence | Comprehensive acceptance testing for every historical workflow |
+| UI switch | Same account/data, pending map/write flush | Further tablet/outdoor usability review |
+| Dashboard | Real local context; fabricated examples removed | Connect actual devices and validated analysis |
+| Backup | Explicit upload/download, private rules, checksum and transactional document restore | Deploy rules to confirmed project/database; real-account staging test |
+| Existing data | Existing SQLite accounts and legacy records retained | Reviewed import/mapping of existing cloud plantations |
+| LAN | Existing trusted HTTPS configuration | Configure certificates and network on the user's plantation |
+| External services | Existing integration screens retained | Provider credentials/connectivity, RTSP media gateway and physical sensors |
+| Offline devices | Failures visible, no false server confirmation | Durable device queue and conflict-aware multi-device editing |
+| Modern appearance | Scoped calm palette on original workflows | Full typography/spacing audit, localization and component refinements |
 
-For every module: inventory existing actions and permissions; implement against existing services; verify actual saves and errors; compare Classic behavior; test tablet/mobile and accessibility; update the changelog. Keep Classic links until equivalent workflows pass review.
+Do not describe an unconfigured external service, undeployed rules or untested historical workflow as production-ready. Record actual acceptance evidence in TESTING.md.

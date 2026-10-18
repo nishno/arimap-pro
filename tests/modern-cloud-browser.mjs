@@ -87,7 +87,7 @@ try {
       : r.abort(),
   );
   const page = await context.newPage();
-  await page.goto(origin + "/modern/register");
+  await page.goto(origin + "/modern-preview/register");
   await page.getByRole("button", { name: "Cloud", exact: true }).click();
   await page.getByLabel("Your name", { exact: true }).fill("New grower");
   await page.getByLabel("Email address").fill("new-modern@example.test");

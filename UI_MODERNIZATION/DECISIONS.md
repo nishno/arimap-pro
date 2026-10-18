@@ -9,3 +9,7 @@
 - Cloud and local accounts are distinct existing identity providers. Switching UI does not link them, enable backup sync or merge records.
 - USD/GEL draft prices are separate tariffs, not converted exchange rates. Georgia plus Georgian language defaults to GEL; explicit currency selection remains available. No checkout is enabled.
 - A loopback-only development emulator flag supports tests. It is disabled in production builds.
+
+- 2026-10-18: Supersedes the initial separate partial-screen approach. Both interfaces use the original module components and one data layer. The prior sample UI is retained at `/modern-preview` only.
+- Local-mode server document storage replaces the original direct Firestore paths at the shared wrapper. Local Founder authority remains scoped to one server's farm, with no platform admin claim.
+- Cloud backup is an explicit private snapshot operation, not continuous synchronization or an unreviewed merge into live cloud farms.

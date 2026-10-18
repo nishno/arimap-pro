@@ -162,7 +162,7 @@ export function openFarm(directory) {
     exportData(user) {
       requireOwner(user);
       // Recovery export deliberately excludes authentication secrets and sessions.
-      return transaction(() => ({ format: 'agrimap-farm-data', version: 1, exported_at: new Date().toISOString(), farm: farm(), users: db.prepare('SELECT id,username,name,role,active FROM users').all(), fields: db.prepare('SELECT * FROM fields').all(), harvests: db.prepare('SELECT * FROM harvests').all(), audit: db.prepare('SELECT * FROM audit').all() }));
+      return transaction(() => ({ format: 'agrimap-farm-data', version: 2, documents: db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='documents'").get() ? db.prepare('SELECT path,body,revision,updated_at FROM documents').all().map(row=>({...row,body:JSON.parse(row.body)})) : [], exported_at: new Date().toISOString(), farm: farm(), users: db.prepare('SELECT id,username,name,role,active FROM users').all(), fields: db.prepare('SELECT * FROM fields').all(), harvests: db.prepare('SELECT * FROM harvests').all(), audit: db.prepare('SELECT * FROM audit').all() }));
     }
   };
 }

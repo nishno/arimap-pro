@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import React, { useState, useMemo, useEffect } from 'react';
 import type { 
     DailyLogEntry, 
@@ -113,7 +114,7 @@ export const StaffAttendanceWidget: React.FC<StaffAttendanceWidgetProps> = ({
     };
 
     // Default employees if list is empty for demo/preview
-    const displayEmployees = employees.length > 0 ? employees : [
+    const displayEmployees = employees.length > 0 || isLocalRuntime ? employees : [
         { id: 'emp-1', name: 'David Beridze', employeeType: 'Chief Agronomist' },
         { id: 'emp-2', name: 'Levan Maisuradze', employeeType: 'Tractor Operator' },
         { id: 'emp-3', name: 'Nino Kalandadze', employeeType: 'Quality Inspector' },

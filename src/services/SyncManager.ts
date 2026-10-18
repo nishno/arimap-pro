@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import { db, auth, getCloudDb, getCloudAuth, SyncLogEntry, updateSyncStatus, bulkUpdateSyncStatus, getDocFromServer, getDoc, increment } from '../firebase';
 import { 
     doc,
@@ -231,6 +232,7 @@ export const syncManager = {
      * Works even when the app is currently pointing to a LAN server.
      */
     pushAllToCloud: async () => {
+        if(isLocalRuntime){toast.info('Local saves stay on your farm server. Use Cloud backup to upload a snapshot explicitly.');return false;}
         const savedLocalConfig = localStorage.getItem('agrimap-local-config');
         let isLocalMode = false;
         try {

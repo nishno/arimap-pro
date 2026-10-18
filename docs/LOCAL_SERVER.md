@@ -1,3 +1,7 @@
+# Local farm server — updated runtime
+
+**2026-10-18:** The full original application now uses authenticated local document storage on this server. `/modern` and `/classic` share the same local session and data. See [the current runtime guide](../UI_MODERNIZATION/LOCAL_RUNTIME.md) and [startup instructions](../UI_MODERNIZATION/README.md). The older quick field/harvest forms remain available in `/local` as account/compatibility controls. The historical first-stage description below is retained for context and no longer describes the full application runtime.
+
 # Local farm server — first migration stage
 
 This is a separate, working local workspace, not a full replacement for the Firebase application. Local mode currently supports owner/worker authentication, worker enable/disable and password reset, personal password changes, creating fields, recording harvests, viewing shared records, a data export, and consistent SQLite backup. It does not connect to Firebase, import production data, or automatically change data stores when connectivity fails.

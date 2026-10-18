@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import React, { useState, useRef, useEffect } from 'react';
 import type { User, LocalServerConfig } from '../types';
 import { BellIcon, UserCircleIcon, FolderIcon, SaveIcon, NetworkIcon, CloudIcon } from './Icons';
@@ -219,7 +220,7 @@ const Header: React.FC<HeaderProps> = ({
 
             {onToggleOffline && (
                 <button
-                    onClick={onToggleOffline}
+                    onClick={isLocalRuntime?()=>{}:onToggleOffline}
                     className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-xl border transition-all flex-shrink-0 snap-end standing-light standing-beam ${
                         isManualOffline 
                         ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-inner underglow-box-active' 
@@ -227,11 +228,11 @@ const Header: React.FC<HeaderProps> = ({
                         ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
                         : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'
                     }`}
-                    title={isManualOffline ? "You are currently OFFLINE (Local Mode)" : "You are currently ONLINE (Cloud Sync Active)"}
+                    title={isLocalRuntime ? "Farm server storage; cloud backup is manual" : isManualOffline ? "You are currently OFFLINE (Local Mode)" : "You are currently ONLINE (Cloud Sync Active)"}
                 >
                     <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full animate-pulse flex-shrink-0 ${isManualOffline ? 'bg-amber-500' : isCloudQuotaExceeded ? 'bg-red-500' : 'bg-emerald-500'}`} />
                     <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-                        {isManualOffline ? 'Local Mode' : isCloudQuotaExceeded ? 'Cloud Exceeded' : 'Cloud Sync'}
+                        {isLocalRuntime?'Local storage':isManualOffline ? 'Local Mode' : isCloudQuotaExceeded ? 'Cloud Exceeded' : 'Cloud Sync'}
                     </span>
                 </button>
             )}

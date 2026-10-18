@@ -1,3 +1,4 @@
+import {isLocalRuntime} from '../local/runtime';
 import React, { useState } from 'react';
 import { 
     Cpu, Scale, QrCode, Printer, Wifi, WifiOff, 
@@ -33,6 +34,7 @@ export const HardwareLabsWidget: React.FC<HardwareLabsWidgetProps> = ({
         toast.success(`Barcode Scanned: ${randomBox}`);
     };
 
+    if(isLocalRuntime)return <section className="bg-white p-6 rounded-2xl border border-slate-200"><h3>Devices & telemetry</h3><p className="my-4 text-slate-600">No verified live readings are connected to this dashboard. Connect your scales, cameras and sensors in Hardware Labs.</p><button className="px-4 py-3 border rounded-lg" onClick={()=>onNavigateMode?.('labs')}>Open Hardware Labs</button></section>;
     return (
         <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 h-full flex flex-col justify-between">
             <div>

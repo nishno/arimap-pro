@@ -40,8 +40,8 @@ export default function LocalApp() {
     try { await task(new FormData(form)); form.reset(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   };
   return <div className="demo-shell local-shell"><header className="demo-header"><div><a className="demo-brand" href="/local">✦ AgriMap <b>Local</b></a><a href="/modern?from=local" style={{display:"block",fontSize:12,minHeight:44,paddingTop:8}}>{MODERN_UI_VERSION} · Try new UI</a></div><span className="demo-tag">Farm server · cloud not connected</span><a href="/demo">Explore demo</a></header>
-    <main className="local-main"><p className="demo-eyebrow">YOUR FARM, ON YOUR NETWORK</p><h1>{session ? session.farm.name : 'Connect to your farm'}</h1>
-      <p>Local mode currently supports fields, harvest records, and owner-managed worker accounts. Other farm modules remain in the cloud application.</p>
+    <main className="local-main"><p><a href="/modern" style={{display:"inline-block",padding:"12px 18px",background:"#286447",color:"white",borderRadius:8,minHeight:48}}>Open full application →</a></p><p className="demo-eyebrow">YOUR FARM, ON YOUR NETWORK</p><h1>{session ? session.farm.name : 'Connect to your farm'}</h1>
+      <p>Manage your local server account here. Open the full application for plantation planning, inventory, tasks, harvests, accounting and agronomy. The quick field/harvest records below are retained separately for compatibility.</p>
       {error && <p className="local-message local-error" role="alert">{error}</p>}{notice && <p className="local-message" role="status">{notice}</p>}
       {!session ? <article className="demo-card"><h2>Local sign in</h2>
         {initialized === false ? <p>On the server computer, run <code>npm run local:init</code> to create your farm and owner account. Public self-registration is disabled on farm servers.</p> : <form onSubmit={submit(async data => { const current = await api<{ user: User; farm: Farm }>('login', { username: data.get('username'), password: data.get('password') }); setSession(current); await refresh(current); })}>

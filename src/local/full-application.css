@@ -1,0 +1,256 @@
+.agrimap-full .farm-runtime-bar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  background: #f1f5ed;
+  border-bottom: 1px solid #d6e0d2;
+  color: #294735;
+  font: 13px/1.4 system-ui;
+  position: relative;
+  z-index: 60;
+}
+.agrimap-full .farm-runtime-bar > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agrimap-full .farm-runtime-bar nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.agrimap-full .farm-runtime-bar a,
+.agrimap-full .farm-runtime-bar button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.agrimap-full .agrimap-app-content {
+  height: calc(100dvh - 52px);
+  overflow: auto;
+}
+.agrimap-full .agrimap-app-content > div.h-screen {
+  height: 100%;
+}
+.agrimap-modern {
+  --color-indigo-600: #286447;
+  --color-purple-600: #286447;
+  --color-emerald-600: #286447;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+.agrimap-modern .agrimap-app-content {
+  background: #f5f7f2;
+  color: #26382e;
+}
+.agrimap-modern .agrimap-app-content aside,
+.agrimap-modern .agrimap-app-content header {
+  background: #fff !important;
+  border-color: #dce4d8 !important;
+  color: #26382e !important;
+}
+.agrimap-modern
+  .agrimap-app-content
+  :is(.uppercase, .tracking-widest, .tracking-wider) {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+.agrimap-modern .agrimap-app-content :is(.font-black, .font-extrabold) {
+  font-weight: 600 !important;
+}
+.agrimap-modern .agrimap-app-content :is(button, input, select) {
+  min-height: 44px;
+  font-size: max(13px, 1em);
+}
+.agrimap-modern .agrimap-app-content :is(input, select, textarea) {
+  border-radius: 8px !important;
+}
+.agrimap-modern .agrimap-app-content button {
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+.agrimap-modern
+  .agrimap-app-content
+  :is(.underglow-box, .underglow-box-active, .standing-light, .standing-beam) {
+  box-shadow: none !important;
+  filter: none !important;
+}
+.agrimap-modern
+  .agrimap-app-content
+  :is(.standing-light, .standing-beam)::before,
+.agrimap-modern
+  .agrimap-app-content
+  :is(.standing-light, .standing-beam)::after {
+  display: none !important;
+}
+.agrimap-modern
+  .agrimap-app-content
+  :is(
+    [class*="text-indigo-"],
+    [class*="text-purple-"],
+    [class*="text-violet-"],
+    [class*="text-cyan-"],
+    [class*="text-blue-"]
+  ) {
+  color: #356348 !important;
+}
+.agrimap-modern
+  .agrimap-app-content
+  :is(
+    .bg-indigo-600,
+    .bg-purple-600,
+    .bg-violet-600,
+    .bg-blue-600,
+    .bg-emerald-600,
+    .bg-indigo-500,
+    .bg-purple-500,
+    .bg-blue-500
+  ) {
+  background: #286447 !important;
+  color: #fff !important;
+  background-image: none !important;
+}
+.agrimap-modern
+  .agrimap-app-content
+  :is(
+    .bg-indigo-50,
+    .bg-purple-50,
+    .bg-violet-50,
+    .bg-blue-50,
+    .bg-cyan-50,
+    .bg-emerald-50
+  ) {
+  background: #edf3e8 !important;
+}
+.agrimap-modern
+  .agrimap-app-content
+  :is(
+    [class*="border-indigo-"],
+    [class*="border-purple-"],
+    [class*="border-violet-"]
+  ) {
+  border-color: #d7e2d1 !important;
+}
+.agrimap-modern .agrimap-app-content .rounded-3xl {
+  border-radius: 14px !important;
+}
+.agrimap-modern .agrimap-app-content .text-\[8px\],
+.agrimap-modern .agrimap-app-content .text-\[9px\] {
+  font-size: 11px !important;
+}
+.agrimap-modern .agrimap-app-content :focus-visible {
+  outline: 3px solid #82ad8f !important;
+  outline-offset: 2px;
+}
+.farm-backup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #20322788;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  font: 15px/1.5 system-ui;
+  color: #26382e;
+}
+.farm-backup-panel {
+  background: #fff;
+  width: min(620px, 100%);
+  max-height: 95dvh;
+  overflow: auto;
+  border-radius: 14px;
+  padding: 24px;
+}
+.farm-backup-panel h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.farm-backup-panel p {
+  margin: 12px 0;
+}
+.farm-backup-panel label {
+  display: block;
+  margin: 16px 0;
+}
+.farm-backup-panel input {
+  display: block;
+  width: 100%;
+  border: 1px solid #cad8c5;
+  padding: 12px;
+  border-radius: 8px;
+  min-height: 48px;
+}
+.farm-backup-panel button,
+.farm-backup-panel a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid #d6dfd1;
+  border-radius: 8px;
+  margin: 6px 6px 0 0;
+  cursor: pointer;
+}
+.farm-backup-panel button[type="submit"] {
+  background: #286447;
+  color: #fff;
+}
+.farm-backup-panel [role="alert"] {
+  color: #973f2b;
+}
+.farm-backup-panel :disabled {
+  opacity: 0.55;
+}
+@media (max-width: 700px) {
+  .agrimap-full .farm-runtime-bar {
+    height: auto;
+    min-height: 90px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 8px 12px;
+  }
+  .agrimap-full .farm-runtime-bar > span {
+    max-width: 100%;
+  }
+  .agrimap-full .farm-runtime-bar nav {
+    gap: 16px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .agrimap-full .agrimap-app-content {
+    height: calc(100dvh - 90px);
+  }
+}
+.agrimap-full .farm-save-error {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  top: 60px;
+  z-index: 9000;
+  background: #fff1eb;
+  border: 2px solid #b75a3b;
+  color: #74351e;
+  border-radius: 10px;
+  padding: 16px;
+  font: 15px/1.5 system-ui;
+}
+/* Operational status must describe the local server, not an idle cloud account. */
+.agrimap-full [title="Cloud Sync"] {
+  visibility: hidden;
+}

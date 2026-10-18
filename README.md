@@ -1,4 +1,20 @@
-# AgriMap Pro — latest source review and isolated demo
+# AgriMap Pro — full local application and Modern UI
+
+## Run the full application locally
+
+Requires Node.js 24. Preserve `.local-data` when updating. For an existing farm, do **not** rerun initialization.
+
+```powershell
+npm ci --include=dev
+npm run build
+npm run local:start
+```
+
+Open `http://localhost:3100`, sign in with your local farm username/password, then choose **Open full application**. `/modern` and `/classic` use the original full module screens, the same local session, and shared SQLite document storage. For a brand-new server only, run `npm run local:init` once before starting it.
+
+Cloud backup is an explicit owner action; production Firebase rules/configuration must be activated separately. External AI, map tiles, forecasts, Google services and RTSP media need their real providers. See [current setup and limits](UI_MODERNIZATION/LOCAL_RUNTIME.md).
+
+## Source and guest demo
 
 Based on the complete `agrimap-pro-v2.0.1.9 (1).zip`. No production deployment has been performed.
 

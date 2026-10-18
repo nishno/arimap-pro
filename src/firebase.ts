@@ -1,3 +1,5 @@
+import { isLocalRuntime, localSession, localRequest } from './local/runtime';
+import { localDoc,localCollection,localQuery,localSet,localUpdate,localDelete,localAdd,localGet,localSubscribe,localBatch } from './local/documentAdapter';
 import { getApps, initializeApp, getApp, FirebaseApp, setLogLevel } from 'firebase/app';
 
 // Set Firebase SDK log level to error to avoid noisy internal stream assertion logs
@@ -69,7 +71,7 @@ export async function requestPersistentStorage(): Promise<boolean> {
 }
 
 export const increment = (value: number): any => {
-    if (USE_FIREBASE) return firebaseIncrement(value);
+    if (USE_FIREBASE && !isLocalRuntime) return firebaseIncrement(value);
     return { type: 'increment', value };
 };
 
@@ -111,7 +113,7 @@ const firestoreDbId = (finalFirebaseConfig as any).firestoreDatabaseId || (
 let cloudApp: FirebaseApp | null = null;
 let cloudDb: Firestore | null = null;
 
-if (USE_FIREBASE) {
+if (USE_FIREBASE && !isLocalRuntime) {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('agrimap-firestore-bypass-persistence');
     }
@@ -154,7 +156,7 @@ if (USE_FIREBASE) {
         _databaseId: { projectId: 'mock', database: 'mock' }
     } as any;
     auth = {
-        currentUser: null,
+        currentUser: isLocalRuntime && localSession()?.user ? {uid:localSession().user.id,email:`${localSession().user.username}@local.invalid`,getIdToken:async()=>{throw new Error("Local sessions are not Firebase tokens");}} : null,
         onAuthStateChanged: (cb: any) => {
             setTimeout(() => {
                 const savedUser = localStorage.getItem('agri-planter-mock-user');
@@ -174,6 +176,7 @@ if (USE_FIREBASE) {
 }
 
 export const getCloudDb = () => {
+  if(isLocalRuntime)return null;
   if (!USE_FIREBASE) return null;
   if (!cloudDb) {
     try {
@@ -202,6 +205,7 @@ export const getCloudDb = () => {
 };
 
 export const getCloudAuth = () => {
+  if(isLocalRuntime)return null;
   if (!USE_FIREBASE) return null;
   if (!cloudApp) {
     getCloudDb();
@@ -302,6 +306,7 @@ if (typeof window !== 'undefined' && window.self !== window.top) {
 }
 
 export const trackModification = (path: string, type: 'set' | 'update' | 'add' | 'delete', data: any = null, initialStatus: SyncLogEntry['status'] = 'pending', explicitMetadata?: SyncLogMetadata, explicitOrgId?: string) => {
+    if(isLocalRuntime)return; // Server commits are authoritative; never mirror into the legacy cloud queue.
     try {
         // DUAL-WRITE / MIRROR COMPLIANCE:
         // Always mirror modifications to the private Local Server Node if configured.
@@ -590,6 +595,7 @@ const sanitizeObject = (obj: any): any => {
 
 // Export mockable Firestore functions
 export const doc = (db: any, collection: string, id: string): any => {
+    if(isLocalRuntime)return localDoc(collection,id);
     if (USE_FIREBASE) return firebaseDoc(db, collection, id);
     return { id, path: `${collection}/${id}`, type: 'document' } as any;
 };
@@ -631,6 +637,7 @@ const runWithOfflineFallback = async (operation: () => Promise<any>, path: strin
 };
 
 export const setDoc = async (docRef: any, data: any, options?: any): Promise<any> => {
+    if(isLocalRuntime)return localSet(docRef,sanitizeObject(data),options);
     if (USE_FIREBASE) {
         trackModification(docRef.path, 'set', data, getInitialSyncStatus());
         return runWithOfflineFallback(() => firebaseSetDoc(docRef, sanitizeObject(data), options), docRef.path);
@@ -640,6 +647,7 @@ export const setDoc = async (docRef: any, data: any, options?: any): Promise<any
 };
 
 export const updateDoc = async (docRef: any, data: any): Promise<any> => {
+    if(isLocalRuntime)return localUpdate(docRef,sanitizeObject(data));
     if (USE_FIREBASE) {
         trackModification(docRef.path, 'update', data, getInitialSyncStatus());
         return runWithOfflineFallback(() => firebaseUpdateDoc(docRef, sanitizeObject(data)), docRef.path);
@@ -649,6 +657,7 @@ export const updateDoc = async (docRef: any, data: any): Promise<any> => {
 };
 
 export const deleteDoc = async (docRef: any): Promise<any> => {
+    if(isLocalRuntime)return localDelete(docRef);
     if (USE_FIREBASE) {
         trackModification(docRef.path, 'delete', null, getInitialSyncStatus());
         return runWithOfflineFallback(() => firebaseDeleteDoc(docRef), docRef.path);
@@ -658,6 +667,7 @@ export const deleteDoc = async (docRef: any): Promise<any> => {
 };
 
 export const addDoc = async (colRef: any, data: any): Promise<any> => {
+    if(isLocalRuntime)return localAdd(colRef,sanitizeObject(data));
     if (USE_FIREBASE) {
         try {
             const result = await firebaseAddDoc(colRef, sanitizeObject(data));
@@ -689,6 +699,7 @@ export const addDoc = async (colRef: any, data: any): Promise<any> => {
 };
 
 export const getDoc = async (docRef: any): Promise<any> => {
+    if(isLocalRuntime)return localGet(docRef);
     if (USE_FIREBASE) {
         try {
             return await firebaseGetDoc(docRef);
@@ -704,6 +715,7 @@ export const getDoc = async (docRef: any): Promise<any> => {
 };
 
 export const getDocFromServer = async (docRef: any): Promise<any> => {
+    if(isLocalRuntime)return localGet(docRef);
     if (USE_FIREBASE) {
         try {
             return await firebaseGetDocFromServer(docRef);
@@ -719,6 +731,7 @@ export const getDocFromServer = async (docRef: any): Promise<any> => {
 };
 
 export const getDocsFromServer = async (q: any): Promise<any> => {
+    if(isLocalRuntime)return localGet(q);
     if (USE_FIREBASE) {
         try {
             return await firebaseGetDocsFromServer(q);
@@ -734,6 +747,7 @@ export const getDocsFromServer = async (q: any): Promise<any> => {
 };
 
 export const getDocs = async (q: any): Promise<any> => {
+    if(isLocalRuntime)return localGet(q);
     if (USE_FIREBASE) {
         try {
             return await firebaseGetDocs(q);
@@ -749,6 +763,7 @@ export const getDocs = async (q: any): Promise<any> => {
 };
 
 export const onSnapshot = (q: any, cb: any, errCb?: any): any => {
+    if(isLocalRuntime)return localSubscribe(q,cb,errCb);
     if (USE_FIREBASE) {
         // Intercept snapshot stream
         const wrappedCb = (snapshot: any) => {
@@ -821,16 +836,19 @@ export const onSnapshot = (q: any, cb: any, errCb?: any): any => {
 };
 
 export const collection = (db: any, path: string): any => {
+    if(isLocalRuntime)return localCollection(path);
     if (USE_FIREBASE) return firebaseCollection(db, path);
     return { path, type: 'collection' } as any;
 };
 
 export const query = (colRef: any, ...constraints: any[]): any => {
+    if(isLocalRuntime)return localQuery(colRef,...constraints);
     if (USE_FIREBASE) return firebaseQuery(colRef, ...constraints);
     return { colRef, constraints } as any;
 };
 
 export const where = (field: string, op: string, value: any): any => {
+    if(isLocalRuntime)return {type:'where',field,op,value:value===undefined?null:value};
     if (USE_FIREBASE) {
         // FORWARD RECOVERY: Prevent 'undefined' from crashing Firestore queries.
         // Convert undefined to null which is a valid Firestore value.
@@ -841,16 +859,19 @@ export const where = (field: string, op: string, value: any): any => {
 };
 
 export const limit = (n: number): any => {
+    if(isLocalRuntime)return {type:'limit',n};
     if (USE_FIREBASE) return firebaseLimit(n);
     return { type: 'limit', n } as any;
 };
 
 export const orderBy = (field: string, dir: 'asc' | 'desc' = 'asc'): any => {
+    if(isLocalRuntime)return {type:'orderBy',field,dir};
     if (USE_FIREBASE) return firebaseOrderBy(field, dir);
     return { type: 'orderBy', field, dir } as any;
 };
 
 export const enableNetwork = async (dbInstance: any): Promise<void> => {
+    if(isLocalRuntime)return;
     if (USE_FIREBASE && dbInstance) {
         try {
             return await firebaseEnableNetwork(dbInstance);
@@ -862,6 +883,7 @@ export const enableNetwork = async (dbInstance: any): Promise<void> => {
 };
 
 export const disableNetwork = async (dbInstance: any): Promise<void> => {
+    if(isLocalRuntime)return;
     if (USE_FIREBASE && dbInstance) {
         try {
             return await firebaseDisableNetwork(dbInstance);
@@ -873,6 +895,7 @@ export const disableNetwork = async (dbInstance: any): Promise<void> => {
 };
 
 export const writeBatch = (db: any): any => {
+    if(isLocalRuntime)return localBatch();
     if (USE_FIREBASE) {
         const batch = firebaseWriteBatch(db);
         return {
@@ -893,6 +916,7 @@ export const writeBatch = (db: any): any => {
 let lastNetworkState: boolean | null = null;
 
 export const setConnectionState = async (healthy: boolean): Promise<void> => {
+    if(isLocalRuntime)return;
     if (!USE_FIREBASE) return;
     const isManualOffline = typeof localStorage !== 'undefined' && localStorage.getItem('agrimap-manual-offline') === 'true';
     if (healthy && isManualOffline) {
@@ -921,6 +945,7 @@ export const setConnectionState = async (healthy: boolean): Promise<void> => {
 };
 
 export const testFirestoreConnection = async (timeoutMs = 2500): Promise<boolean> => {
+    if(isLocalRuntime){try{await localRequest('me');return true;}catch{return false;}}
     if (!USE_FIREBASE) return true;
     
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -951,6 +976,7 @@ export const testFirestoreConnection = async (timeoutMs = 2500): Promise<boolean
 };
 
 export const resetFirestorePersistence = async () => {
+    if(isLocalRuntime)return;
     if (!USE_FIREBASE) return;
     try {
         await firebaseTerminate(db);
@@ -989,10 +1015,24 @@ WORKSPACE_SCOPES.forEach(scope => provider.addScope(scope));
 let isSigningIn = false;
 let cachedAccessToken: string | null = null;
 
+// Google integrations have their own optional login; they never replace a farm-server identity.
+let externalGoogleAuth: Auth | null = null;
+const googleIntegrationAuth = () => {
+    if(!isLocalRuntime)return auth;
+    if(!externalGoogleAuth){const app=getApps().find(a=>a.name==='external-google')||initializeApp(finalFirebaseConfig,'external-google');externalGoogleAuth=getAuth(app);}
+    return externalGoogleAuth;
+};
+
 export const initGoogleAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
   onAuthFailure?: () => void
 ) => {
+  if(isLocalRuntime){
+    const changed=(event:any)=>{if(event.detail?.user&&event.detail?.token)onAuthSuccess?.(event.detail.user,event.detail.token);else onAuthFailure?.();};
+    window.addEventListener('agrimap-google-session',changed);
+    if(externalGoogleAuth?.currentUser&&cachedAccessToken)onAuthSuccess?.(externalGoogleAuth.currentUser,cachedAccessToken);
+    return()=>window.removeEventListener('agrimap-google-session',changed);
+  }
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
       if (cachedAccessToken) {
@@ -1015,13 +1055,14 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
   }
   try {
     isSigningIn = true;
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(googleIntegrationAuth(), provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     if (!credential?.accessToken) {
       throw new Error('Failed to get access token from Firebase Auth');
     }
 
     cachedAccessToken = credential.accessToken;
+    if(isLocalRuntime)window.dispatchEvent(new CustomEvent('agrimap-google-session',{detail:{user:result.user,token:cachedAccessToken}}));
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error: any) {
     const errCode = error?.code || '';
@@ -1057,6 +1098,6 @@ export const getAccessToken = async (): Promise<string | null> => {
 };
 
 export const googleLogout = async () => {
-  await auth.signOut();
+  if(isLocalRuntime){if(externalGoogleAuth)await externalGoogleAuth.signOut();window.dispatchEvent(new CustomEvent('agrimap-google-session',{detail:null}));}else await auth.signOut();
   cachedAccessToken = null;
 };
