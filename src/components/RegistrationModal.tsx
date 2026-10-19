@@ -1,3 +1,4 @@
+import {LanguageSwitch} from '../local/EntryControls';
 import React, { useState, useEffect } from 'react';
 import type { User, UserRole, Organization, ForumPost, Membership, Employee } from '../types';
 import { XIcon, CheckIcon, ChevronRightIcon, ChevronLeftIcon, SearchIcon, BuildingStorefrontIcon } from './Icons';
@@ -302,8 +303,8 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
           
           if (USE_FIREBASE) {
               // 1. Create auth user
-              const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, formData.password);
-              firebaseUser = userCredential.user;
+              if(auth.currentUser?.email?.toLowerCase()===cleanEmail)firebaseUser=auth.currentUser;
+              else {const userCredential=await createUserWithEmailAndPassword(auth,cleanEmail,formData.password);firebaseUser=userCredential.user;}
           } else {
               // Mock registration
               const existingUsersStr = localStorage.getItem('agri-planter-mock-all-users') || '[]';
@@ -331,7 +332,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 status: 'active',
                 roles: ['Guest'],
                 role: 'Independent',
-                subscriptionType: 'Individual Subscription',
+                subscriptionType: 'Free',
                 createdAt: new Date().toISOString(),
                 aiQueryCount: 0,
                 isGuest: false 
@@ -359,7 +360,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
               status: 'active' as const,
               roles: ['Guest'],
               role: 'Independent',
-              subscriptionType: 'Individual Subscription',
+              subscriptionType: 'Free',
               createdAt: new Date().toISOString(),
               aiQueryCount: 0,
               isGuest: false
@@ -367,7 +368,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
           await onRegister(user, selectedOrgToJoin);
 
-          if (selectedOrgToJoin && onAddPost) {
+          if (!USE_FIREBASE && selectedOrgToJoin && onAddPost) {
             onAddPost({
               title: "Join Request",
               content: `Hello, I'm ${user.name}. I've just registered and would like to join ${selectedOrgToJoin.name} as a professional partner.`,
@@ -443,7 +444,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         Active Profile: <span className="text-slate-700">{currentUser.name}</span>
                     </p>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><XIcon className="h-5 w-5 text-slate-400" /></button>
+                <LanguageSwitch/><button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><XIcon className="h-5 w-5 text-slate-400" /></button>
             </div>
 
             {/* TAB SELECTOR FOR LOGGED IN USERS */}
@@ -761,7 +762,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       {t('reg.start_journey')}
                     </p>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><XIcon className="h-6 w-6 text-slate-400" /></button>
+                <LanguageSwitch/><button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><XIcon className="h-6 w-6 text-slate-400" /></button>
             </div>
 
             <div className="p-10 flex-grow max-h-[70vh] overflow-y-auto w-full">

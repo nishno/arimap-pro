@@ -1,3 +1,4 @@
+import {createCloudServer} from './cloud-server.mjs';
 import http from 'node:http';
 import https from 'node:https';
 import { readFileSync, existsSync, statSync } from 'node:fs';
@@ -7,7 +8,7 @@ import { documentStore } from './documents.mjs';
 import { openFarm, FarmError } from './farm-store.mjs';
 
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export function createLocalServer({ directory, origin = 'http://localhost:3100', tls, dist = path.join(project, 'dist') }) {
+export function createLocalServer({ directory, origin = 'http://localhost:3100', tls, cloudUrl = null, dist = path.join(project, 'dist') }) {
   const expected = new URL(origin);
   if (!['https:', 'http:'].includes(expected.protocol) || expected.origin !== origin) throw new Error('LOCAL_ORIGIN must be an exact HTTP(S) origin');
   if (expected.protocol !== 'https:' && !['localhost', '127.0.0.1', '[::1]'].includes(expected.hostname)) throw new Error('LAN access requires HTTPS. Configure TLS or a trusted HTTPS reverse proxy.');
@@ -27,7 +28,8 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
       const url = new URL(req.url, origin), route = url.pathname;
       if (!route.startsWith('/api/')) {
         if (!['GET', 'HEAD'].includes(req.method)) throw new FarmError(405, 'Method not allowed');
-        if (route === '/' && url.searchParams.get('register') !== '1') { res.writeHead(302, { Location: '/modern' }); return res.end(); }
+        if(route==='/'&&(url.searchParams.get('register')==='1'||url.searchParams.get('login')==='1')){const destination=cloudUrl?new URL('/'+url.search,cloudUrl).href:'/start';res.writeHead(302,{Location:destination});return res.end();}
+        if (route === '/') { res.writeHead(302, { Location: '/modern' }); return res.end(); }
         const relative = decodeURIComponent(route).replace(/^\/+/, '');
         const target = path.resolve(dist, relative || 'index.html');
         if (!target.startsWith(path.resolve(dist) + path.sep)) throw new FarmError(404, 'Not found');
@@ -40,7 +42,7 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
       }
       if (req.headers['sec-fetch-site'] === 'cross-site') throw new FarmError(403, 'Cross-site request denied');
       if (!['GET', 'HEAD'].includes(req.method) && req.headers.origin !== origin) throw new FarmError(403, 'Same-origin request required');
-      if (route === '/api/local/status' && req.method === 'GET') return json(res, 200, { initialized: !!store.farm(), mode: 'local', cloud: 'not-connected' });
+      if (route === '/api/local/status' && req.method === 'GET') return json(res, 200, { initialized: !!store.farm(), mode: 'local', cloud: 'not-connected', cloudUrl });
       if (route === '/api/local/login' && req.method === 'POST') {
         if (!store.farm()) throw new FarmError(409, 'Initialize the farm on the server computer first');
         const key = req.socket.remoteAddress, now = Date.now();
@@ -78,7 +80,16 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const origin = process.env.LOCAL_ORIGIN || 'http://localhost:3100';
   const tls = process.env.LOCAL_TLS_CERT && process.env.LOCAL_TLS_KEY ? { cert: readFileSync(process.env.LOCAL_TLS_CERT), key: readFileSync(process.env.LOCAL_TLS_KEY) } : undefined;
-  const { server } = createLocalServer({ directory: process.env.LOCAL_DATA_DIR || path.join(project, '.local-data'), origin, tls });
-  server.listen(Number(process.env.LOCAL_PORT || 3100), process.env.LOCAL_HOST || '127.0.0.1', () => console.log('Local farm server started. Cloud synchronization is not enabled.'));
-  for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => server.close());
+  const cloudPort=Number(process.env.CLOUD_PORT || 3101);
+  const cloudOrigin=new URL(origin);cloudOrigin.port=String(cloudPort);
+  const cloudServer=createCloudServer({origin:cloudOrigin.origin,tls});
+  const { server } = createLocalServer({ directory: process.env.LOCAL_DATA_DIR || path.join(project, '.local-data'), origin, tls, cloudUrl:cloudOrigin.origin });
+  const host=process.env.LOCAL_HOST || '127.0.0.1';
+  let stopping=false;const stop=()=>{if(stopping)return;stopping=true;cloudServer.close();server.close();};
+  for(const instance of [server,cloudServer])instance.on('error',error=>{console.error('Server startup failed:',error.message);stop();process.exitCode=1;});
+  cloudServer.listen(cloudPort,host,()=>{
+    console.log(`Firebase application: ${cloudOrigin.origin}/?register=1 (separate cloud workspace; internet required)`);
+    server.listen(Number(process.env.LOCAL_PORT || 3100),host,()=>console.log(`Local farm application: ${origin}/local (no automatic cloud sync)`));
+  });
+  for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, stop);
 }

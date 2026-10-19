@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "update": "git pull origin main && npm install",
+    "update": "git pull --ff-only origin demo-preview && npm ci --include=dev",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:hosting:agrimap": "npm run build && firebase deploy --only hosting --project agrimap",
     "deploy:hosting:wmda": "npm run build && firebase deploy --only hosting --project wmda",
@@ -41,7 +41,10 @@
     "test:backup:cloud": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/cloud-backup.mjs\"",
     "test:i18n": "node --experimental-strip-types --test tests/i18n.mjs",
     "i18n:audit": "node --experimental-strip-types scripts/i18n-audit.mjs",
-    "test:registration": "node tests/registration-browser.mjs"
+    "test:registration": "node tests/registration-browser.mjs",
+    "test:cloud:registration": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node --experimental-strip-types tests/cloud-registration.mjs\"",
+    "test:entry": "node tests/entry-browser.mjs",
+    "test:entry:startup": "node tests/entry-cli.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

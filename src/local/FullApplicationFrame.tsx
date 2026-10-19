@@ -1,3 +1,5 @@
+import {LanguageSwitch} from './EntryControls';
+import {useLanguage} from '../contexts/LanguageContext';
 import React, { useState, useEffect } from "react";
 import { isLocalRuntime, localSession, localRequest } from "./runtime";
 import { MODERN_UI_VERSION } from "../utils/version";
@@ -8,6 +10,7 @@ export function FullApplicationFrame({
 }: {
   children: React.ReactNode;
 }) {
+  const {t}=useLanguage();
   const modern = location.pathname.startsWith("/modern");
   const [backup, setBackup] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -58,7 +61,7 @@ export function FullApplicationFrame({
             ? `${localSession()?.farm.name} · Local server`
             : "Cloud application"}
         </span>
-        <nav aria-label="Application controls">
+        <nav aria-label="Application controls"><LanguageSwitch/>{!isLocalRuntime&&<><a href="/?register=1">{t('entry.cloud_register')}</a><a href="/?login=1">{t('entry.cloud_login')}</a></>}
           <a href={modern ? "/classic" : "/modern"}>
             {modern ? "Switch to Classic" : "Switch to Modern"}
           </a>

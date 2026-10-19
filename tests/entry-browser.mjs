@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {createLocalServer} from '../server/local-server.mjs';
+import {createCloudServer} from '../server/cloud-server.mjs';
+const local='http://127.0.0.1:3193',cloud='http://127.0.0.1:3194',directory=mkdtempSync('/tmp/agrimap-entry-');
+const {server,store}=createLocalServer({directory,origin:local,cloudUrl:cloud});
+const cloudServer=createCloudServer({origin:cloud});
+await store.initialize({name:'Entry test farm',timezone:'Asia/Tbilisi',ownerName:'Owner',ownerUsername:'owner',password:'test-only-owner-password'});
+await Promise.all([new Promise(r=>server.listen(3193,'127.0.0.1',r)),new Promise(r=>cloudServer.listen(3194,'127.0.0.1',r))]);let browser,debugPage;
+try{
+ browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox'],headless:true});
+ const context=await browser.newContext({viewport:{width:1366,height:900}});context.setDefaultTimeout(120000);
+ await context.route('**/*',r=>[local,cloud].includes(new URL(r.request().url()).origin)?r.continue():r.abort());
+ const page=await context.newPage(),errors=[];debugPage=page;page.on('pageerror',e=>errors.push(e.message));await page.goto(local+'/local');console.log('Entry: local page ready');
+ await page.getByRole('button',{name:'Create a local account',exact:true}).click();await page.getByRole('heading',{name:'Create a local account',exact:true}).waitFor();
+ await page.getByText(/This server already has a farm/).waitFor();
+ await page.getByRole('button',{name:'Change language',exact:true}).click();await page.getByRole('heading',{name:'ლოკალური ანგარიშის შექმნა',exact:true}).waitFor();
+ await page.getByRole('button',{name:'ენის შეცვლა',exact:true}).click();
+ await page.getByLabel('Username',{exact:true}).fill('owner');await page.getByLabel('Password',{exact:true}).fill('test-only-owner-password');await page.getByRole('button',{name:'Sign in locally'}).click();
+ await page.getByRole('heading',{name:'Entry test farm',exact:true}).waitFor();console.log('Entry: owner signed in');
+ await page.getByLabel('Worker name',{exact:true}).fill('New local worker');await page.getByLabel('Worker username',{exact:true}).fill('new-worker');await page.getByLabel('Initial password',{exact:true}).fill('test-only-worker-password');await page.getByRole('button',{name:'Create worker',exact:true}).click();await page.getByRole('status').filter({hasText:'Worker created'}).waitFor();
+ await page.evaluate(()=>localStorage.setItem('entry-backend-isolation','local-records'));
+ const legacy=await context.request.get(local+'/?register=1',{maxRedirects:0});assert.equal(legacy.status(),302);assert.equal(legacy.headers().location,cloud+'/?register=1');
+ const register=page.getByRole('link',{name:'Register with Firebase',exact:true});assert.equal(await register.getAttribute('href'),cloud+'/?register=1');await register.click();
+ console.log('Entry: cloud registration opened');assert.equal(new URL(page.url()).origin,cloud);assert.equal(await page.evaluate(()=>window.__AGRIMAP_LOCAL__),false);assert.equal(await page.evaluate(()=>localStorage.getItem('entry-backend-isolation')),null);
+ await page.getByRole('heading',{name:/Create Account/i}).waitFor();console.log('Entry: cloud signup form ready');await page.getByRole('button',{name:'Change language',exact:true}).last().click();
+ assert.equal(await page.locator('html').getAttribute('lang'),'ka');await page.getByRole('button',{name:'ენის შეცვლა',exact:true}).last().click();
+ const denied=await context.request.post(cloud+'/api/local/users',{data:{name:'No access'}});assert.equal(denied.status(),405);
+ const localHtml=await (await context.request.get(local+'/local')).text(),cloudHtml=await (await context.request.get(cloud+'/?register=1')).text();assert(localHtml.includes('__AGRIMAP_LOCAL__=true'));assert(cloudHtml.includes('__AGRIMAP_LOCAL__=false'));
+ await page.goto(local+'/local');assert.equal(await page.evaluate(()=>localStorage.getItem('entry-backend-isolation')),'local-records');
+ await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Change language',exact:true}).waitFor();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Entry controls overflow mobile viewport');
+ assert.deepEqual(errors,[]);console.log('PASS: visible local/cloud registration, local worker creation, local + cloud language controls, separate browser origins, cloud routes reject local APIs, mobile layout.');
+}catch(error){console.log(await debugPage?.locator('body').innerText());throw error;}finally{await browser?.close();await Promise.all([new Promise(r=>server.close(r)),new Promise(r=>cloudServer.close(r))]);rmSync(directory,{recursive:true,force:true});}

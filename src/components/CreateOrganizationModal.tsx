@@ -33,6 +33,7 @@ export const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = (
         roles: ['Founder']
     } as unknown as User);
 
+    const [cloudOrgId,setCloudOrgId]=useState(()=>`org-${crypto.randomUUID()}`);
     const [name, setName] = useState('');
     const [taxNumber, setTaxNumber] = useState('');
     const [type, setType] = useState<OrganizationType>('LTD');
@@ -55,7 +56,7 @@ export const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = (
 
         setIsSubmitting(true);
         try {
-            const orgId = isLocalRuntime?localSession().farm.id:`org-${Date.now()}`;
+            const orgId = isLocalRuntime?localSession().farm.id:cloudOrgId;
             const newOrg: Organization = {
                 id: orgId,
                 uniqueId: `Comp-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -109,6 +110,7 @@ export const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = (
                 });
             }
 
+            setCloudOrgId(`org-${crypto.randomUUID()}`);
             toast.success(isKa ? `კომპანია "${newOrg.name}" წარმატებით დარეგისტრირდა!` : `Organization "${newOrg.name}" created successfully!`);
             onClose();
         } catch (err: any) {

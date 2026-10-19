@@ -21,7 +21,22 @@
     "profile.verify_required": "Verify required",
     "team_widget.on_duty_count": "On duty count {count}",
     "team_widget.send_broadcast": "Send broadcast",
-    "team_widget.open_team_hub": "Open team hub"
+    "team_widget.open_team_hub": "Open team hub",
+    "entry.language": "Change language",
+    "entry.cloud_register": "Register with Firebase",
+    "entry.cloud_login": "Cloud sign in",
+    "entry.cloud_restart": "Restart the updated server with npm run local:start to enable the separate cloud entry.",
+    "entry.cloud_separate": "Separate cloud workspace. Your local farm is not copied or synchronized automatically.",
+    "entry.local_register": "Create a local account",
+    "entry.local_first": "First farm setup: on the server computer, run the command below once to create the farm and owner. Then sign in here.",
+    "entry.local_existing": "This server already has a farm. Its owner creates worker accounts under Farm users. A new farm requires its own server workspace.",
+    "entry.local_contact": "Ask the farm owner for a local username and password. Firebase registration does not create a local account.",
+    "entry.local_company": "After local sign-in, open Dashboard → Map Tools → Company Registration to enter company details for this farm.",
+    "entry.add_worker": "Open farm users",
+    "entry.local_modules": "All original modules use the local farm server. Cloud backup is manual; live two-way synchronization is not enabled.",
+    "entry.cloud_invitation": "Your account is ready. Ask the company owner to approve your membership; registration does not grant company access.",
+    "entry.cloud_save_error": "Your cloud profile could not be saved. Check your connection and Firebase permissions, then retry using the same signed-in account.",
+    "entry.duplicate_company": "A company with that tax number or phone already exists. Open its existing workspace instead."
   },
   "ka": {
     "language": "ენა",
@@ -46,6 +61,21 @@
     "team_widget.on_duty_count": "მორიგე თანამშრომლები: {count}",
     "team_widget.open_team_hub": "გუნდის მართვის გახსნა",
     "hardware_widget.protocols_active": "მოწყობილობების მხარდაჭერილი პროტოკოლები",
-    "team_widget.send_broadcast": "შეტყობინების ყველასთვის გაგზავნა"
+    "team_widget.send_broadcast": "შეტყობინების ყველასთვის გაგზავნა",
+    "entry.language": "ენის შეცვლა",
+    "entry.cloud_register": "Firebase-ით რეგისტრაცია",
+    "entry.cloud_login": "ღრუბლოვან ანგარიშში შესვლა",
+    "entry.cloud_restart": "ცალკე ღრუბლოვანი შესასვლელის ჩასართავად განახლებული სერვერი ხელახლა გაუშვით ბრძანებით npm run local:start.",
+    "entry.cloud_separate": "ცალკე ღრუბლოვანი სამუშაო სივრცე. თქვენი ლოკალური ფერმა ავტომატურად არ კოპირდება და არ სინქრონდება.",
+    "entry.local_register": "ლოკალური ანგარიშის შექმნა",
+    "entry.local_first": "ფერმის საწყისი გამართვა: სერვერის კომპიუტერზე ქვემოთ მოცემული ბრძანება ერთხელ გაუშვით ფერმისა და მფლობელის შესაქმნელად. შემდეგ შედით აქ.",
+    "entry.local_existing": "ამ სერვერზე ფერმა უკვე არსებობს. თანამშრომლების ანგარიშებს მფლობელი ქმნის ფერმის მომხმარებლების განყოფილებაში. ახალ ფერმას ცალკე სერვერული სამუშაო სივრცე სჭირდება.",
+    "entry.local_contact": "ლოკალური მომხმარებლის სახელი და პაროლი ფერმის მფლობელს სთხოვეთ. Firebase-ში რეგისტრაცია ლოკალურ ანგარიშს არ ქმნის.",
+    "entry.local_company": "ლოკალური შესვლის შემდეგ გახსენით მართვის პანელი → რუკის ხელსაწყოები → კომპანიის რეგისტრაცია და შეავსეთ ამ ფერმის კომპანიის მონაცემები.",
+    "entry.add_worker": "ფერმის მომხმარებლების გახსნა",
+    "entry.local_modules": "ყველა ძირითადი მოდული ლოკალური ფერმის სერვერს იყენებს. ღრუბლოვანი სარეზერვო ასლი ხელით ინახება; ცოცხალი ორმხრივი სინქრონიზაცია ჩართული არ არის.",
+    "entry.cloud_invitation": "თქვენი ანგარიში მზადაა. წევრობის დასამტკიცებლად მიმართეთ კომპანიის მფლობელს; რეგისტრაცია კომპანიის მონაცემებზე წვდომას არ ანიჭებს.",
+    "entry.cloud_save_error": "ღრუბლოვანი პროფილის შენახვა ვერ მოხერხდა. შეამოწმეთ კავშირი და Firebase-ის ნებართვები, შემდეგ გაიმეორეთ იმავე ანგარიშით შესულ მდგომარეობაში.",
+    "entry.duplicate_company": "ამ საიდენტიფიკაციო კოდით ან ტელეფონით კომპანია უკვე არსებობს. გახსენით მისი არსებული სამუშაო სივრცე."
   }
 }

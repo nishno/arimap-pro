@@ -78,3 +78,9 @@ Vercel hosts the static demo and cloud client. It cannot host this persistent LA
 ## Validation
 
 `npm run test:local` checks durable IDs, authorization, duplicate retry rejection, consistent SQLite backup integrity, restart persistence, session revocation, HTTP origin boundaries and exported-data protection. `npm run lint` and `npm run build` validate the application. Browser workflow tests require Chromium and use isolated temporary databases, never your farm data. Test responses and loopback tests do not prove operation on your actual LAN or with an NVR.
+
+## Local and Firebase registration entries
+
+After `npm run build`, `npm run local:start` serves the existing local farm on port 3100 and the separate Firebase application on port 3101. Open `/local` for local sign-in/account setup; the Firebase registration button opens the separate origin with `?register=1`. This isolates browser storage and does not merge the local farm into a cloud workspace. Set `CLOUD_PORT` if 3101 is occupied. LAN access requires the documented trusted HTTPS setup; the cloud listener uses the same host/TLS settings. Both listeners stop together. Never rerun initialization or delete an existing farm to switch modes.
+
+Initial local owners are created once on the server with `npm run local:init`. Existing owners create workers through Farm users. Public self-registration into an existing local farm remains disabled. See `UI_MODERNIZATION/REGISTRATION_AND_DATA_AUTHORITY.md` for identity linking, manual backup and the future synchronization plan.

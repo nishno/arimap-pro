@@ -20,6 +20,7 @@ try{
  await page.getByPlaceholder('e.g. Alazani Agro LLC').fill('Dashboard Farm LLC');
  await page.getByPlaceholder('e.g. 405123456').fill('405123456');
  await page.getByPlaceholder('e.g. Kakheti, Guria').fill('Guria');
+ await page.getByRole('button',{name:'+ Blueberries',exact:true}).click();
  await page.getByRole('button',{name:'🇺🇸 EN',exact:true}).evaluate(button=>button.click());
  await page.getByRole('heading',{name:'კომპანიის რეგისტრაცია',exact:true}).waitFor();console.log('Registration: Georgian form ready');
  assert.equal(await page.locator('input').filter({visible:true}).count()>0,true);
@@ -29,6 +30,7 @@ try{
  const read=async path=>{const r=await context.request.post(origin+'/api/local/documents/read',{headers:{Origin:origin},data:{path}});assert.equal(r.status(),200);return r.json();};
  console.log('Registration: submitted');const orgs=(await read('organizations')).documents;assert.equal(orgs.length,1);assert.equal(orgs[0].id,store.farm().id);assert.equal(orgs[0].name,'Dashboard Farm LLC');assert.equal(orgs[0].type,'LTD');assert.equal(orgs[0].region,'Guria');assert.notEqual(orgs[0].createdAt,'1970-01-01T00:00:00.000Z');
  assert(!commits.some(batch=>batch.operations.some(o=>o.path.startsWith('memberships/'))));
+ const crops=(await read('crops')).documents;assert.equal(crops.length,1);assert(crops[0].id.startsWith('crop-'+store.farm().id+'-'));const saved=commits.find(batch=>batch.operations.some(o=>o.path.startsWith('crops/')));const retry=await context.request.post(origin+'/api/local/documents/commit',{headers:{Origin:origin},data:saved});assert.equal(retry.status(),200);assert.equal((await read('crops')).documents.length,1);
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('agrimap-switch-mode',{detail:'design'})));
  await page.waitForTimeout(500);assert.equal(await page.getByText('Module Restricted',{exact:true}).count(),0);
  await page.reload();await page.getByRole('button',{name:'რუკის ხელსაწყოები',exact:true}).waitFor();assert.equal(await page.getByText('მოდულზე წვდომა შეზღუდულია',{exact:true}).count(),0);await page.getByRole('button',{name:'🇬🇪 GE',exact:true}).waitFor();

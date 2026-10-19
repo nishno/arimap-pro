@@ -23,3 +23,5 @@ The farm owner's top bar has **Cloud backup**. This requires an existing Firebas
 See [LOCAL_RUNTIME.md](LOCAL_RUNTIME.md) for deployment, restores, role boundaries and external dependencies. See [TESTING.md](TESTING.md) for executed checks. Startup instructions saved in cloud environment settings are separate from deploying this app or Firebase rules.
 
 Language file responsibilities and maintenance: [LOCALIZATION.md](LOCALIZATION.md).
+
+Registration, storage authority and risk plan: [REGISTRATION_AND_DATA_AUTHORITY.md](REGISTRATION_AND_DATA_AUTHORITY.md).

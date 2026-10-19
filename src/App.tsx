@@ -1,4 +1,5 @@
 import {isLocalRuntime,localSession,localRequest} from './local/runtime';
+import {saveCloudRegistration} from './cloud/registration';
 import { usePlatformAdmin } from './hooks/usePlatformAdmin';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import L from 'leaflet';
@@ -1480,14 +1481,14 @@ const App: React.FC = () => {
     };
 
     // Modals
-    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(() => new URLSearchParams(window.location.search).get('login') === '1');
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(() => new URLSearchParams(window.location.search).get('register') === '1');
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     useEffect(()=>{if(isLocalRuntime&&isRegisterModalOpen){setIsRegisterModalOpen(false);toast.info('This farm is already initialized. Manage logins in Local accounts & records; edit the farm in Founders Vault.');}},[isRegisterModalOpen]);
 
 
     useEffect(() => {
-        if (isAuthReady && currentUser?.id === 'guest') {
+        if (isAuthReady && currentUser?.id === 'guest' && !['register','login'].some(key=>new URLSearchParams(location.search).get(key)==='1')) {
             const hasSeenWelcome = sessionStorage.getItem('agri-planter-welcome-seen');
             if (!hasSeenWelcome) {
                 setShowWelcomeModal(true);
@@ -3206,19 +3207,21 @@ const App: React.FC = () => {
         console.log("[App] handleAddOrg called for:", org.name);
         
         // Duplicate Tax Number Check
-        if (org.taxNumber && organizations.some(o => o.taxNumber === org.taxNumber && (!isLocalRuntime || o.id!==localSession()?.farm.id))) {
-            toast.error(`A company with tax number ${org.taxNumber} already exists.`);
-            return;
+        if (org.taxNumber && organizations.some(o => o.taxNumber === org.taxNumber && o.id!==(isLocalRuntime?localSession()?.farm.id:org.id))) {
+            throw new Error(t('entry.duplicate_company'));
         }
 
         // Duplicate Phone Check
-        if (org.phoneNumber && organizations.some(o => o.phoneNumber === org.phoneNumber && (!isLocalRuntime || o.id!==localSession()?.farm.id))) {
-            toast.error(`A company with phone number ${org.phoneNumber} already exists.`);
-            return;
+        if (org.phoneNumber && organizations.some(o => o.phoneNumber === org.phoneNumber && o.id!==(isLocalRuntime?localSession()?.farm.id:org.id))) {
+            throw new Error(t('entry.duplicate_company'));
         }
 
         try {
             const finalOrg = { ...org };
+            if(!isLocalRuntime){
+                Object.assign(finalOrg,{createdBy:currentUser!.id,tier:'Free',isPaid:false,subscriptionStatus:'Unpaid'});
+                for(const key of ['trialExpiry','trial_start_date','trialStartedAt','subscriptionType','subscriptionExpiry','subscriptionPlan','grantSource','grantedBy','grantedAt'])delete (finalOrg as any)[key];
+            }
             if(isLocalRuntime){
                 if(localSession()?.user.role!=='owner')throw new Error(t('company.owner_required'));
                 finalOrg.id=localSession().farm.id;
@@ -3276,16 +3279,19 @@ const App: React.FC = () => {
             }
 
             // Create Crop entries if provided
-            const newCrops: Crop[] = (selectedCrops || []).map(crop => {
+            const newCrops: Crop[] = await Promise.all((selectedCrops || []).map(async crop => {
                 const name = typeof crop === 'string' ? crop : crop.name;
                 const varieties = typeof crop === 'string' ? [] : (crop.varieties || []);
+                const nameKey=name.normalize('NFKC').trim().toLowerCase();
+                const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(nameKey));
+                const stableId=`crop-${finalOrg.id}-${Array.from(new Uint8Array(digest)).map(byte=>byte.toString(16).padStart(2,'0')).join('')}`;
                 return {
-                    id: (isLocalRuntime?crops.find(c=>c.organizationId===finalOrg.id&&c.name.toLowerCase()===name.toLowerCase())?.id:undefined)||`crop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    id: crops.find(c=>c.organizationId===finalOrg.id&&c.name.normalize('NFKC').trim().toLowerCase()===nameKey)?.id||stableId,
                     name: name,
                     varieties: varieties,
                     organizationId: finalOrg.id
                 };
-            });
+            }));
 
             if (USE_FIREBASE && auth.currentUser && currentUser?.id !== 'root-system') {
                 console.log("Saving org to Firebase:", finalOrg.id);
@@ -3349,8 +3355,8 @@ const App: React.FC = () => {
                             experience: [newExperience, ...(currentUser.cv?.experience || []).filter(e=>!isLocalRuntime||e.organizationId!==finalOrg.id)]
                         }
                     };
-                    batch.set(doc(db, 'users', currentUser.id), updatedUser);
-                    if(!isLocalRuntime)setCurrentUser(updatedUser);
+                    if(isLocalRuntime)batch.set(doc(db, 'users', currentUser.id), updatedUser);
+                    else batch.set(doc(db,'users',currentUser.id),{currentOrgId:finalOrg.id,isGuest:false,cv:updatedUser.cv},{merge:true});
                 }
 
                 if (boundaryFeature) {
@@ -5347,6 +5353,12 @@ const App: React.FC = () => {
 
     const handleRegister = async (user: User, orgToJoin?: Organization | null) => {
         try {
+            if(USE_FIREBASE&&!isLocalRuntime){
+                const saved=await saveCloudRegistration(db,user);
+                setCurrentUser(saved);setIsRegisterModalOpen(false);
+                if(orgToJoin)toast.info(t('entry.cloud_invitation'));
+                return;
+            }
             if (USE_FIREBASE && auth.currentUser && user.id !== 'root-system') {
                 const batch = writeBatch(db);
                 batch.set(doc(db, 'users', user.id), sanitizeObject(user));
@@ -5532,6 +5544,7 @@ const App: React.FC = () => {
                 setCurrentUser(user);
             }
         } catch (error) {
+            if(!isLocalRuntime)throw new Error(t('entry.cloud_save_error'));
             handleFirestoreError(error, 'write', `users/${user.id}`);
         }
     };
@@ -7008,7 +7021,7 @@ const App: React.FC = () => {
                 onPushToCloud={handlePushToCloud}
             />
             <SmartOfflineDisconnectModal 
-                isOpen={showSmartDisconnectModal}
+                isOpen={showSmartDisconnectModal && !isRegisterModalOpen && !isLoginModalOpen && Boolean(currentUser && !currentUser.isGuest)}
                 onClose={() => setShowSmartDisconnectModal(false)}
                 currentConfig={localServerConfig}
                 onSaveConfig={(newConfig) => {

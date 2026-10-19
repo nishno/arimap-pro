@@ -1,4 +1,5 @@
 
+import {LanguageSwitch} from '../local/EntryControls';
 import React, { useState } from 'react';
 import type { User } from '../types';
 import { XIcon, AlertTriangleIcon, LockClosedIcon, ShieldCheckIcon } from './Icons';
@@ -108,7 +109,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin, onGoo
             <h2 className="text-xl md:text-2xl font-black text-gray-800 tracking-tight uppercase">{isRootMode ? 'Account access' : 'Account Access'}</h2>
             <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">{isRootMode ? 'System-level administrative entry' : 'Log in to your workspace'}</p>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end mt-1 sm:mt-0">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end mt-1 sm:mt-0"><LanguageSwitch/>
             {!isRootMode && (
               <button 
                 type="button" 
