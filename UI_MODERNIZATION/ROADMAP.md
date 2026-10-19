@@ -13,6 +13,8 @@ The initial partial-screen migration was replaced: `/modern` and `/classic` now 
 | LAN | Existing trusted HTTPS configuration | Configure certificates and network on the user's plantation |
 | External services | Existing integration screens retained | Provider credentials/connectivity, RTSP media gateway and physical sensors |
 | Offline devices | Failures visible, no false server confirmation | Durable device queue and conflict-aware multi-device editing |
-| Modern appearance | Scoped calm palette on original workflows | Full typography/spacing audit, localization and component refinements |
+| Modern appearance | Scoped calm palette on original workflows | Native-speaker review of specialist translations, provider-output localization and typography/spacing refinements |
 
 Do not describe an unconfigured external service, undeployed rules or untested historical workflow as production-ready. Record actual acceptance evidence in TESTING.md.
+
+Company setup uses the canonical local farm identity; additional independent local farms require separate server workspaces. Translation editing is described in LOCALIZATION.md.

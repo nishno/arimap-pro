@@ -21,3 +21,5 @@ The local server, not Firebase, now supplies authentication and the original mod
 The farm owner's top bar has **Cloud backup**. This requires an existing Firebase account, internet, and deployed private snapshot rules in the configured project/database. Upload is explicit: no automatic background Firebase synchronization occurs in local runtime. The snapshot is separate from operational cloud collections and excludes passwords and login sessions. The panel can download and verify the latest completed snapshot for this farm.
 
 See [LOCAL_RUNTIME.md](LOCAL_RUNTIME.md) for deployment, restores, role boundaries and external dependencies. See [TESTING.md](TESTING.md) for executed checks. Startup instructions saved in cloud environment settings are separate from deploying this app or Firebase rules.
+
+Language file responsibilities and maintenance: [LOCALIZATION.md](LOCALIZATION.md).

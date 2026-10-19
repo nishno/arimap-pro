@@ -13,7 +13,7 @@ await store.initialize({
   password: "test-owner-long-password",
 });
 await new Promise((r) => server.listen(3196, "127.0.0.1", r));
-let browser;
+let browser,debugPage;
 try {
   browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
@@ -26,9 +26,11 @@ try {
   await context.route("**/*", (r) =>
     new URL(r.request().url()).origin === origin ? r.continue() : r.abort(),
   );
+  context.setDefaultTimeout(120000);
   const page = await context.newPage(),
     errors = [],
     requests = [];
+  debugPage=page;
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("request", (r) => requests.push(r.url()));
   await page.goto(origin + "/modern");
@@ -148,6 +150,7 @@ try {
   console.log(
     "PASS: full application local authentication, real inventory UI save to SQLite, Classic/Modern switching, reload persistence, module navigation, backup dialog, mobile/tablet and no automatic Firebase traffic.",
   );
+} catch(error){mkdirSync("tmp/screenshots",{recursive:true});await debugPage?.screenshot({path:"tmp/screenshots/modern-failure.png"});console.log(await debugPage?.locator("body").innerText());throw error;
 } finally {
   if (browser) await browser.close();
   await new Promise((r) => server.close(r));

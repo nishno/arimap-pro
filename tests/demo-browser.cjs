@@ -59,12 +59,12 @@ fs.mkdirSync(screenshotDir, { recursive: true });
  await page.getByRole('heading',{name:'Choose a plan for your farm'}).waitFor();
  await page.getByLabel('Guest region').selectOption('Georgia');
  await page.getByLabel('Guest language').selectOption('ka');
- assert.equal(await page.getByLabel('Guest currency').inputValue(),'GEL');
+ assert.equal(await page.getByLabel('სტუმრის ვალუტა').inputValue(),'GEL');
  await page.getByRole('heading',{name:'აირჩიეთ გეგმა თქვენი მეურნეობისთვის'}).waitFor();
- await page.getByText(/129.*GEL/).waitFor();
- await page.getByLabel('Guest currency').selectOption('USD');
- await page.getByText(/49.*USD/).waitFor();
- await page.getByLabel('Guest language').selectOption('en');
+ await page.getByText(/129.*(?:GEL|ლარი|ლარ)/).waitFor();
+ await page.getByLabel('სტუმრის ვალუტა').selectOption('USD');
+ await page.getByText(/49.*(?:USD|დოლარ)/).waitFor();
+ await page.getByLabel('სტუმრის ენა').selectOption('en');
 
  assert(!requests.some(u=>/firebase|firestore|identitytoolkit|generativelanguage|\/api\/ai/.test(u)), 'Rich guest tools requested production services');
  assert.equal(await page.evaluate(()=>localStorage.getItem('agri-planter-session')),'production-sentinel');

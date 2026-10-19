@@ -1,3 +1,4 @@
+import {useLanguage} from '../contexts/LanguageContext';
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -89,9 +90,9 @@ const ka: Record<string, string> = {
   Settings: "პარამეტრები",
 };
 export default function ModernApp() {
+  const {language:lang,setLanguage:setLang}=useLanguage();
   const [page, setPage] = useState<Page>("overview"),
     [menu, setMenu] = useState(false),
-    [lang, setLang] = useState<"en" | "ka">("en"),
     [region, setRegion] = useState<"Georgia" | "Global">("Global"),
     [currency, setCurrency] = useState<"USD" | "GEL">("USD");
   const [session, setSession] = useState<Session | null>(null),

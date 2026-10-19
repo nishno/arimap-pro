@@ -25,5 +25,16 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tmp",
+    ".local-data",
+    "local-backups"
+  ],
+  "include": [
+    "src",
+    "vite.config.ts"
+  ]
 }

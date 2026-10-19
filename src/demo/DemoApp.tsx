@@ -1,3 +1,4 @@
+import {useLanguage} from '../contexts/LanguageContext';
 import { defaultBillingCurrency } from '../billing/locale';
 import React, { useEffect, useState } from 'react';
 import { DEMO_STORAGE_KEY, fields, frostRisk, initialState, readDemoState } from './model';
@@ -7,7 +8,7 @@ import GuestTools from './GuestTools';
 const sections = ['Overview', 'Field explorer', 'Harvest', 'Weather & alerts', 'Cameras', 'Map planner', 'Marketplace', 'AI agro analyst', 'Communicator', 'Plans'] as const;
 type Section = typeof sections[number];
 export default function DemoApp() {
-  const [guestLanguage,setGuestLanguage]=useState<'en'|'ka'>('en');
+  const {language:guestLanguage,setLanguage:setGuestLanguage}=useLanguage();
   const [guestRegion,setGuestRegion]=useState<'Global'|'Georgia'>('Global');
   const [guestCurrency,setGuestCurrency]=useState<'USD'|'GEL'>('USD');
   const [gate, setGate] = useState('');

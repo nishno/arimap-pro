@@ -1031,7 +1031,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
               top: `${dashboardMapToolsPos.y}px`,
               zIndex: 3100
             } : undefined}
-            className={`${dashboardMapToolsPos ? '' : 'absolute bottom-4 left-4 sm:left-6 z-[1050]'} pointer-events-auto flex items-center gap-1.5`}
+            className={`${dashboardMapToolsPos ? '' : 'absolute bottom-4 left-4 sm:left-6 z-[3100]'} pointer-events-auto flex items-center gap-1.5`}
           >
             {/* Drag Handle */}
             <div
@@ -1538,6 +1538,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
             mapProps={props}
         />
         
+        <CreateOrganizationModal isOpen={isCreateOrgModalOpen} onClose={()=>setIsCreateOrgModalOpen(false)} user={props.currentUser} onAddOrg={props.onAddOrg} onSwitchOrg={props.onSwitchOrg}/>
         <style>{`
             .custom-scrollbar::-webkit-scrollbar { width: 4px; }
             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

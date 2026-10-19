@@ -1,8 +1,13 @@
+import extraKeys from './i18n/keys.json' with {type:'json'};
 
 export type Language = 'en' | 'ka';
 
 export const translations = {
   en: {
+    ...extraKeys.en,
+    'access.restricted_title':'Module Restricted',
+    'company.owner_required':'Only the local farm owner can register company details.',
+    'company.registration_failed':'Company registration could not be saved. Check the farm server connection and try again.',
     // Sidebar
     'nav.dashboard': 'Dashboard',
     'nav.communicator': 'Communicator',
@@ -1201,6 +1206,10 @@ export const translations = {
     'exec_modal.confirm_btn': 'Save Execution & Deduct Stock',
   },
   ka: {
+    ...extraKeys.ka,
+    'access.restricted_title':'მოდულზე წვდომა შეზღუდულია',
+    'company.owner_required':'კომპანიის მონაცემების რეგისტრაცია მხოლოდ მეურნეობის მფლობელს შეუძლია.',
+    'company.registration_failed':'კომპანიის რეგისტრაციის შენახვა ვერ მოხერხდა. შეამოწმეთ კავშირი მეურნეობის სერვერთან და სცადეთ ხელახლა.',
     // Sidebar
     'nav.dashboard': 'მართვის პანელი',
     'nav.communicator': 'კომუნიკატორი',

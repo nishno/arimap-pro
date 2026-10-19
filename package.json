@@ -38,7 +38,10 @@
     "test:modern:cloud": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/modern-cloud-browser.mjs\"",
     "test:local:documents": "node --test tests/local-documents.mjs",
     "local:restore-documents": "node server/restore-documents.mjs",
-    "test:backup:cloud": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/cloud-backup.mjs\""
+    "test:backup:cloud": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node tests/cloud-backup.mjs\"",
+    "test:i18n": "node --experimental-strip-types --test tests/i18n.mjs",
+    "i18n:audit": "node --experimental-strip-types scripts/i18n-audit.mjs",
+    "test:registration": "node tests/registration-browser.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

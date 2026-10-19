@@ -114,7 +114,7 @@ export function documentStore(store) {
           id: farm.id,
           name: farm.name,
           createdBy: people.find((p) => p.role === "owner")?.id,
-          type: "Farm",
+          type: JSON.parse(db.prepare("SELECT body FROM documents WHERE path=?").get(`organizations/${farm.id}`)?.body || "{}").type || "Farm",
           country:
             JSON.parse(
               db
@@ -125,7 +125,7 @@ export function documentStore(store) {
           status: "active",
           isDiscoverable: false,
           subscriptionType: "Local",
-          createdAt: new Date(0).toISOString(),
+          createdAt: JSON.parse(db.prepare("SELECT body FROM documents WHERE path=?").get(`organizations/${farm.id}`)?.body || "{}").createdAt || db.prepare("SELECT at FROM audit WHERE action='farm.created' ORDER BY id LIMIT 1").get()?.at || new Date(0).toISOString(),
         },
       ];
     if (col === "memberships")

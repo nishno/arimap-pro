@@ -1,3 +1,4 @@
+import {isLocalRuntime,localSession} from '../local/runtime';
 import React, { useState } from 'react';
 import type { User, Organization, Membership, OrganizationType, AgricultureType } from '../types';
 import { XIcon, BuildingStorefrontIcon } from './Icons';
@@ -54,7 +55,7 @@ export const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = (
 
         setIsSubmitting(true);
         try {
-            const orgId = `org-${Date.now()}`;
+            const orgId = isLocalRuntime?localSession().farm.id:`org-${Date.now()}`;
             const newOrg: Organization = {
                 id: orgId,
                 uniqueId: `Comp-${Math.floor(1000 + Math.random() * 9000)}`,

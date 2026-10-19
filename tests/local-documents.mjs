@@ -46,12 +46,18 @@ test("full local document store: durable writes, role boundary, transactions, tr
         merge: true,
         data: {
           country: "Italy",
+          type: "LTD",
+          createdAt: "2026-10-19T00:00:00.000Z",
           shareholders: [{ name: "Owner", share: 100 }],
           createdBy: "forged-owner",
         },
       },
     ]);
     assert.equal(read("organizations").documents[0].country, "Italy");
+    assert.equal(read("organizations").documents[0].type, "LTD");
+    assert.equal(read("organizations").documents[0].createdAt, "2026-10-19T00:00:00.000Z");
+    assert.throws(()=>commit([{type:"set",path:"organizations/second-farm",data:{name:"Other farm"}}]), /one farm workspace/);
+    assert.equal(read("organizations").documents.length,1);
     assert.equal(read("organizations").documents[0].shareholders[0].share, 100);
     assert.equal(read("organizations").documents[0].createdBy, owner.id);
     commit([

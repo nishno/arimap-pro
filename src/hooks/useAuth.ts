@@ -697,6 +697,7 @@ export const useAuth = () => {
     };
 
     const handleSwitchOrg = async (orgId: string | null) => {
+        if(isLocalRuntime){const id=localSession()?.farm.id;localStorage.setItem('agri-planter-active-org',id);setCurrentUser(await localRequest('profile'));return;}
         if (!currentUser || currentUser.isGuest) return;
         const updatedUser = { ...currentUser, currentOrgId: orgId };
         setCurrentUser(updatedUser);

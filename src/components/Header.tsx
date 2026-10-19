@@ -185,7 +185,7 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Middle Area: Scrollable statuses and toggles */}
-        <div className="flex-1 flex items-center justify-start md:justify-end gap-1.5 sm:gap-2.5 overflow-x-auto custom-scrollbar-hide flex-nowrap min-w-0 snap-x py-1 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 flex items-center justify-start gap-1.5 sm:gap-2.5 overflow-x-auto custom-scrollbar-hide flex-nowrap min-w-0 snap-x py-1 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
             {pendingSyncCount > 0 && (
                 <button
                     onClick={handleSyncClick}

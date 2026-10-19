@@ -1,4 +1,4 @@
-import {isLocalRuntime} from './local/runtime';
+import {isLocalRuntime,localSession,localRequest} from './local/runtime';
 import { usePlatformAdmin } from './hooks/usePlatformAdmin';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import L from 'leaflet';
@@ -179,7 +179,7 @@ const executeDecoupledPresenceUpdate = async (updateFn: () => Promise<void>) => 
 };
 
 const App: React.FC = () => {
-    const { language, setRegion } = useLanguage();
+    const { language, setRegion, t } = useLanguage();
     const lastValidPermissionsRef = React.useRef<Set<Permission>>(new Set<Permission>());
     const [appMode, setAppMode] = useState<AppMode>(() => {
         const saved = localStorage.getItem('agri-planter-mode');
@@ -251,8 +251,8 @@ const App: React.FC = () => {
     }, []);
 
     const [activeOrgId, setActiveOrgId] = useState<string | null>(() => {
-        // Preference: Firestore session > LocalStorage
-        return localStorage.getItem('agri-planter-active-org') || null;
+        // The server farm identity is authoritative in local mode.
+        return isLocalRuntime?localSession()?.farm.id||null:localStorage.getItem('agri-planter-active-org') || null;
     });
 
     const isEnterpriseMode = useMemo(() => {
@@ -623,6 +623,7 @@ const App: React.FC = () => {
 
     // Sync activeOrgId with currentUser.currentOrgId and persistence
     useEffect(() => {
+        if(isLocalRuntime){const id=localSession()?.farm.id;if(id&&activeOrgId!==id)setActiveOrgId(id);return;}
         if (!isAuthReady || !currentUser || currentUser.isGuest) {
             // Even if guest/not ready, try to recover activeOrgId from localStorage for better UX
             const savedOrgId = localStorage.getItem('agri-planter-active-org');
@@ -1483,6 +1484,7 @@ const App: React.FC = () => {
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(() => new URLSearchParams(window.location.search).get('register') === '1');
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     useEffect(()=>{if(isLocalRuntime&&isRegisterModalOpen){setIsRegisterModalOpen(false);toast.info('This farm is already initialized. Manage logins in Local accounts & records; edit the farm in Founders Vault.');}},[isRegisterModalOpen]);
+
 
     useEffect(() => {
         if (isAuthReady && currentUser?.id === 'guest') {
@@ -3204,19 +3206,25 @@ const App: React.FC = () => {
         console.log("[App] handleAddOrg called for:", org.name);
         
         // Duplicate Tax Number Check
-        if (org.taxNumber && organizations.some(o => o.taxNumber === org.taxNumber)) {
+        if (org.taxNumber && organizations.some(o => o.taxNumber === org.taxNumber && (!isLocalRuntime || o.id!==localSession()?.farm.id))) {
             toast.error(`A company with tax number ${org.taxNumber} already exists.`);
             return;
         }
 
         // Duplicate Phone Check
-        if (org.phoneNumber && organizations.some(o => o.phoneNumber === org.phoneNumber)) {
+        if (org.phoneNumber && organizations.some(o => o.phoneNumber === org.phoneNumber && (!isLocalRuntime || o.id!==localSession()?.farm.id))) {
             toast.error(`A company with phone number ${org.phoneNumber} already exists.`);
             return;
         }
 
         try {
             const finalOrg = { ...org };
+            if(isLocalRuntime){
+                if(localSession()?.user.role!=='owner')throw new Error(t('company.owner_required'));
+                finalOrg.id=localSession().farm.id;
+                finalOrg.createdBy=currentUser!.id;
+                mem={...mem,id:`local-${currentUser!.id}`,organizationId:finalOrg.id,userId:currentUser!.id,role:'Founder',status:'active'};
+            }
             // Only use tempBoundaryGeometry if the org doesn't already have geometry
             if (tempBoundaryGeometry && (!finalOrg.areaGeometry || finalOrg.areaGeometry.length === 0)) {
                 finalOrg.areaGeometry = tempBoundaryGeometry;
@@ -3272,7 +3280,7 @@ const App: React.FC = () => {
                 const name = typeof crop === 'string' ? crop : crop.name;
                 const varieties = typeof crop === 'string' ? [] : (crop.varieties || []);
                 return {
-                    id: `crop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    id: (isLocalRuntime?crops.find(c=>c.organizationId===finalOrg.id&&c.name.toLowerCase()===name.toLowerCase())?.id:undefined)||`crop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     name: name,
                     varieties: varieties,
                     organizationId: finalOrg.id
@@ -3282,8 +3290,8 @@ const App: React.FC = () => {
             if (USE_FIREBASE && auth.currentUser && currentUser?.id !== 'root-system') {
                 console.log("Saving org to Firebase:", finalOrg.id);
                 const batch = writeBatch(db);
-                batch.set(doc(db, 'organizations', finalOrg.id), sanitizedOrg);
-                batch.set(doc(db, 'memberships', mem.id), mem);
+                batch.set(doc(db, 'organizations', finalOrg.id), sanitizedOrg, {merge:isLocalRuntime});
+                if(!isLocalRuntime)batch.set(doc(db, 'memberships', mem.id), mem);
                 batch.set(doc(db, 'layers', orgLayer.id), orgLayer);
                 batch.set(doc(db, 'layers', boundaryLayer.id), boundaryLayer);
                 
@@ -3314,8 +3322,8 @@ const App: React.FC = () => {
                         joinedAt: new Date().toISOString(),
                         organizationId: finalOrg.id
                     };
-                    batch.set(doc(db, 'employees', newEmployee.id), newEmployee);
-                    setEmployees(prev => [...prev, newEmployee]);
+                    if(!isLocalRuntime||!employees.some(e=>e.id===newEmployee.id))batch.set(doc(db, 'employees', newEmployee.id), newEmployee);
+                    if(!isLocalRuntime)setEmployees(prev => [...prev, newEmployee]);
 
                     const newExperience: WorkExperience = {
                         id: `exp-${Date.now()}`,
@@ -3338,11 +3346,11 @@ const App: React.FC = () => {
                         verificationStatus: 'verified' as const,
                         cv: {
                             ...currentUser.cv,
-                            experience: [newExperience, ...(currentUser.cv?.experience || [])]
+                            experience: [newExperience, ...(currentUser.cv?.experience || []).filter(e=>!isLocalRuntime||e.organizationId!==finalOrg.id)]
                         }
                     };
                     batch.set(doc(db, 'users', currentUser.id), updatedUser);
-                    setCurrentUser(updatedUser);
+                    if(!isLocalRuntime)setCurrentUser(updatedUser);
                 }
 
                 if (boundaryFeature) {
@@ -3350,20 +3358,21 @@ const App: React.FC = () => {
                 }
 
                 await batch.commit();
+                if(isLocalRuntime){setCurrentUser(await localRequest('profile'));setActiveOrgId(finalOrg.id);(window as any).__AGRIMAP_LOCAL_SESSION__.farm.name=finalOrg.name;}
                 await handleSwitchOrg(finalOrg.id);
                 
                 // Update local state after successful batch commit
-                setOrganizations(prev => [...prev, finalOrg]);
-                setMemberships(prev => [...prev, mem]);
-                setLayers(prev => [...prev, orgLayer, boundaryLayer]);
+                setOrganizations(prev => [...prev.filter(o=>o.id!==finalOrg.id), finalOrg]);
+                setMemberships(prev => [...prev.filter(m=>m.id!==mem.id), mem]);
+                setLayers(prev => [...prev.filter(l=>l.id!==orgLayer.id&&l.id!==boundaryLayer.id), orgLayer, boundaryLayer]);
                 if (boundaryFeature) {
                     setPlantationFeatures(prev => [...prev, boundaryFeature!]);
                 }
             } else {
                 // Mock mode or root-system local mode
-                setOrganizations(prev => [...prev, finalOrg]);
-                setMemberships(prev => [...prev, mem]);
-                setLayers(prev => [...prev, orgLayer, boundaryLayer]);
+                setOrganizations(prev => [...prev.filter(o=>o.id!==finalOrg.id), finalOrg]);
+                setMemberships(prev => [...prev.filter(m=>m.id!==mem.id), mem]);
+                setLayers(prev => [...prev.filter(l=>l.id!==orgLayer.id&&l.id!==boundaryLayer.id), orgLayer, boundaryLayer]);
                 
                 if (currentUser) {
                     const newEmployee: Employee = {
@@ -3455,8 +3464,8 @@ const App: React.FC = () => {
             toast.success(`Company ${finalOrg.name} registered successfully!`);
             logActivity("Org Registered", 'admin', 'success', `Registered new organization: ${finalOrg.name}`);
         } catch (error) {
-            handleFirestoreError(error, 'write', 'organizations/memberships/layers');
-            toast.error("Registration failed");
+            console.error('Company registration failed',error);
+            throw new Error(t('company.registration_failed'));
         }
     };
 
@@ -5742,7 +5751,7 @@ const App: React.FC = () => {
                     <div className="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mb-6 shadow-inner">
                         <LockClosedIcon className="h-10 w-10 text-slate-400" />
                     </div>
-                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">Module <span className="text-indigo-600">Restricted</span></h2>
+                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">{t('access.restricted_title')}</h2>
                     <p className="mt-2 text-slate-500 max-w-md font-medium uppercase text-[10px] tracking-widest leading-relaxed">
                         This section requires a verified account or active organization membership. {(currentUser?.roles?.length || 0) === 0 ? "Please complete your profile to continue." : "Manage your organizations in the Founders Vault."}
                     </p>
@@ -6694,7 +6703,7 @@ const App: React.FC = () => {
                     onOpenProjects={() => setIsProjectManagerOpen(true)} 
                     onSaveProject={() => setIsSaveModalOpen(true)} 
                     onOpenProfile={() => setAppMode('profile')}
-                    activeOrgName={activeOrgId === 'ALL' ? 'All Tickets' : (activeOrg?.name || 'Personal Account')}
+                    activeOrgName={activeOrgId === 'ALL' ? 'All Tickets' : (activeOrg?.name || t('profile.personal_account'))}
                     onOpenTicketManager={() => setIsTicketManagerOpen(true)}
                     currentUserRole={memberships.find(m => m.organizationId === activeOrgId)?.role}
                     onOpenNotifications={() => setIsNotificationHubOpen(true)}

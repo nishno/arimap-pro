@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState } from 'react';
+import {translateUi,setUiLanguage} from '../i18n/runtime';
 import { translations, Language } from '../translations';
 import { defaultBillingCurrency } from '../billing/locale';
 import { safeStorage } from '../services/storageService';
@@ -49,7 +50,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   });
 
+  setUiLanguage(language);
+  React.useEffect(()=>{document.documentElement.lang=language;},[language]);
   const setLanguage = (lang: Language) => {
+    setUiLanguage(lang);
     setLanguageState(lang);
     safeStorage.setItem('agri-app-lang', lang);
     const automatic = defaultBillingCurrency(region, lang);
@@ -130,9 +134,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return String(result ?? key);
     }
 
+    result=translateUi(result,language);
     if (params && typeof result === 'string') {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
-        result = (result as string).replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+        result = (result as string).replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(language==='ka'&&/^(unit|uom|role|status|currency)$/.test(paramKey)?translateUi(paramValue,language):paramValue));
       });
     }
 

@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from "react";
+import {LanguageProvider} from './contexts/LanguageContext';
 import ReactDOM from "react-dom/client";
 const DemoApp = lazy(() => import("./demo/DemoApp"));
 const LocalApp = lazy(() => import("./local/LocalApp"));
@@ -51,7 +52,7 @@ async function start() {
   );
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <Suspense fallback={<p role="status">Loading AgriMap…</p>}>
-      {element}
+      <LanguageProvider>{element}</LanguageProvider>
     </Suspense>,
   );
 }
