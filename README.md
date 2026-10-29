@@ -1,5 +1,7 @@
 # AgriMap Pro — full local application and Modern UI
 
+[Code file guide: file purposes and documentation explained](CODE_FILE_GUIDE.md)
+
 ## Run the full application locally
 
 Requires Node.js 24. Preserve `.local-data` when updating. For an existing farm, do **not** rerun initialization.
