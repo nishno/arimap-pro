@@ -78,6 +78,7 @@ export default defineConfig(({ mode }) => {
       build: {
         chunkSizeWarningLimit: 3000,
         rollupOptions: {
+          input: { core: path.resolve(__dirname, 'index.html'), terminal: path.resolve(__dirname, 'terminal/index.html') },
           output: {
             manualChunks(id) {
               if (id.includes('node_modules')) {

@@ -1,3 +1,4 @@
+import {weighTerminal} from './weigh-terminal.mjs';
 import {createCloudServer} from './cloud-server.mjs';
 import http from 'node:http';
 import https from 'node:https';
@@ -12,7 +13,7 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
   const expected = new URL(origin);
   if (!['https:', 'http:'].includes(expected.protocol) || expected.origin !== origin) throw new Error('LOCAL_ORIGIN must be an exact HTTP(S) origin');
   if (expected.protocol !== 'https:' && !['localhost', '127.0.0.1', '[::1]'].includes(expected.hostname)) throw new Error('LAN access requires HTTPS. Configure TLS or a trusted HTTPS reverse proxy.');
-  const store = openFarm(directory), documents = documentStore(store), attempts = new Map();
+  const store = openFarm(directory), documents = documentStore(store), terminal = weighTerminal(store), attempts = new Map();
   const cookie = (token, expired = false) => `agrimap_local_session=${token}; Path=/api/local; HttpOnly; SameSite=Strict; ${expected.protocol === 'https:' ? 'Secure; ' : ''}Max-Age=${expired ? 0 : 43200}`;
   const json = (res, status, body, headers = {}) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers }); res.end(JSON.stringify(body)); };
   const body = async req => {
@@ -56,6 +57,11 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
       const token = /(?:^|;\s*)agrimap_local_session=([a-f0-9]{64})(?:;|$)/.exec(req.headers.cookie || '')?.[1];
       if (route === '/api/local/logout' && req.method === 'POST') { store.logout(token); return json(res, 200, { ok: true }, { 'Set-Cookie': cookie('', true) }); }
       const user = store.authenticate(token);
+      if(route==='/api/local/terminal/bootstrap'&&req.method==='GET')return json(res,200,terminal.bootstrap(user));
+      if(route==='/api/local/terminal/operations'&&req.method==='POST')return json(res,200,terminal.submit(user,await body(req)));
+      if(route==='/api/local/terminal/changes'&&req.method==='GET')return json(res,200,terminal.changes(user,Number(url.searchParams.get('cursor')||'0')));
+      if(route==='/api/local/terminal/review'&&req.method==='POST')return json(res,200,terminal.review(user,await body(req)));
+
       if(route === '/api/local/documents/read' && req.method==='POST')return json(res,200,documents.read(user,await body(req)));
       if(route === '/api/local/documents/commit' && req.method==='POST')return json(res,200,documents.write(user,await body(req)));
       if(route === '/api/local/profile' && req.method==='GET')return json(res,200,documents.profile(user));

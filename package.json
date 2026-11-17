@@ -46,7 +46,9 @@
     "test:entry": "node tests/entry-browser.mjs",
     "test:entry:startup": "node tests/entry-cli.mjs",
     "test:access": "node --experimental-strip-types --test tests/role-access.mjs",
-    "test:access:browser": "node tests/role-navigation-browser.mjs"
+    "test:access:browser": "node tests/role-navigation-browser.mjs",
+    "test:terminal": "node --test tests/weigh-terminal.mjs",
+    "test:terminal:browser": "node tests/weigh-terminal-browser.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

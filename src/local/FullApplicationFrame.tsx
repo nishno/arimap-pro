@@ -10,7 +10,8 @@ export function FullApplicationFrame({
 }: {
   children: React.ReactNode;
 }) {
-  const {t}=useLanguage();
+  const {t,language}=useLanguage();
+  const [terminal,setTerminal]=useState(false);
   const modern = location.pathname.startsWith("/modern");
   const [backup, setBackup] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -66,6 +67,7 @@ export function FullApplicationFrame({
             {modern ? "Switch to Classic" : "Switch to Modern"}
           </a>
           {isLocalRuntime && <a href="/local">Local accounts & records</a>}
+          {isLocalRuntime && localSession()?.user.role === 'owner' && <button onClick={()=>setTerminal(true)}>{language==='ka'?'აწონვის ტერმინალი · საპილოტე':'Weigh terminal · Pilot'}</button>}
           {isLocalRuntime && localSession()?.user.role === "owner" && (
             <button onClick={() => setBackup(true)}>Cloud backup</button>
           )}
@@ -77,6 +79,10 @@ export function FullApplicationFrame({
         </div>
       )}
       <div className="agrimap-app-content">{children}</div>
+      {terminal && <div role="dialog" aria-modal="true" aria-label="Weigh terminal pilot" style={{position:'fixed',inset:12,zIndex:20000,background:'white',display:'flex',flexDirection:'column',border:'1px solid #ccc',borderRadius:12}}>
+        <nav style={{padding:10,display:'flex',gap:20}}><button onClick={()=>setTerminal(false)}>{language==='ka'?'დახურვა':'Close'}</button><a href="/terminal/index.html" target="_blank" rel="noopener" onClick={()=>setTerminal(false)}>{language==='ka'?'ცალკე ჩანართში გახსნა':'Open in new tab'}</a></nav>
+        <iframe title="Weigh terminal pilot" src="/terminal/index.html" style={{border:0,flex:1,width:'100%'}}/>
+      </div>}
       {backup && (
         <React.Suspense
           fallback={<p role="status">Loading backup controls…</p>}

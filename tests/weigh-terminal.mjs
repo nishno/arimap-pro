@@ -1,0 +1,50 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {openFarm} from '../server/farm-store.mjs';
+import {documentStore} from '../server/documents.mjs';
+import {weighTerminal} from '../server/weigh-terminal.mjs';
+const rejects=(status)=>e=>e.status===status;
+test('terminal ledger: replay safety, concurrent contributions, conflicts, review revisions, audit and restart durability',async()=>{
+ const directory=mkdtempSync('/tmp/agrimap-terminal-store-');let store=openFarm(directory);
+ try{
+  await store.initialize({name:'Pilot farm',timezone:'Asia/Tbilisi',ownerName:'Owner',ownerUsername:'owner',password:'test-owner-password'});
+  const owner=(await store.login('owner','test-owner-password')).user;
+  const worker=await store.createWorker(owner,{name:'Worker',username:'worker',password:'test-worker-password'});
+  let documents=documentStore(store),terminal=weighTerminal(store);const org=store.farm().id;
+  documents.write(owner,{operations:[{type:'set',path:'harvestEvents/event1',data:{name:'Blueberry harvest',organizationId:org,status:'active'}},{type:'set',path:'employees/worker1',data:{name:'Worker',organizationId:org,status:'active'}}]});
+  assert.equal(terminal.bootstrap(owner).events[0].id,'event1');
+  assert.throws(()=>terminal.bootstrap(worker),rejects(403));
+  const operation=(n,changes={})=>({schemaVersion:1,actorId:owner.id,operationId:'operation-'+n,organizationId:org,eventId:'event1',workerId:'worker1',deviceId:n<20?'tablet':'computer',boxQrId:'box-'+n,grossKg:5.75,tareKg:.35,capturedAt:'2026-11-17T10:00:00Z',...changes});
+  // Two independently produced batches merge without replacing either user's rows.
+  for(let n=20;n<35;n++)terminal.submit(owner,operation(n));
+  for(let n=0;n<20;n++)terminal.submit(owner,operation(n));
+  assert.equal(terminal.changes(owner,0).records.length,35);
+  const first=terminal.submit(owner,operation(0));assert.equal(first.replayed,true);assert.equal(first.record.netKg,5.4);
+  assert.equal(first.record.capturedAt,'2026-11-17T10:00:00Z');assert.ok(first.record.receivedAt);
+  assert.equal(terminal.changes(owner,0).records.length,35);
+  assert.throws(()=>terminal.submit(owner,operation(0,{grossKg:7})),rejects(409));
+  assert.throws(()=>terminal.submit(owner,operation(40,{organizationId:'other-farm'})),rejects(403));
+  assert.throws(()=>terminal.submit(owner,operation(40,{actorId:'other-user'})),rejects(403));
+  assert.throws(()=>terminal.submit(worker,operation(40,{actorId:worker.id})),rejects(403));
+  for(const grossKg of [NaN,Infinity,-1,0,10001,'7'])assert.throws(()=>terminal.submit(owner,operation(40,{grossKg})),rejects(400));
+  const duplicate=terminal.submit(owner,operation(40,{boxQrId:'box-0'}));
+  assert.equal(duplicate.record.status,'suspected_duplicate');
+  const earlier=terminal.submit(owner,operation(0)).record;
+  assert.equal(earlier.status,'suspected_duplicate');assert.equal(earlier.revision,2);
+  assert.ok(earlier.relatedOperationIds.includes('operation-40'));
+  assert.throws(()=>terminal.review(owner,{expectedActorId:owner.id,operationId:'operation-0',expectedRevision:1,decision:'confirm',reason:'Inspected box'}),rejects(409));
+  const reviewed=terminal.review(owner,{expectedActorId:owner.id,operationId:'operation-0',expectedRevision:2,decision:'confirm',reason:'Inspected box'});
+  assert.equal(reviewed.status,'reviewed');assert.equal(reviewed.reviews[0].actorId,owner.id);
+  const next=terminal.changes(owner,35);assert.equal(next.records.length,2);assert.equal(next.records.find(r=>r.operationId==='operation-0').revision,3);
+  documents.write(owner,{operations:[{type:'update',path:'harvestEvents/event1',data:{status:'completed'}}]});
+  assert.equal(terminal.submit(owner,operation(41)).record.status,'late_review');
+  assert.throws(()=>terminal.submit(owner,operation(42,{eventId:'unknown'})),rejects(409));
+  assert.equal(documents.read(owner,{path:'harvestEntries'}).documents.length,0,'pilot must not change legacy harvest totals');
+  assert.equal(documents.read(owner,{path:'stockTransactions'}).documents.length,0);
+  assert.ok(store.db.prepare("SELECT COUNT(*) AS n FROM audit WHERE action='terminal.reviewed'").get().n>0);
+  store.close();store=openFarm(directory);documentStore(store);terminal=weighTerminal(store);
+  assert.equal(terminal.submit(owner,operation(0)).record.status,'reviewed');
+  assert.equal(terminal.changes(owner,0).records.length,37);
+ }finally{store.close();rmSync(directory,{recursive:true,force:true});}
+});
