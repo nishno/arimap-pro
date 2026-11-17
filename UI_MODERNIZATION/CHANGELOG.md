@@ -21,3 +21,9 @@ All application routes share one language provider. Added offline Georgian/Engli
 Added visible local account setup and Firebase signup/sign-in actions, with shared language controls on local/start/full-app and account modals. Local startup now also serves the Firebase application on a separate origin (default 3101), keeping its browser caches separate from the local farm (3100). Legacy cloud-registration links redirect to that entry. Local farm APIs are unavailable on the cloud origin.
 
 Firebase registration completes profiles transactionally without self-granted roles/billing, tolerates an auth-listener-created profile and supports retries. Company setup uses rule-compliant unpaid values, keeps its organization ID on failed retries, and avoids changing protected global roles. Added emulator and entry browser coverage. See REGISTRATION_AND_DATA_AUTHORITY.md for actual local account creation, backup versus live sync, current limitations and prioritized risks.
+
+## 2026-11-17 — contextual module navigation and toolbar controls
+
+Added a personal work/earnings view, hidden denied desktop/mobile modules, contextual active-membership checks, management-only Meet/Chat and AI console entries, workspace URLs and a reversible weather-panel hide control. Removed stale permission retention across account/role changes. Platform administration uses verified claims, not profile role labels.
+
+See [User access and workspaces](../USER_ACCESS.md) for the role matrix, test commands and remaining backend/data-scope work. Production Firebase rules were not changed or deployed.

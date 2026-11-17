@@ -70,6 +70,8 @@ interface GlobalAssistantPanelProps {
   activeOrgId?: string;
   activeOrgName?: string;
   currentUser?: User | null;
+  canUseManagementTools?: boolean;
+  isPlatformAdmin?: boolean;
   onOpenChat?: () => void;
   onOpenMeet?: () => void;
   currentAiMode?: AIAssistantMode;
@@ -120,6 +122,8 @@ const Message: React.FC<{ message: AssistantMessage; onOpenSettings?: () => void
 };
 
 const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({ 
+  canUseManagementTools = false,
+  isPlatformAdmin = false,
   messages, 
   onSendCommand, 
   isLoading,
@@ -205,11 +209,8 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isSystemAdmin = Boolean(
-      (currentUser as any)?.isSystemAdmin || 
-      (currentUser as any)?.role === 'system_admin' || 
-      ((currentUser as any)?.roles as any)?.includes?.('system_admin')
-  );
+  const isSystemAdmin = isPlatformAdmin;
+  useEffect(() => { if (!canUseManagementTools) setIsGodAIHubOpen(false); }, [canUseManagementTools]);
 
   // Load currently active key on mount and when settings opens
   useEffect(() => {
@@ -583,7 +584,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                 </div>
 
                 {/* 1. Google Meet Button (Top Blue Circle) */}
-                <button
+                {canUseManagementTools && (<button
                     onClick={() => {
                         if (onOpenMeet) onOpenMeet();
                         window.dispatchEvent(new CustomEvent('agrimap_open_meet'));
@@ -592,10 +593,10 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                     title="Google Meet Video Call"
                 >
                     <Video className="w-6 h-6 text-white" />
-                </button>
+                </button>)}
 
                 {/* 2. Google Chat Button (Second Emerald Circle) */}
-                <button
+                {canUseManagementTools && (<button
                     onClick={() => {
                         if (onOpenChat) onOpenChat();
                         window.dispatchEvent(new CustomEvent('agrimap_open_chat'));
@@ -604,7 +605,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                     title="Google Chat Workspace Hub"
                 >
                     <MessageSquare className="w-6 h-6 text-white" />
-                </button>
+                </button>)}
 
                 {/* 3. AI Voice Notes Button (Third Darker Green / Teal Circle with subtle ring) */}
                 <button
@@ -642,7 +643,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                 </button>
 
                 {/* 6. Root AI & God AI Intelligence Console Button */}
-                <button
+                {canUseManagementTools && (<button
                     onClick={() => setIsGodAIHubOpen(true)}
                     className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-white shadow-xl shadow-amber-950/60 flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 cursor-pointer border-2 border-amber-300/50 relative"
                     title={isSystemAdmin ? (isKa ? "Root AI ასისტენტი & God AI კონსოლი (სუპერ ადმინი - ყველა კომპანია)" : "Root AI Assistant & God AI Console (Super Admin - All Companies)") : (isKa ? "აგრონომიული PM კონსოლი" : "Agronomy PM Intelligence Console")}
@@ -652,7 +653,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-white"></span>
                     </span>
-                </button>
+                </button>)}
             </div>
         </div>
 
@@ -871,7 +872,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
               <Stethoscope size={11} />
               <span>{isKa ? 'დიაგნოსტიკა (Pop-up)' : 'Pop-up'}</span>
             </button>
-            <button
+            {canUseManagementTools && (<button
               type="button"
               onClick={() => setIsGodAIHubOpen(true)}
               className="px-2 py-1 bg-gradient-to-r from-amber-600 to-emerald-600 hover:from-amber-500 hover:to-emerald-500 text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1 cursor-pointer transition-all hover:scale-105 active:scale-95"
@@ -879,7 +880,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
             >
               <Sparkles size={11} />
               <span>{isKa ? 'კონსოლი' : 'Console'}</span>
-            </button>
+            </button>)}
           </div>
         </div>
 
@@ -970,13 +971,13 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
           >
             <Leaf size={10} className="text-emerald-700" /> 🔬 AI დიაგნოსტიკა
           </button>
-          <button
+          {canUseManagementTools && (<button
             type="button"
             onClick={() => setIsGodAIHubOpen(true)}
             className="whitespace-nowrap px-2 py-0.5 bg-gradient-to-r from-emerald-100 to-amber-100 border border-emerald-200 text-emerald-900 rounded-full font-bold transition-colors cursor-pointer hover:opacity-90 flex items-center gap-1"
           >
             <Sparkles size={10} className="text-amber-600" /> Console
-          </button>
+          </button>)}
         </div>
         
         {isSettingsOpen && (
@@ -1353,8 +1354,8 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
       )}
 
       {/* God AI & Agronomy PM Intelligence Hub Modal */}
-      <GodAIIntelligenceHubModal
-          isOpen={isGodAIHubOpen}
+      {canUseManagementTools && <GodAIIntelligenceHubModal
+          isOpen={canUseManagementTools && isGodAIHubOpen}
           onClose={() => setIsGodAIHubOpen(false)}
           activeOrgId={activeOrgId}
           activeOrgName={activeOrgName}
@@ -1373,7 +1374,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
           nutritionPlans={nutritionPlans}
           notes={notes}
           onNavigateToTasks={onNavigateToTasks}
-      />
+      />}
 
       {/* AI Analysis Suite Dedicated Pop-up Modal (Matches Console Window) */}
       <AiAnalysisModal

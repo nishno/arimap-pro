@@ -17,6 +17,7 @@ import ContextualStatusEngine from './ContextualStatusEngine';
 import { APP_VERSION_CODE, APP_VERSION_NAME, MODERN_UI_VERSION } from '../utils/version';
 
 interface SidebarProps {
+  isPlatformAdmin?: boolean;
   appMode: AppMode;
   onSetAppMode: (mode: AppMode) => void;
   checkPermission: (mode: AppMode) => boolean;
@@ -70,6 +71,7 @@ const NavItem: React.FC<{
 );
 
 const Sidebar: React.FC<SidebarProps> = ({ 
+  isPlatformAdmin = false,
   appMode, 
   onSetAppMode, 
   checkPermission, 
@@ -83,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { isDark, currentTheme, toggleDarkLight } = useAppTheme();
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [copiedType, setCopiedType] = useState<'phone' | 'email' | null>(null);
-  const isRoot = currentUser?.roles?.includes('ROOT_SUPER_ADMIN');
+  const isRoot = isPlatformAdmin;
   
   const savedLocalConfig = localStorage.getItem('agrimap-local-config');
   let isLocalMode = false;
@@ -92,6 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   } catch (e) {}
 
   const publicPortal: { mode: AppMode, icon: React.ReactNode, label: string }[] = [
+    { mode: 'my-work', icon: <BanknotesIcon className="h-5 w-5" />, label: language === 'ka' ? 'ჩემი სამუშაო და ანაზღაურება' : 'My work & earnings' },
     { mode: 'dashboard', icon: <HomeIcon className="h-5 w-5" />, label: t('nav.dashboard') },
     { mode: 'marketplace', icon: <BuildingStorefrontIcon className="h-5 w-5" />, label: t('nav.market') },
     { mode: 'ai', icon: <AcademicCapIcon className="h-5 w-5" />, label: t('nav.ai_analyst') },
@@ -116,13 +119,17 @@ const Sidebar: React.FC<SidebarProps> = ({
     { mode: 'admin', icon: <ShieldCheckIcon className="h-5 w-5" />, label: t('nav.admin'), rootOnly: true },
   ];
 
-  const renderSection = (title: string, items: typeof companyEnterprise) => (
+  const renderSection = (title: string, items: typeof companyEnterprise) => {
+    items = items.filter(item => checkPermission(item.mode) && (!item.rootOnly || isRoot));
+    if (!items.length) return null;
+    return (
     <div className="mb-6">
       <p className={`px-4 text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{title}</p>
       <div className="space-y-1">
         {items.map((item) => {
           if (item.rootOnly && !isRoot) return null;
           const hasAccess = checkPermission(item.mode);
+          if (!hasAccess) return null;
           return (
             <NavItem 
               key={item.mode} 
@@ -138,6 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </div>
   );
+  };
 
   return (
     <aside 

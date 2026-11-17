@@ -1,5 +1,5 @@
 
-export type AppMode = 'dashboard' | 'ai' | 'design' | 'community' | 'marketplace' | 'system' | 'agronomy' | 'harvesting' | 'stock' | 'accounting' | 'founders' | 'tools' | 'tasks' | 'personalization' | 'admin' | 'invitations' | 'logs' | 'profile' | 'onboarding' | 'labs' | 'guide';
+export type AppMode = 'dashboard' | 'ai' | 'design' | 'community' | 'marketplace' | 'system' | 'agronomy' | 'harvesting' | 'stock' | 'accounting' | 'founders' | 'tools' | 'tasks' | 'personalization' | 'admin' | 'invitations' | 'logs' | 'profile' | 'onboarding' | 'labs' | 'guide' | 'my-work';
 
 export type NetworkMode = 'cloud' | 'local' | 'offline';
 
@@ -1748,7 +1748,24 @@ export const AI_FREE_LIMIT = 20;
 
 type AccessLevel = 'full' | 'read' | 'none';
 
+// Navigation policy is contextual; profile role labels never grant platform claims.
+export const activeMembershipsFor = (user: User | null, memberships: Membership[] = [], organizationId?: string) =>
+    memberships.filter(m => m.userId === user?.id && m.status === 'active' && (!organizationId || m.organizationId === organizationId));
+
+export const canUseManagementTools = (user: User | null, organizationId: string | undefined, memberships: Membership[] = [], platformAdmin = false): boolean => {
+    if (!user || user.isGuest || ['blocked', 'suspended', 'deleted'].includes(user.status)) return false;
+    return platformAdmin || Boolean(organizationId && activeMembershipsFor(user, memberships, organizationId)
+        .some(m => ['Admin', 'Founder', 'Co-Founder'].includes(m.role)));
+};
+
+export const isWorkerContext = (user: User | null, organizationId?: string, memberships: Membership[] = []): boolean => {
+    if (!user || user.isGuest) return false;
+    const roles = organizationId ? activeMembershipsFor(user, memberships, organizationId).map(m => m.role) : user.roles || [];
+    return roles.length > 0 && roles.every(r => ['Employee', 'worker', 'Daily Worker', 'Foreman'].includes(r));
+};
+
 const permissionMatrix: Record<AppMode, Partial<Record<UserRole, AccessLevel>>> = {
+    "my-work": {},
     dashboard: { Founder: 'full', 'Co-Founder': 'full', Admin: 'full', Accountant: 'full', Agronomist: 'full', 'Agro-Agent': 'full', Buyer: 'full', Employee: 'full', Independent: 'full', ROOT_SUPER_ADMIN: 'full', Guest: 'read', 'Field Manager': 'full', company: 'full' },
     ai: { Founder: 'full', 'Co-Founder': 'full', Admin: 'full', Accountant: 'full', Agronomist: 'full', 'Agro-Agent': 'full', Buyer: 'full', Employee: 'full', Independent: 'full', ROOT_SUPER_ADMIN: 'full', Guest: 'full', 'Field Manager': 'full', company: 'full', 'Agro-Shop': 'full' },
     community: { Founder: 'full', 'Co-Founder': 'full', Admin: 'full', Accountant: 'full', Agronomist: 'full', 'Agro-Agent': 'full', Buyer: 'full', Employee: 'full', Independent: 'full', ROOT_SUPER_ADMIN: 'full', Guest: 'read', 'Field Manager': 'full', company: 'full', 'Agro-Shop': 'full' },
@@ -1774,8 +1791,14 @@ const permissionMatrix: Record<AppMode, Partial<Record<UserRole, AccessLevel>>> 
 };
 
 export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?: Organization, memberships?: Membership[]): AccessLevel => {
-    // 1. Super Admin Override
-    if (user?.roles?.includes('ROOT_SUPER_ADMIN')) return 'full';
+    if (user && ['blocked', 'suspended', 'deleted'].includes(user.status)) return 'none';
+    if (module === 'my-work') return user && !user.isGuest ? 'full' : 'none';
+    // Workers get a personal workspace, not read access to the company's management screens.
+    if (isWorkerContext(user, activeOrg?.id, memberships)) {
+        return ['dashboard', 'ai', 'community', 'marketplace', 'profile', 'guide', 'personalization', 'onboarding'].includes(module) ? 'full' : 'none';
+    }
+    if (module === 'labs' && !canUseManagementTools(user, activeOrg?.id, memberships)) return 'none';
+    // Platform overrides are applied by the caller using verified token claims, never a profile label.
 
     // 2. Guest Handling
     if (!user || user.isGuest) {
@@ -1798,14 +1821,20 @@ export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?
         }
     }
 
+    if (['dashboard', 'ai', 'community', 'marketplace', 'profile', 'guide', 'personalization', 'onboarding'].includes(module)) return 'full';
+    memberships = activeMembershipsFor(user, memberships);
+
     // 4. Determine User's Role in Context
     let userRole: UserRole = (user?.roles && user.roles.length > 0) ? user.roles[0] : 'Guest';
+    if (userRole === 'ROOT_SUPER_ADMIN') userRole = 'Guest';
     if (userRole === 'company') userRole = 'Founder'; // Map company to Founder for permissions
     
     if (activeOrg) {
         const membership = memberships?.find(m => m.organizationId === activeOrg.id && m.userId === user.id);
         if (membership) {
             userRole = membership.role;
+        } else {
+            return 'none';
         }
     } else if (memberships && memberships.length > 0) {
         // "See All" Context: Check max permission across all memberships

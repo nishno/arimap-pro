@@ -17,10 +17,11 @@ interface MobileNavProps {
 }
 
 const MobileNav: React.FC<MobileNavProps> = ({ appMode, onSetAppMode, checkPermission }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const allItems: { mode: AppMode, icon: React.ReactNode, label: string }[] = [
+    { mode: 'my-work', icon: <BanknotesIcon className="h-5 w-5" />, label: language === 'ka' ? 'ჩემი ანაზღაურება' : 'My earnings' },
     { mode: 'dashboard', icon: <HomeIcon className="h-5 w-5" />, label: t('nav.dashboard') },
     { mode: 'tasks', icon: <BellIcon className="h-5 w-5" />, label: t('nav.tasks') },
     { mode: 'design', icon: <PencilIcon className="h-5 w-5" />, label: t('nav.map_planner') },
@@ -52,7 +53,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ appMode, onSetAppMode, checkPermi
           const active = appMode === item.mode;
           const isHelp = item.mode === 'guide';
           
-          if (!hasAccess && (item.mode === 'admin' || item.mode === 'logs' || item.mode === 'founders')) return null;
+          if (!hasAccess) return null;
 
           return (
             <button

@@ -44,7 +44,9 @@
     "test:registration": "node tests/registration-browser.mjs",
     "test:cloud:registration": "firebase emulators:exec --only auth,firestore --project demo-agrimap --config firebase.emulator.json \"node --experimental-strip-types tests/cloud-registration.mjs\"",
     "test:entry": "node tests/entry-browser.mjs",
-    "test:entry:startup": "node tests/entry-cli.mjs"
+    "test:entry:startup": "node tests/entry-cli.mjs",
+    "test:access": "node --experimental-strip-types --test tests/role-access.mjs",
+    "test:access:browser": "node tests/role-navigation-browser.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

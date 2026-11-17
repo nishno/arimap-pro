@@ -279,6 +279,7 @@ export const useFirebaseData = (
     const [layers, setLayers] = useState<Layer[]>([]);
     const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [memberships, setMemberships] = useState<Membership[]>([]);
+    const [resolvedMembershipUserId, setResolvedMembershipUserId] = useState<string | null>(null);
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
     const [harvestEvents, setHarvestEvents] = useState<HarvestEvent[]>([]);
     const [accounts, setAccounts] = useState<Account[]>([]);
@@ -468,7 +469,9 @@ export const useFirebaseData = (
     }, []);
 
     useEffect(() => {
+        setResolvedMembershipUserId(null);
         if (!USE_FIREBASE || currentUser?.id === 'root-system') {
+            setResolvedMembershipUserId(currentUser?.id || null);
             const savedOrgs = safeStorage.safeParse(localStorage.getItem('mock_organizations'), []);
             const savedMemberships = safeStorage.safeParse(localStorage.getItem('mock_memberships'), []);
             const savedUsers = safeStorage.safeParse(localStorage.getItem('mock_users'), []);
@@ -543,19 +546,20 @@ export const useFirebaseData = (
             : query(collection(db, 'memberships'), where('userId', '==', currentUser.id));
         
         const unsubscribeMemberships = onSnapshot(membershipsQuery, (snapshot) => {
+            setResolvedMembershipUserId(currentUser.id);
             const mems = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as unknown as Membership));
             // Deduplicate memberships by id
             const uniqueMems = Array.from(new Map(mems.map(m => [m.id, m])).values()) as Membership[];
             
-            // Only update if IDs have changed to prevent downstream listener cycles
+            // Role/status changes must propagate even when membership IDs stay the same.
             setMemberships(prev => {
-                const prevIds = prev.map(m => m.id).sort().join(',');
-                const nextIds = uniqueMems.map(m => m.id).sort().join(',');
-                if (prevIds === nextIds) return prev;
+                if (JSON.stringify(prev) === JSON.stringify(uniqueMems)) return prev;
                 saveToCache('memberships', uniqueMems);
                 return uniqueMems;
             });
         }, (error) => {
+            setMemberships([]);
+            setResolvedMembershipUserId(currentUser.id);
             const msg = String(error instanceof Error ? error.message : error).toLowerCase();
             if (!msg.includes('permission-denied') && !msg.includes('insufficient permissions')) {
                 handleFirestoreError(error, 'list', 'memberships');
@@ -1265,6 +1269,7 @@ export const useFirebaseData = (
     }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin]);
 
     return {
+        membershipsReady: Boolean(currentUser?.id && resolvedMembershipUserId === currentUser.id),
         plantationFeatures: sanitizeCollection(plantationFeatures),
         setPlantationFeatures,
         layers: sanitizeCollection(layers),

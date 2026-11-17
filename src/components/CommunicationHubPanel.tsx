@@ -34,6 +34,7 @@ import {
 } from '../services/googleChatService';
 
 interface CommunicationHubPanelProps {
+    canUseGoogleTools?: boolean;
     currentUser: User | null;
     forumPosts: ForumPost[];
     onAddPost: (post: Partial<ForumPost>) => void;
@@ -156,7 +157,9 @@ const isUserOnline = (user?: User) => {
 
 const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
     const { allUsers = [], organizations = [], crops = [], onSetAppMode, mapProps, onAddPost, currentUser, forumPosts, onAddReply, initialConversationId, onClearInitialConversation, onForwardToAnalyst, isManualOffline, setAlerts, onSetAiTab, onMarkPostAsRead } = props;
-    const [mainTab, setMainTab] = useState<'GOOGLE_CHAT' | 'GOOGLE_MEET' | 'COMMUNICATOR' | 'PARTNERS'>('GOOGLE_CHAT');
+    const canUseGoogleTools = props.canUseGoogleTools === true;
+    const [mainTab, setMainTab] = useState<'GOOGLE_CHAT' | 'GOOGLE_MEET' | 'COMMUNICATOR' | 'PARTNERS'>(canUseGoogleTools ? 'GOOGLE_CHAT' : 'COMMUNICATOR');
+    useEffect(() => { if (!canUseGoogleTools) setMainTab('COMMUNICATOR'); }, [canUseGoogleTools]);
     const [hubType, setHubType] = useState<'INTERNAL' | 'REGIONAL' | 'GLOBAL'>('INTERNAL');
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -648,20 +651,20 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
             >
                 {/* Main Tabs */}
                 <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-hide bg-slate-50/90 shrink-0 min-h-[52px] h-[52px] items-stretch">
-                    <button 
+                    {canUseGoogleTools && (<button
                         onClick={() => setMainTab('GOOGLE_CHAT')}
                         className={`flex-1 py-3 px-3.5 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 min-w-[120px] shrink-0 h-full ${mainTab === 'GOOGLE_CHAT' ? 'border-emerald-600 text-emerald-600 bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
                         <MessageSquare size={16} className="text-emerald-500 shrink-0" />
                         <span>Google Chat</span>
-                    </button>
-                    <button 
+                    </button>)}
+                    {canUseGoogleTools && (<button
                         onClick={() => setMainTab('GOOGLE_MEET')}
                         className={`flex-1 py-3 px-3.5 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 min-w-[120px] shrink-0 h-full ${mainTab === 'GOOGLE_MEET' ? 'border-blue-600 text-blue-600 bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
                         <Video size={16} className="text-blue-500 shrink-0" />
                         <span>Google Meet</span>
-                    </button>
+                    </button>)}
                     <button 
                         onClick={() => setMainTab('COMMUNICATOR')}
                         className={`flex-1 py-3 px-3.5 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 min-w-[120px] shrink-0 h-full ${mainTab === 'COMMUNICATOR' ? 'border-indigo-600 text-indigo-600 bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
@@ -681,7 +684,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                 {/* Sub Content View */}
                 <div className="flex-grow flex flex-col overflow-hidden min-h-0">
                     {/* Google Chat Tab */}
-                    {mainTab === 'GOOGLE_CHAT' && (
+                    {canUseGoogleTools && mainTab === 'GOOGLE_CHAT' && (
                         <div className="flex-grow flex flex-col overflow-hidden">
                             {/* Google Auth Banner */}
                             {needsAuth && (
@@ -1197,7 +1200,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                     )}
 
                     {/* Google Meet Tab */}
-                    {mainTab === 'GOOGLE_MEET' && (
+                    {canUseGoogleTools && mainTab === 'GOOGLE_MEET' && (
                         <div className="flex-grow flex flex-col p-6 space-y-6 overflow-y-auto bg-slate-50/40">
                             {/* Meet Banner */}
                             <div className="p-6 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-[2rem] shadow-xl relative overflow-hidden space-y-4">

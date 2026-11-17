@@ -46,3 +46,5 @@ npm run local:start
 ```
 
 The local server defaults to local mode and supports fields, harvest records, owner-created worker accounts and database backup without Firebase. Full cloud-module migration, cloud backup/sync, camera gateway and device offline queues are not yet connected. Vercel can host the demo/cloud client, but the local server runs on your own computer. See the local server guide above before connecting LAN tablets.
+
+[User access, workspaces and toolbar controls](USER_ACCESS.md)

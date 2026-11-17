@@ -1,3 +1,6 @@
+import {readWorkspaceRoute, workspacePath} from './access/routes';
+import MyWorkView from './components/MyWorkView';
+import {activeMembershipsFor, canUseManagementTools, isWorkerContext} from './types';
 import {isLocalRuntime,localSession,localRequest} from './local/runtime';
 import {saveCloudRegistration} from './cloud/registration';
 import { usePlatformAdmin } from './hooks/usePlatformAdmin';
@@ -181,10 +184,9 @@ const executeDecoupledPresenceUpdate = async (updateFn: () => Promise<void>) => 
 
 const App: React.FC = () => {
     const { language, setRegion, t } = useLanguage();
-    const lastValidPermissionsRef = React.useRef<Set<Permission>>(new Set<Permission>());
     const [appMode, setAppMode] = useState<AppMode>(() => {
         const saved = localStorage.getItem('agri-planter-mode');
-        return (saved as AppMode) || 'dashboard';
+        return readWorkspaceRoute(location.pathname)?.module || (saved as AppMode) || 'dashboard';
     });
     const [labTab, setLabTab] = useState<'hardware' | 'devices_map' | 'theme' | 'letters' | 'analytics'>('hardware');
     const { 
@@ -460,6 +462,7 @@ const App: React.FC = () => {
         organizations,
         setOrganizations,
         memberships,
+        membershipsReady,
         setMemberships,
         inventoryItems,
         setInventoryItems,
@@ -574,15 +577,19 @@ const App: React.FC = () => {
     const [showcaseShapeType, setShowcaseShapeType] = useState<'polygon' | 'circle' | 'line' | 'point'>('polygon');
     const [inProgressShowcasePoints, setInProgressShowcasePoints] = useState<[number, number][]>([]);
 
+    const canUsePrivilegedTools = membershipsReady && canUseManagementTools(currentUser, activeOrgId || undefined, memberships, isSystemAdmin);
+
     const handleOpenMeetHub = useCallback(() => {
+        if (!canUsePrivilegedTools) return;
         setCommunicationHubInitialTab('MEET');
         setIsCommunicationHubOpen(true);
-    }, []);
+    }, [canUsePrivilegedTools]);
 
     const handleOpenChatHub = useCallback(() => {
+        if (!canUsePrivilegedTools) return;
         setCommunicationHubInitialTab('CHAT');
         setIsCommunicationHubOpen(true);
-    }, []);
+    }, [canUsePrivilegedTools]);
 
     useEffect(() => {
         const onMeet = () => handleOpenMeetHub();
@@ -709,6 +716,11 @@ const App: React.FC = () => {
         handleAgriImageAnalysis,
         handleCompareDocuments
     } = useAiAssistant(language);
+    useEffect(() => {
+        if (!canUsePrivilegedTools) setIsCommunicationHubOpen(false);
+        if (!isSystemAdmin && assistantMode === 'god_ai') setAssistantMode('standard');
+    }, [canUsePrivilegedTools, isSystemAdmin, assistantMode]);
+
 
     // Automated Evolutionary God AI Learning Cycle (monitors works, tasks, harvest, features)
     useEffect(() => {
@@ -1908,7 +1920,7 @@ const App: React.FC = () => {
     const currentUserPermissions = useMemo(() => {
         let perms = new Set<Permission>();
 
-        if (currentUser?.roles?.includes('ROOT_SUPER_ADMIN')) {
+        if (isSystemAdmin) {
             perms = new Set(ALL_PERMISSIONS);
         } else {
             const getPermissionsForRole = (roleName: string) => {
@@ -1928,13 +1940,13 @@ const App: React.FC = () => {
 
             if (!activeOrg) {
                 const merged = new Set<Permission>();
-                memberships.forEach(m => {
+                activeMembershipsFor(currentUser, memberships).forEach(m => {
                     if (m.userId === currentUser?.id) {
                         const permsForRole = getPermissionsForRole(m.role);
                         permsForRole.forEach(p => merged.add(p));
                     }
                 });
-                if (currentUser?.roles) {
+                if (!activeOrg && currentUser?.roles) {
                     currentUser.roles.forEach(r => {
                         const permsForRole = getPermissionsForRole(r);
                         permsForRole.forEach(p => merged.add(p));
@@ -1943,13 +1955,13 @@ const App: React.FC = () => {
                 perms = merged;
             } else {
                 const merged = new Set<Permission>();
-                const membership = memberships.find(m => m.organizationId === activeOrg.id && m.userId === currentUser?.id);
+                const membership = activeMembershipsFor(currentUser, memberships, activeOrg.id)[0];
                 if (membership) {
                     const permsForRole = getPermissionsForRole(membership.role);
                     permsForRole.forEach(p => merged.add(p));
                 }
 
-                if (currentUser?.roles) {
+                if (!activeOrg && currentUser?.roles) {
                     currentUser.roles.forEach(r => {
                         const permsForRole = getPermissionsForRole(r);
                         permsForRole.forEach(p => merged.add(p));
@@ -1959,21 +1971,13 @@ const App: React.FC = () => {
             }
         }
 
-        // Lock structural context to last valid non-empty permissions on erratic network states or auth timeouts
-        if (perms.size > 0) {
-            lastValidPermissionsRef.current = perms;
-        } else if (lastValidPermissionsRef.current.size > 0 && (!isConnectionHealthy || !isAuthReady || currentUser?.isGuest)) {
-            console.warn("[Permissions] Erratic network or auth timeout/guest state detected. Locking context to last valid permissions.");
-            perms = lastValidPermissionsRef.current;
-        }
-
         return perms;
-    }, [currentUser, activeOrg, memberships, roles, isConnectionHealthy, isAuthReady]);
+    }, [currentUser, activeOrg, memberships, roles, isConnectionHealthy, isAuthReady, isSystemAdmin]);
 
     const checkPermission = useCallback((module: AppMode) => {
-        if (currentUser?.roles?.includes('ROOT_SUPER_ADMIN')) {
-            return true;
-        }
+        if (currentUser && ['blocked', 'suspended', 'deleted'].includes(currentUser.status)) return false;
+        if (isSystemAdmin) return true;
+        if (isWorkerContext(currentUser, activeOrg?.id, memberships)) return checkModuleAccess(currentUser, module, activeOrg, memberships) !== 'none';
 
         const access = checkModuleAccess(currentUser, module, activeOrg, memberships);
         if (access === 'full') return true;
@@ -1985,7 +1989,29 @@ const App: React.FC = () => {
         if (module === 'system' && currentUserPermissions.has('access_system')) return true;
 
         return access !== 'none';
-    }, [currentUser, activeOrg, memberships, currentUserPermissions]);
+    }, [currentUser, activeOrg, memberships, currentUserPermissions, isSystemAdmin]);
+
+    useEffect(() => {
+        const navigate = () => {
+            const route = readWorkspaceRoute(location.pathname);
+            if (route) setAppMode(route.module);
+        };
+        window.addEventListener('popstate', navigate);
+        return () => window.removeEventListener('popstate', navigate);
+    }, []);
+
+    useEffect(() => {
+        if (!isAuthReady || !currentUser || currentUser.isGuest || !membershipsReady) return;
+        if (activeOrgId && activeOrgId !== 'ALL' && !activeOrg) return;
+        const route = readWorkspaceRoute(location.pathname);
+        const worker = !isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships);
+        const allowed = checkPermission(appMode) && (!route?.organizationId || route.organizationId === activeOrg?.id);
+        const next = allowed ? appMode : worker ? 'my-work' : 'dashboard';
+        if (next !== appMode) setAppMode(next);
+        const base = location.pathname.startsWith('/modern') ? 'modern' : 'classic';
+        const path = workspacePath(base, next, activeOrg?.id, worker);
+        if (location.pathname !== path) history.replaceState(null, '', path + location.search);
+    }, [isAuthReady, membershipsReady, currentUser, activeOrg, activeOrgId, memberships, appMode, checkPermission, isSystemAdmin]);
 
     const logActivity = async (action: string, module: AppMode, status: 'success' | 'failure' | 'alert', report?: string): Promise<void> => {
         const userId = currentUser?.id || 'operator-user';
@@ -5753,12 +5779,13 @@ const App: React.FC = () => {
             );
         }
 
-        const access = checkModuleAccess(currentUser, appMode, activeOrg, memberships);
+        if (currentUser && !currentUser.isGuest && !membershipsReady) return <p role="status" className="p-6">{language === 'ka' ? 'წვდომის უფლებების შემოწმება…' : 'Checking workspace access…'}</p>;
+        const access = isSystemAdmin ? 'full' : checkModuleAccess(currentUser, appMode, activeOrg, memberships);
         
         // Bypass access check for registration on map
-        const isBypass = isRegisteringOnMap && appMode === 'design';
+        const isBypass = isRegisteringOnMap && appMode === 'design' && (!currentUser || currentUser.isGuest || canUsePrivilegedTools);
         
-        if (access === 'none' && !isBypass) {
+        if (!checkPermission(appMode) && !isBypass) {
             return (
                 <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 p-10 text-center">
                     <div className="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mb-6 shadow-inner">
@@ -6200,8 +6227,10 @@ const App: React.FC = () => {
                 notes={notes || []}
                 currentUser={currentUser}
             />;
+            case 'my-work': return <MyWorkView currentUser={currentUser} />;
             case 'community': return (
                 <CommunicationHubPanel 
+                    canUseGoogleTools={canUsePrivilegedTools}
                     currentUser={currentUser}
                     forumPosts={forumPosts || []} 
                     onAddPost={handleAddPost} 
@@ -6562,7 +6591,8 @@ const App: React.FC = () => {
                         </div>
                     </main>
                 );
-            default: return (
+            default: if (!isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships)) return <MyWorkView currentUser={currentUser} />;
+            return (
                 <Dashboard 
                     {...mapProps}
                     plantationFeatures={currentOrgFeatures} 
@@ -6698,6 +6728,7 @@ const App: React.FC = () => {
         <FirebaseDataProvider rawData={rawFirebaseData} isConnectionHealthy={isConnectionHealthy}>
             <div className="flex h-[100dvh] w-screen overflow-hidden font-inter transition-colors duration-200" style={{ backgroundColor: 'var(--bg-canvas, #f3f4f6)', color: 'var(--text-primary, #0f172a)' }}>
             <Sidebar 
+                isPlatformAdmin={isSystemAdmin}
                 appMode={appMode} 
                 onSetAppMode={setAppMode} 
                 checkPermission={checkPermission} 
@@ -6754,12 +6785,14 @@ const App: React.FC = () => {
                 <MobileNav 
                     appMode={appMode} 
                     onSetAppMode={setAppMode} 
-                    checkPermission={(mode) => checkModuleAccess(currentUser, mode, activeOrg, memberships) !== 'none'} 
+                    checkPermission={checkPermission}
                 />
 
                 <div className="pointer-events-none z-[8500]">
                     <div className="pointer-events-auto">
                         <GlobalAssistantPanel 
+                            canUseManagementTools={canUsePrivilegedTools}
+                            isPlatformAdmin={isSystemAdmin}
                             messages={assistantMessages}
                             onSendCommand={(cmd) => handleSendCommand(cmd, {
                                 onAddTask: handleAddTask,
@@ -6810,7 +6843,7 @@ const App: React.FC = () => {
 
                 {/* Floating Collaborative Communication & Video Hub */}
                 <FloatingCommunicationHub
-                    isOpen={isCommunicationHubOpen}
+                    isOpen={canUsePrivilegedTools && isCommunicationHubOpen}
                     onClose={() => setIsCommunicationHubOpen(false)}
                     currentUser={currentUser}
                     initialTab={communicationHubInitialTab}
