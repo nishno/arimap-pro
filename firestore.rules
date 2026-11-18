@@ -90,6 +90,18 @@ service cloud.firestore {
          (!write || member.get('permissionLevel', 'write') in ['write', 'admin'])));
     }
 
+    function ownEmployee(orgId, employeeId) {
+      let path = /databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId);
+      let member = exists(path) ? get(path).data : {};
+      let employeePath = /databases/$(database)/documents/employees/$(employeeId);
+      let employee = exists(employeePath) ? get(employeePath).data : {};
+      return isAuthenticated() && member.get('status','') == 'active' &&
+        employee.get('organizationId','') == orgId &&
+        (employee.get('userId','') == request.auth.uid ||
+         (employee.get('userId','') == '' && (member.get('employeeId','') == employeeId ||
+          employeeId == request.auth.uid || employeeId == 'emp-' + request.auth.uid + '-' + orgId)));
+    }
+
     // Validation Helpers
     function isValidString(val, maxLen) {
       return val is string && val.size() <= maxLen;
@@ -182,6 +194,13 @@ service cloud.firestore {
         (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
+    match /roles/{roleId} {
+      allow read: if isMemberOf(resource.data.get('organizationId',''));
+      allow create: if isOrgAdmin(request.resource.data.get('organizationId',''));
+      allow update: if isOrgAdmin(resource.data.get('organizationId','')) && request.resource.data.get('organizationId','') == resource.data.get('organizationId','');
+      allow delete: if isOrgAdmin(resource.data.get('organizationId',''));
+    }
+
     match /projects/{projectId} {
       allow list: if isAuthenticated();
       allow get: if isAuthenticated() && (resource.data.userId == request.auth.uid || isMemberOf(resource.data.organizationId) || isAdmin());
@@ -234,7 +253,7 @@ service cloud.firestore {
     }
 
     match /transactions/{id} {
-      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], false);
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], false) || (ownEmployee(resource.data.get('organizationId',''),resource.data.get('employeeId','')) && (resource.data.get('creditAccountId','') == 'acc-payroll' || resource.data.get('debitAccountId','') == 'acc-payroll'));
       allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], true);
       allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['accounting'], true);
       allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], true) &&
@@ -251,7 +270,7 @@ service cloud.firestore {
 
     // Employee module assignments are authority-bearing: ordinary members cannot edit them.
     match /employees/{id} {
-      allow read: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow read: if (isVerified() && isMemberOf(resource.data.get('organizationId', ''))) || ownEmployee(resource.data.get('organizationId',''),id);
       allow delete: if isOrgAdmin(resource.data.get('organizationId', ''));
       allow create: if isOrgAdmin(request.resource.data.get('organizationId', ''));
       allow update: if isOrgAdmin(resource.data.get('organizationId', '')) &&
@@ -336,7 +355,7 @@ service cloud.firestore {
     }
 
     match /harvestEntries/{id} {
-      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], false);
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], false) || ownEmployee(resource.data.get('organizationId',''),resource.data.get('employeeId',''));
       allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], true);
       allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['harvesting'], true);
       allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], true) &&

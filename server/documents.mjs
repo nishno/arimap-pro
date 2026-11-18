@@ -188,7 +188,20 @@ export function documentStore(store) {
     profile,
     read(user, input) {
       const { path } = input;
-      check(user, path);
+      const sameFarm=(input.constraints||[]).some(c=>c.type==='where'&&c.field==='organizationId'&&c.op==='=='&&c.value===store.farm().id);
+      const personalCandidate=typeof path==='string'&&(path==='employees'||path.startsWith('employees/')||path==='harvestEntries'||path==='transactions'||path.startsWith('roles/'));
+      const ownEmployees=user.role==='owner'||!personalCandidate?[]:db.prepare("SELECT path FROM documents WHERE path LIKE 'employees/%' AND json_extract(body,'$.organizationId')=? AND (json_extract(body,'$.userId')=? OR ((json_extract(body,'$.userId') IS NULL OR json_extract(body,'$.userId')='') AND (path=? OR path=?)))").all(store.farm().id,user.id,`employees/${user.id}`,`employees/emp-${user.id}-${store.farm().id}`).map(row=>row.path.split('/')[1]);
+      const ownRoleIds=user.role==='owner'||typeof path!=='string'||!path.startsWith('roles/')?[]:db.prepare("SELECT body FROM documents WHERE path LIKE 'employees/%' AND json_extract(body,'$.organizationId')=? AND (json_extract(body,'$.userId')=? OR ((json_extract(body,'$.userId') IS NULL OR json_extract(body,'$.userId')='') AND (path=? OR path=?)))").all(store.farm().id,user.id,`employees/${user.id}`,`employees/emp-${user.id}-${store.farm().id}`).flatMap(row=>{const id=JSON.parse(row.body).roleId;return typeof id==='string'?[id,id.startsWith(store.farm().id+'__')?id:store.farm().id+'__'+id]:[];});
+      const fieldEquals=(field,value)=>(input.constraints||[]).some(c=>c.type==='where'&&c.field===field&&c.op==='=='&&c.value===value);
+      const selectedEmployee=(input.constraints||[]).find(c=>c.type==='where'&&c.field==='employeeId'&&c.op==='==')?.value;
+      const scopedOwn=sameFarm&&ownEmployees.includes(selectedEmployee);
+      const privateRead=typeof path==='string'&&/^[-\w]+(?:\/[-\w.]+)?$/.test(path)&&(
+        path.startsWith('employees/')&&ownEmployees.includes(path.split('/')[1]) ||
+        path.startsWith('roles/')&&ownRoleIds.includes(path.split('/')[1]) ||
+        path==='employees'&&sameFarm&&fieldEquals('userId',user.id) ||
+        path==='harvestEntries'&&scopedOwn ||
+        path==='transactions'&&scopedOwn&&(fieldEquals('creditAccountId','acc-payroll')||fieldEquals('debitAccountId','acc-payroll')));
+      if(!privateRead)check(user, path);
       const parts = path.split("/"),
         v = virtual(user, parts[0]);
       let rows =

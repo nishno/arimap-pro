@@ -9,3 +9,7 @@ The pilot does not replace the original station, change business totals, connect
 ## 2026-11-18 — stable explicit module grants
 
 Fixed worker-role fallback overriding explicit grants, incompatible HR module names, random membership IDs, optimistic-only grants and missing colleague membership subscriptions. Added canonical membership precedence, existing invitation acceptance preserving grants, scoped cloud collection checks, LAN module editor/API enforcement and delegated LAN terminal operators. Added emulator/unit/browser coverage. Cloud rules require a separate deployment; the rest of the hardware/offline plan remains open.
+
+## 2026-11-18 — linked worker records and cloud role loading
+
+Replaced the profile-only earnings placeholder with trusted employee-linked harvest and payroll queries plus own task logs. Added legacy HR/custom-role grant recovery, scoped role subscriptions and namespaced saves, protected personal read rules, an explicit HR account link selector and a non-secret Firebase target diagnostic. See WORKER_RECORDS.md for source semantics, deployment requirements and limits.

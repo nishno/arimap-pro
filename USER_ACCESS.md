@@ -58,3 +58,7 @@ Verified for this change: production build, TypeScript check, role-policy/route 
 ## Explicit grants update — 2026-11-18
 
 When an active membership has `allowedModules`, that exact optional-module list overrides the default role matrix, including an empty list. Profile/help/account controls remain. Granted workers can therefore enter assigned operational modules without receiving the other company modules. Persisted canonical membership grants, LAN access controls, updated cloud rules and rollout limits are documented in [MODULE_ACCESS.md](HARDWARE_MODULARIZATION/MODULE_ACCESS.md). The earlier worker-default table applies when no explicit list is present.
+
+## Worker records and role recovery
+
+The earnings view now reads linked employee harvest entries, individual accessible task logs and payroll ledger records. Legacy HR module grants and assigned company roles are read from the server when membership grants are absent. Explicit membership lists, including empty lists, retain precedence. See [worker records](HARDWARE_MODULARIZATION/WORKER_RECORDS.md).

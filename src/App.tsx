@@ -1,4 +1,5 @@
-import {normalizeModuleGrants} from './access/moduleGrants';
+import {useWorkerAccount} from './worker/useWorkerAccount';
+import {normalizeModuleGrants,legacyEmployeeModules} from './access/moduleGrants';
 import {readWorkspaceRoute, workspacePath} from './access/routes';
 import MyWorkView from './components/MyWorkView';
 import {activeMembershipsFor, canUseManagementTools, isWorkerContext} from './types';
@@ -462,7 +463,7 @@ const App: React.FC = () => {
         setLayers,
         organizations,
         setOrganizations,
-        memberships,
+        memberships: storedMemberships,
         membershipsReady,
         setMemberships,
         inventoryItems,
@@ -533,6 +534,14 @@ const App: React.FC = () => {
         cropVarieties,
         setCropVarieties
     } = useFirebaseData(currentUser, isAuthReady, activeOrgId, isRoot, isConnectionHealthy);
+    const personalWork=useWorkerAccount(isAuthReady?currentUser:null,activeOrgId,storedMemberships);
+    const memberships=useMemo(()=>storedMemberships.map(m=>{
+        if(m.userId!==currentUser?.id||m.organizationId!==activeOrgId||Array.isArray(m.allowedModules)||!personalWork.employee)return m;
+        const assigned=legacyEmployeeModules(personalWork.employee,personalWork.role);
+        if(!assigned.length)return m;
+        return {...m,employeeId:personalWork.employee.id,allowedModules:assigned as AppMode[]};
+    }),[storedMemberships,currentUser?.id,activeOrgId,personalWork.employee,personalWork.role]);
+
 
     const [historyStack, setHistoryStack] = useState<PlantationFeature[][]>([]);
     const [redoStack, setRedoStack] = useState<PlantationFeature[][]>([]);
@@ -1233,6 +1242,16 @@ const App: React.FC = () => {
         { id: 'role-worker', name: 'worker', permissions: ['edit_work'] as Permission[] },
         { id: 'role-daily', name: 'Daily Worker', permissions: ['edit_work'] as Permission[] }
     ]);
+
+    const baselineRoles=React.useRef(roles);
+    useEffect(()=>{
+        setRoles(baselineRoles.current);
+        if(!USE_FIREBASE||!isAuthReady||!currentUser||currentUser.isGuest||!activeOrgId||activeOrgId==='ALL')return;
+        return onSnapshot(query(collection(db,'roles'),where('organizationId','==',activeOrgId)),snapshot=>{
+            const values=snapshot.docs.map(d=>({...d.data(),id:d.id}) as Role);
+            setRoles(values.length?values:baselineRoles.current);
+        },()=>setRoles(baselineRoles.current));
+    },[isAuthReady,currentUser?.id,activeOrgId]);
 
     const [users, setUsers] = useState<User[]>([]);
 
@@ -1972,8 +1991,11 @@ const App: React.FC = () => {
             }
         }
 
+        if(!isSystemAdmin && personalWork.role && activeMembershipsFor(currentUser,memberships,activeOrg?.id).length){
+            for(const permission of personalWork.role.permissions||[])if(ALL_PERMISSIONS.includes(permission)&&!['edit_roles','admin_access'].includes(permission))perms.add(permission);
+        }
         return perms;
-    }, [currentUser, activeOrg, memberships, roles, isConnectionHealthy, isAuthReady, isSystemAdmin]);
+    }, [currentUser, activeOrg, memberships, roles, personalWork.role, isConnectionHealthy, isAuthReady, isSystemAdmin]);
 
     const checkPermission = useCallback((module: AppMode) => {
         if (!isAuthReady || (currentUser && !currentUser.isGuest && (!membershipsReady || (activeOrgId && activeOrgId !== 'ALL' && !activeOrg)))) return ['profile','guide'].includes(module);
@@ -4506,7 +4528,10 @@ const App: React.FC = () => {
                     };
                     trackModification(`employees/${id}`, 'set', data);
                     batch.set(doc(db, 'employees', id), sanitizeObject(data));
-                    const member = memberships.filter(m => m.organizationId === data.organizationId && (m.employeeId === id || e.userId === m.userId || id === `emp-${m.userId}-${m.organizationId}`)).sort((a,b)=>Number(b.id===`${b.userId}_${b.organizationId}`)-Number(a.id===`${a.userId}_${a.organizationId}`))[0];
+                    const member = memberships.filter(m => m.organizationId === data.organizationId && (e.userId ? e.userId === m.userId : m.employeeId === id || id === `emp-${m.userId}-${m.organizationId}`)).sort((a,b)=>Number(b.id===`${b.userId}_${b.organizationId}`)-Number(a.id===`${a.userId}_${a.organizationId}`))[0];
+                    if(e.userId)for(const previous of memberships.filter(m=>m.organizationId===data.organizationId&&m.employeeId===id&&m.userId!==e.userId)){
+                        if(previous.id===`${previous.userId}_${previous.organizationId}`)batch.update(doc(db,'memberships',previous.id),{employeeId:''});
+                    }
                     if (member && Array.isArray(e.visibleModules)) {
                         const canonicalId=`${member.userId}_${member.organizationId}`;
                         const grants={employeeId:id,allowedModules:normalizeModuleGrants(e.visibleModules)};
@@ -4538,27 +4563,14 @@ const App: React.FC = () => {
     };
 
     const handleSetRoles = async (newRoles: Role[]) => {
-        setRoles(newRoles);
-        saveMockData('roles', newRoles);
-
-        if (USE_FIREBASE && auth.currentUser && currentUser?.id !== 'root-system') {
-            try {
-                const batch = writeBatch(db);
-                newRoles.forEach(r => {
-                    const id = r.id || `role-${Date.now()}-${Math.random()}`;
-                    const data = { ...r, id, organizationId: activeOrgId || 'personal' };
-                    trackModification(`roles/${id}`, 'set', data);
-                    batch.set(doc(db, 'roles', id), data);
-                });
-                await batch.commit();
-            } catch (error) {
-                console.warn("Firestore write error for roles, queued locally:", error);
-                newRoles.forEach(r => {
-                    const id = r.id || `role-${Date.now()}-${Math.random()}`;
-                    trackModification(`roles/${id}`, 'set', { ...r, id, organizationId: activeOrgId || 'personal' });
-                });
+        if(!activeOrgId||activeOrgId==='ALL'){toast.error('Select a company before changing roles.');return;}
+        const normalized=newRoles.map(r=>({...r,legacyId:r.legacyId||r.id,id:r.id.startsWith(activeOrgId+'__')?r.id:activeOrgId+'__'+r.id,organizationId:activeOrgId}));
+        try{
+            if(USE_FIREBASE&&auth.currentUser&&currentUser?.id!=='root-system'){
+                const batch=writeBatch(db);normalized.forEach(r=>batch.set(doc(db,'roles',r.id),sanitizeObject(r)));await batch.commit();
             }
-        }
+            setRoles(normalized);saveMockData('roles',normalized);
+        }catch(error){console.error('Role permissions were not saved',error);toast.error('Role permissions could not be saved to the server.');}
     };
 
     const handleSetEmployeeGroups = async (newGroups: EmployeeGroup[]) => {
@@ -6258,7 +6270,7 @@ const App: React.FC = () => {
                 notes={notes || []}
                 currentUser={currentUser}
             />;
-            case 'my-work': return <MyWorkView currentUser={currentUser} />;
+            case 'my-work': return <MyWorkView data={personalWork} tasks={workAssignments||[]} organization={activeOrg} />;
             case 'community': return (
                 <CommunicationHubPanel 
                     canUseGoogleTools={canUsePrivilegedTools}
@@ -6622,7 +6634,7 @@ const App: React.FC = () => {
                         </div>
                     </main>
                 );
-            default: if (!isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships) && !activeMembershipsFor(currentUser,memberships,activeOrg?.id).some(m=>Array.isArray(m.allowedModules))) return <MyWorkView currentUser={currentUser} />;
+            default: if (!isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships) && !activeMembershipsFor(currentUser,memberships,activeOrg?.id).some(m=>Array.isArray(m.allowedModules))) return <MyWorkView data={personalWork} tasks={workAssignments||[]} organization={activeOrg} />;
             return (
                 <Dashboard 
                     {...mapProps}

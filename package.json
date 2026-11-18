@@ -50,7 +50,10 @@
     "test:terminal": "node --test tests/weigh-terminal.mjs",
     "test:terminal:browser": "node tests/weigh-terminal-browser.mjs",
     "test:module-grants": "node --experimental-strip-types --test tests/module-grants.mjs",
-    "test:module-grants:browser": "node tests/module-grants-browser.mjs"
+    "test:module-grants:browser": "node tests/module-grants-browser.mjs",
+    "test:worker": "node --experimental-strip-types --test tests/worker-summary.mjs tests/worker-records.mjs",
+    "test:worker:browser": "node tests/worker-earnings-browser.mjs",
+    "firebase:target": "node scripts/firebase-target.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

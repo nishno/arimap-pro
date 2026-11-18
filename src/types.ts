@@ -610,6 +610,8 @@ export type Permission = 'edit_work' | 'edit_machinery' | 'edit_employees' | 'ed
 export const ALL_PERMISSIONS: Permission[] = ['edit_work', 'edit_machinery', 'edit_employees', 'edit_roles', 'view_accounting', 'admin_access', 'access_harvesting', 'use_weigh_station', 'access_stock', 'access_accounting', 'access_system'];
 
 export interface Role {
+    legacyId?: string;
+    organizationId?: string;
     id: string;
     name: string;
     permissions: Permission[];
@@ -1800,6 +1802,7 @@ const permissionMatrix: Record<AppMode, Partial<Record<UserRole, AccessLevel>>> 
 
 export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?: Organization, memberships?: Membership[]): AccessLevel => {
     if (user && ['blocked', 'suspended', 'deleted'].includes(user.status)) return 'none';
+    if (module === 'my-work') return user && !user.isGuest ? 'full' : 'none';
     // Explicit grants replace role defaults for this farm, including an explicit empty list.
     const scopedMembership = activeOrg ? activeMembershipsFor(user, memberships, activeOrg.id)[0] : undefined;
     if (scopedMembership && Array.isArray(scopedMembership.allowedModules)) {
@@ -1807,7 +1810,7 @@ export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?
         if (!normalizeModuleGrants(scopedMembership.allowedModules).includes(module)) return 'none';
         return scopedMembership.permissionLevel === 'read' ? 'read' : 'full';
     }
-    if (module === 'my-work') return user && !user.isGuest ? 'full' : 'none';
+
     // Workers get a personal workspace, not read access to the company's management screens.
     if (isWorkerContext(user, activeOrg?.id, memberships)) {
         return ['dashboard', 'ai', 'community', 'marketplace', 'profile', 'guide', 'personalization', 'onboarding'].includes(module) ? 'full' : 'none';

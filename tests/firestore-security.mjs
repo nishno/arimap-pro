@@ -42,6 +42,27 @@ try {
  await assertFails(setDoc(doc(invited,'harvestEntries','read-only-attempt'),{organizationId:'farm-a'}));
  await assertSucceeds(updateDoc(doc(orgOwner,'memberships','invited-grant_farm-a'),{status:'suspended'}));
  await assertFails(getDoc(doc(invited,'harvestEntries','entry-a')));
+ const payrollOwner=env.authenticatedContext('owner-a').firestore();
+ await assertSucceeds(setDoc(doc(payrollOwner,'memberships','personal-worker_farm-a'),{userId:'personal-worker',organizationId:'farm-a',role:'Employee',status:'active',allowedModules:[],employeeId:'private-employee'}));
+ await assertSucceeds(setDoc(doc(payrollOwner,'employees','private-employee'),{organizationId:'farm-a',userId:'personal-worker',name:'Worker'}));
+ await assertSucceeds(setDoc(doc(payrollOwner,'transactions','personal-paid'),{organizationId:'farm-a',employeeId:'private-employee',debitAccountId:'acc-payroll',creditAccountId:'bank',amount:40}));
+ await assertSucceeds(setDoc(doc(payrollOwner,'transactions','foreign-paid'),{organizationId:'farm-a',employeeId:'someone-else',debitAccountId:'acc-payroll',amount:999}));
+ await assertSucceeds(setDoc(doc(payrollOwner,'transactions','private-expense'),{organizationId:'farm-a',employeeId:'private-employee',debitAccountId:'fuel',creditAccountId:'bank',amount:100}));
+ await assertSucceeds(setDoc(doc(payrollOwner,'harvestEntries','personal-picked'),{organizationId:'farm-a',employeeId:'private-employee',netWeightKg:20}));
+ await assertSucceeds(setDoc(doc(payrollOwner,'roles','farm-a__weigher'),{organizationId:'farm-a',name:'Weigher',permissions:['access_harvesting','edit_work']}));
+ const personal=env.authenticatedContext('personal-worker').firestore();
+ await assertSucceeds(getDocs(query(collection(personal,'roles'),where('organizationId','==','farm-a'))));
+ await assertFails(updateDoc(doc(personal,'roles','farm-a__weigher'),{permissions:['admin_access']}));
+
+ await assertSucceeds(updateDoc(doc(payrollOwner,'employees','private-employee'),{userId:'replacement-worker'}));
+ await assertFails(getDoc(doc(personal,'transactions','personal-paid')));
+ await assertSucceeds(updateDoc(doc(payrollOwner,'employees','private-employee'),{userId:'personal-worker'}));
+ await assertSucceeds(getDocs(query(collection(personal,'transactions'),where('organizationId','==','farm-a'),where('employeeId','==','private-employee'),where('debitAccountId','==','acc-payroll'))));
+ await assertSucceeds(getDocs(query(collection(personal,'harvestEntries'),where('organizationId','==','farm-a'),where('employeeId','==','private-employee'))));
+ await assertFails(getDocs(collection(personal,'transactions')));
+ await assertFails(getDoc(doc(personal,'transactions','foreign-paid')));
+ await assertFails(getDoc(doc(personal,'transactions','private-expense')));
+ await assertFails(updateDoc(doc(personal,'employees','private-employee'),{userId:'someone-else'}));
  const member=env.authenticatedContext('member-a').firestore();
  await assertSucceeds(getDoc(doc(member,'harvestEntries','entry-a')));
  await assertFails(getDoc(doc(member,'harvestEntries','entry-b')));

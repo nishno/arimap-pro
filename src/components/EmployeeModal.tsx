@@ -14,6 +14,7 @@ interface EmployeeModalProps {
     roles: Role[];
     organizations?: Organization[];
     activeOrgId?: string | null;
+    linkedAccounts?: {userId:string;organizationId:string;label:string}[];
 }
 
 const Modal: React.FC<{ children: React.ReactNode; title: string; onClose: () => void; }> = ({ children, title, onClose }) => (
@@ -30,7 +31,7 @@ const Modal: React.FC<{ children: React.ReactNode; title: string; onClose: () =>
     </div>
   );
 
-const EmployeeModal: React.FC<EmployeeModalProps> = ({ employee, allEmployees, onSave, onClose, roles, organizations, activeOrgId }) => {
+const EmployeeModal: React.FC<EmployeeModalProps> = ({ employee, allEmployees, onSave, onClose, roles, organizations, activeOrgId, linkedAccounts=[] }) => {
     const { t } = useLanguage();
     const [formState, setFormState] = useState<Omit<Employee, 'id'>>({
         name: employee?.name || '',
@@ -55,6 +56,11 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({ employee, allEmployees, o
         sex: employee?.sex || '',
         isGeorgianCitizen: employee?.isGeorgianCitizen || false
     });
+    React.useEffect(()=>{setFormState(previous=>{
+        if(roles.some(role=>role.id===previous.roleId))return previous;
+        const role=roles.find(role=>role.legacyId===previous.roleId);
+        return role?{...previous,roleId:role.id}:previous;
+    });},[roles]);
     const [error, setError] = useState<string | null>(null);
     const [addManualNumber, setAddManualNumber] = useState(false);
 
@@ -270,6 +276,7 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({ employee, allEmployees, o
                     </div>
                     
                     <div className="md:col-span-3">
+                        <label className="block mb-2 text-gray-700 font-medium">Linked company account<select aria-label="Linked company account" className="input-field" value={formState.userId||''} onChange={e=>setFormState(previous=>({...previous,userId:e.target.value||undefined}))}><option value="">Select the invited member</option>{linkedAccounts.filter(a=>a.organizationId===formState.organizationId).map(a=><option key={a.userId} value={a.userId}>{a.label}</option>)}</select></label>
                         <label className="block mb-2 text-gray-700 font-medium">{t('emp.visible_modules')}</label>
                         <div className="flex flex-wrap gap-4">
                             {modules.map(mod => (
@@ -284,7 +291,7 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({ employee, allEmployees, o
                                 </label>
                             ))}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">If none selected, employee appears everywhere.</p>
+                        <p className="text-xs text-gray-500 mt-1">Select only the modules this account should access. Personal earnings and account controls remain available.</p>
                     </div>
 
                     <h4 className="md:col-span-3 font-semibold text-gray-500 text-xs uppercase tracking-wider border-b pb-1 mt-4">{t('emp.financial')}</h4>

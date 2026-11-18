@@ -1,4 +1,4 @@
-import {normalizeModuleGrants} from '../access/moduleGrants';
+import {normalizeModuleGrants,membershipRoleForEmployee} from '../access/moduleGrants';
 import {isLocalRuntime} from '../local/runtime';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -552,7 +552,7 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
 
     const getRoleOfEmp = (roleId?: string): string => {
         if (!roleId) return 'Employee';
-        const matched = roles.find(r => r.id === roleId || (r.name && roleId && r.name.toLowerCase() === roleId.toLowerCase()));
+        const matched = roles.find(r => r.id === roleId || r.legacyId === roleId || (r.name && roleId && r.name.toLowerCase() === roleId.toLowerCase()));
         if (matched) return matched.name;
         return roleId;
     };
@@ -565,8 +565,9 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
             const targetOrgId = emp.organizationId || activeOrgId;
             const targetUser = users.find(u => (u.email && emp.email && u.email.toLowerCase() === emp.email.toLowerCase()) || (u.personalNumber && u.personalNumber === emp.idNumber));
             if (targetUser && targetOrgId) {
-                const updatedRole = getRoleOfEmp(emp.roleId) as UserRole;
-                const updatedPermission = (updatedRole === 'Admin' ? 'admin' : updatedRole === 'Field Manager' ? 'write' : 'read') as 'read' | 'write' | 'admin';
+                const assignedRole=roles.find(r=>r.id===emp.roleId||r.legacyId===emp.roleId||r.name===getRoleOfEmp(emp.roleId));
+                const updatedRole = membershipRoleForEmployee(getRoleOfEmp(emp.roleId)) as UserRole;
+                const updatedPermission = (updatedRole === 'Admin' ? 'admin' : updatedRole === 'Field Manager' || assignedRole?.permissions.some(p=>['edit_work','use_weigh_station','edit_machinery'].includes(p)) ? 'write' : 'read') as 'read' | 'write' | 'admin';
 
                 // 1. Update Membership
                 const updatedMemberships = memberships.map(m => {
@@ -601,15 +602,6 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
                     onSetMemberships(updatedMemberships);
                 }
 
-                // 2. Update User Global Roles list
-                const currentRoles = targetUser.roles || [];
-                if (!currentRoles.includes(updatedRole)) {
-                    const updatedUser = {
-                        ...targetUser,
-                        roles: [updatedRole, ...currentRoles.filter(r => r !== updatedRole && r !== 'Guest')]
-                    };
-                    onSetUsers(users.map(u => u.id === targetUser.id ? updatedUser : u));
-                }
             }
             toast.success(`${emp.name} updated successfully.`);
         } else {
@@ -732,7 +724,7 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
                         employeeId: newEmpId,
                         userId: targetUser.id,
                         organizationId: targetOrgId,
-                        role: getRoleOfEmp(emp.roleId) as UserRole,
+                        role: membershipRoleForEmployee(getRoleOfEmp(emp.roleId)) as UserRole,
                         permissionLevel: (getRoleOfEmp(emp.roleId) === 'Admin' ? 'admin' : 'write'),
                         status: 'active',
                         joinedAt: new Date().toISOString()
@@ -1272,7 +1264,7 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
                 {employees.length === 0 && <div className="col-span-full py-20 text-center text-slate-300 font-black uppercase tracking-widest text-xs">No employees found in registry.</div>}
             </div>
 
-             {modalOpen && <EmployeeModal employee={editingEmployee} onSave={handleSaveEmployee} onClose={() => setModalOpen(false)} roles={roles} allEmployees={employees} organizations={organizations} activeOrgId={activeOrgId} />}
+             {modalOpen && <EmployeeModal linkedAccounts={memberships.map(m=>({userId:m.userId,organizationId:m.organizationId,label:users.find(u=>u.id===m.userId)?.name||m.userId}))} employee={editingEmployee} onSave={handleSaveEmployee} onClose={() => setModalOpen(false)} roles={roles} allEmployees={employees} organizations={organizations} activeOrgId={activeOrgId} />}
              {managingForeman && <ForemanManagerModal foreman={managingForeman} allEmployees={employees} allMachinery={machinery || []} onSave={async (upd) => { await onSetEmployees(employees.map(e => e.id === upd.id ? upd : e)); setManagingForeman(null); }} onClose={() => setManagingForeman(null)} />}
 
              
