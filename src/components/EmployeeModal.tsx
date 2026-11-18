@@ -1,3 +1,4 @@
+import {normalizeModuleGrants, GRANTABLE_MODULES} from '../access/moduleGrants';
 
 import React, { useState } from 'react';
 import type { Employee, Role, EmployeeType, AccountType, PaymentType, Organization } from '../types';
@@ -43,7 +44,8 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({ employee, allEmployees, o
         paymentRate: employee?.paymentRate || 0,
         accountType: employee?.accountType || 'Bank Account',
         notes: employee?.notes || '',
-        visibleModules: employee?.visibleModules || [],
+        visibleModules: normalizeModuleGrants(employee?.visibleModules),
+        userId: employee?.userId,
         password: employee?.password || '',
         status: employee?.status || 'active',
         joinedAt: employee?.joinedAt || new Date().toISOString(),
@@ -133,7 +135,7 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({ employee, allEmployees, o
         });
     };
 
-    const modules = ['Planning', 'Harvest', 'Admin', 'Store'];
+    const modules = [...GRANTABLE_MODULES];
 
     return (
         <Modal title={employee ? t('emp.edit') : t('emp.add')} onClose={onClose}>
@@ -269,7 +271,7 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({ employee, allEmployees, o
                     
                     <div className="md:col-span-3">
                         <label className="block mb-2 text-gray-700 font-medium">{t('emp.visible_modules')}</label>
-                        <div className="flex gap-4">
+                        <div className="flex flex-wrap gap-4">
                             {modules.map(mod => (
                                 <label key={mod} className="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded border hover:bg-gray-100">
                                     <input 

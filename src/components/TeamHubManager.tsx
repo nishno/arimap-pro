@@ -583,6 +583,7 @@ export const TeamHubManager: React.FC<TeamHubManagerProps> = ({
                                                                     const roleId = roles?.find(r => r.name === selectedRole)?.id || roles?.[0]?.id || '';
                                                                     const newEmp: Employee = {
                                                                         id: `emp-${msg.authorId}-${activeOrgId}`,
+                                                                        userId: msg.authorId,
                                                                         name: requestingUser?.name || 'Authorized Partner',
                                                                         email: requestingUser?.email || '',
                                                                         phone: requestingUser?.phone || '',

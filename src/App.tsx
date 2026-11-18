@@ -1,3 +1,4 @@
+import {normalizeModuleGrants} from './access/moduleGrants';
 import {readWorkspaceRoute, workspacePath} from './access/routes';
 import MyWorkView from './components/MyWorkView';
 import {activeMembershipsFor, canUseManagementTools, isWorkerContext} from './types';
@@ -1975,8 +1976,10 @@ const App: React.FC = () => {
     }, [currentUser, activeOrg, memberships, roles, isConnectionHealthy, isAuthReady, isSystemAdmin]);
 
     const checkPermission = useCallback((module: AppMode) => {
+        if (!isAuthReady || (currentUser && !currentUser.isGuest && (!membershipsReady || (activeOrgId && activeOrgId !== 'ALL' && !activeOrg)))) return ['profile','guide'].includes(module);
         if (currentUser && ['blocked', 'suspended', 'deleted'].includes(currentUser.status)) return false;
         if (isSystemAdmin) return true;
+        if (activeMembershipsFor(currentUser, memberships, activeOrg?.id).some(m => m.organizationId === activeOrg?.id && Array.isArray(m.allowedModules))) return checkModuleAccess(currentUser, module, activeOrg, memberships) !== 'none';
         if (isWorkerContext(currentUser, activeOrg?.id, memberships)) return checkModuleAccess(currentUser, module, activeOrg, memberships) !== 'none';
 
         const access = checkModuleAccess(currentUser, module, activeOrg, memberships);
@@ -1989,7 +1992,7 @@ const App: React.FC = () => {
         if (module === 'system' && currentUserPermissions.has('access_system')) return true;
 
         return access !== 'none';
-    }, [currentUser, activeOrg, memberships, currentUserPermissions, isSystemAdmin]);
+    }, [currentUser, activeOrg, activeOrgId, membershipsReady, isAuthReady, memberships, currentUserPermissions, isSystemAdmin]);
 
     useEffect(() => {
         const navigate = () => {
@@ -2006,12 +2009,27 @@ const App: React.FC = () => {
         const route = readWorkspaceRoute(location.pathname);
         const worker = !isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships);
         const allowed = checkPermission(appMode) && (!route?.organizationId || route.organizationId === activeOrg?.id);
-        const next = allowed ? appMode : worker ? 'my-work' : 'dashboard';
+        const fallback = worker && checkPermission('my-work') ? 'my-work' : (['dashboard','my-work','harvesting','tasks','stock','ai','community','profile'] as AppMode[]).find(checkPermission) || 'profile';
+        const next = allowed ? appMode : fallback;
         if (next !== appMode) setAppMode(next);
         const base = location.pathname.startsWith('/modern') ? 'modern' : 'classic';
         const path = workspacePath(base, next, activeOrg?.id, worker);
         if (location.pathname !== path) history.replaceState(null, '', path + location.search);
     }, [isAuthReady, membershipsReady, currentUser, activeOrg, activeOrgId, memberships, appMode, checkPermission, isSystemAdmin]);
+
+    useEffect(()=>{
+        if(isLocalRuntime || !USE_FIREBASE || !isAuthReady || !auth.currentUser || !canUsePrivilegedTools) return;
+        const updates = memberships.flatMap(m=>{
+            if(m.organizationId!==activeOrgId || Array.isArray(m.allowedModules)) return [];
+            if(m.id!==`${m.userId}_${m.organizationId}` && memberships.some(other=>other.id===`${m.userId}_${m.organizationId}`)) return [];
+            const employee = employees.find(e=>e.organizationId===m.organizationId&&(e.userId===m.userId||m.employeeId===e.id||e.id===`emp-${m.userId}-${m.organizationId}`));
+            if(!employee?.visibleModules?.length) return [];
+            return [{...m,id:`${m.userId}_${m.organizationId}`,employeeId:employee.id,allowedModules:normalizeModuleGrants(employee.visibleModules)}];
+        });
+        if(!updates.length)return;
+        const batch=writeBatch(db);updates.forEach(m=>batch.set(doc(db,'memberships',m.id),sanitizeObject(m),{merge:true}));
+        batch.commit().catch(error=>console.error('Legacy module grant migration failed',error));
+    },[isAuthReady,canUsePrivilegedTools,activeOrgId,memberships,employees]);
 
     const logActivity = async (action: string, module: AppMode, status: 'success' | 'failure' | 'alert', report?: string): Promise<void> => {
         const userId = currentUser?.id || 'operator-user';
@@ -4488,6 +4506,14 @@ const App: React.FC = () => {
                     };
                     trackModification(`employees/${id}`, 'set', data);
                     batch.set(doc(db, 'employees', id), sanitizeObject(data));
+                    const member = memberships.filter(m => m.organizationId === data.organizationId && (m.employeeId === id || e.userId === m.userId || id === `emp-${m.userId}-${m.organizationId}`)).sort((a,b)=>Number(b.id===`${b.userId}_${b.organizationId}`)-Number(a.id===`${a.userId}_${a.organizationId}`))[0];
+                    if (member && Array.isArray(e.visibleModules)) {
+                        const canonicalId=`${member.userId}_${member.organizationId}`;
+                        const grants={employeeId:id,allowedModules:normalizeModuleGrants(e.visibleModules)};
+                        if(member.id===canonicalId)batch.update(doc(db,'memberships',canonicalId),grants);
+                        else batch.set(doc(db,'memberships',canonicalId),sanitizeObject({...member,id:canonicalId,...grants}),{merge:true});
+                    }
+
 
                     // If global user is requested but doesn't exist in 'users' collection,
                     // we should ensure it's provisioned (though usually ToolsView handles this, 
@@ -4632,20 +4658,25 @@ const App: React.FC = () => {
     };
 
     const handleSetMemberships = async (newMemberships: Membership[]) => {
-        setMemberships(newMemberships);
-        saveMockData('memberships', newMemberships);
-
-        if (USE_FIREBASE && auth.currentUser && currentUser?.id !== 'root-system') {
-            try {
+        const byIdentity = new Map<string, Membership>();
+        for (const m of newMemberships) {
+            const id = `${m.userId}_${m.organizationId}`;
+            const current = memberships.find(existing => existing.userId === m.userId && existing.organizationId === m.organizationId);
+            byIdentity.set(id, {...current, ...m, id, ...(Array.isArray(m.allowedModules) ? {allowedModules: normalizeModuleGrants(m.allowedModules) as AppMode[]} : {})});
+        }
+        const normalized = [...byIdentity.values()];
+        const changed = normalized.filter(m => JSON.stringify(m) !== JSON.stringify(memberships.find(old => old.userId === m.userId && old.organizationId === m.organizationId)));
+        try {
+            if (USE_FIREBASE && auth.currentUser && currentUser?.id !== 'root-system') {
                 const batch = writeBatch(db);
-                newMemberships.forEach(m => {
-                    const id = m.id || `mem-${Date.now()}-${Math.random()}`;
-                    batch.set(doc(db, 'memberships', id), { ...m, id });
-                });
-                await batch.commit();
-            } catch (error) {
-                console.warn("Firestore write error for memberships:", error);
+                for (const m of changed) batch.set(doc(db, 'memberships', m.id), sanitizeObject(m), {merge:true});
+                if (changed.length) await batch.commit();
             }
+            setMemberships(normalized);
+            saveMockData('memberships', normalized);
+        } catch (error) {
+            console.error('Membership changes were not saved', error);
+            toast.error('Access changes could not be saved. No temporary permissions were granted.');
         }
     };
 
@@ -6591,7 +6622,7 @@ const App: React.FC = () => {
                         </div>
                     </main>
                 );
-            default: if (!isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships)) return <MyWorkView currentUser={currentUser} />;
+            default: if (!isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships) && !activeMembershipsFor(currentUser,memberships,activeOrg?.id).some(m=>Array.isArray(m.allowedModules))) return <MyWorkView currentUser={currentUser} />;
             return (
                 <Dashboard 
                     {...mapProps}

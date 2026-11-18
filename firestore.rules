@@ -54,8 +54,8 @@ service cloud.firestore {
 
     function isMemberOf(orgId) {
       return isAuthenticated() && (
-        exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) ||
-        existsAfter(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) ||
+        (exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.get('status','active') == 'active') ||
+        (existsAfter(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && getAfter(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.get('status','active') == 'active') ||
         (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
          (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
           get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid)) ||
@@ -70,6 +70,7 @@ service cloud.firestore {
       return isAuthenticated() && (
         isAdmin() ||
         (exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && 
+         get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.get('status','active') == 'active' &&
          get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder']) ||
         (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
          (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
@@ -78,6 +79,15 @@ service cloud.firestore {
          (getAfter(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
           getAfter(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid))
       );
+    }
+
+    function moduleAllowed(orgId, modules, write) {
+      let memberPath = /databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId);
+      let member = exists(memberPath) ? get(memberPath).data : {};
+      return isAuthenticated() && (isOrgAdmin(orgId) ||
+        (isMemberOf(orgId) && member.get('status', 'active') == 'active' &&
+         (!('allowedModules' in member) || (member.allowedModules is list && member.allowedModules.hasAny(modules))) &&
+         (!write || member.get('permissionLevel', 'write') in ['write', 'admin'])));
     }
 
     // Validation Helpers
@@ -159,12 +169,15 @@ service cloud.firestore {
         (resource.data.userId == request.auth.uid || isOrgAdmin(resource.data.organizationId));
       allow create: if isAuthenticated() &&
         membershipId == request.resource.data.userId + '_' + request.resource.data.organizationId &&
-        request.resource.data.role in ['Founder', 'Admin', 'Manager', 'Employee', 'worker', 'Agronomist', 'Accountant', 'Guest'] &&
+        request.resource.data.role in ['Founder', 'Co-Founder', 'Admin', 'Manager', 'Field Manager', 'Employee', 'worker', 'Agronomist', 'Accountant', 'Guest'] &&
         (isAdmin() || isOrgAdmin(request.resource.data.organizationId));
-      allow update: if isOrgAdmin(resource.data.organizationId) &&
+      allow update: if (isOrgAdmin(resource.data.organizationId) &&
         request.resource.data.userId == resource.data.userId &&
         request.resource.data.organizationId == resource.data.organizationId &&
-        request.resource.data.role in ['Founder', 'Admin', 'Manager', 'Employee', 'worker', 'Agronomist', 'Accountant', 'Guest'];
+        request.resource.data.role in ['Founder', 'Co-Founder', 'Admin', 'Manager', 'Field Manager', 'Employee', 'worker', 'Agronomist', 'Accountant', 'Guest']) ||
+        (isOwner(resource.data.userId) && resource.data.get('status', '') == 'invited' &&
+         request.resource.data.status == 'active' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','joinedAt']));
       allow delete: if isOrgAdmin(resource.data.organizationId) ||
         (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
@@ -181,94 +194,108 @@ service cloud.firestore {
 
     // Explicitly handle collections that were in the previous rules to ensure no regression
     match /plantationFeatures/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['design', 'agronomy', 'harvesting', 'dashboard'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['design', 'agronomy', 'harvesting', 'dashboard'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['design', 'agronomy', 'harvesting', 'dashboard'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['design', 'agronomy', 'harvesting', 'dashboard'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
     
     match /layers/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['design', 'harvesting', 'dashboard'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['design', 'harvesting', 'dashboard'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['design', 'harvesting', 'dashboard'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['design', 'harvesting', 'dashboard'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /inventoryItems/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['stock'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /harvestEvents/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['harvesting'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /accounts/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['accounting'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /transactions/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['accounting'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['accounting'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /workAssignments/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['tasks'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
+    // Employee module assignments are authority-bearing: ordinary members cannot edit them.
     match /employees/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
+      allow delete: if isOrgAdmin(resource.data.get('organizationId', ''));
+      allow create: if isOrgAdmin(request.resource.data.get('organizationId', ''));
+      allow update: if isOrgAdmin(resource.data.get('organizationId', '')) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /machinery/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['system', 'tools'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /nutritionPlans/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['agronomy'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /planExecutions/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['agronomy'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /dailyLogs/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['system', 'tools'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /employeeGroups/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['system', 'tools'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['system', 'tools'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /forumPosts/{id} {
@@ -309,66 +336,75 @@ service cloud.firestore {
     }
 
     match /harvestEntries/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['harvesting'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /pallets/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting', 'stock'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting', 'stock'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['harvesting', 'stock'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting', 'stock'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /harvestLogs/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['harvesting'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['harvesting'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /inventoryTransactions/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['stock'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /suppliers/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['stock'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /purchaseOrders/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['stock'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['stock'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /notes/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['tasks'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /checkpoints/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['tasks'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['tasks'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /crops/{id} {
-      allow read, delete: if isVerified() && isMemberOf(resource.data.get('organizationId', ''));
-      allow create: if isVerified() && isMemberOf(request.resource.data.get('organizationId', ''));
-      allow update: if isVerified() && isMemberOf(resource.data.get('organizationId', '')) &&
-        isMemberOf(request.resource.data.get('organizationId', ''));
+      allow read: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy', 'harvesting', 'marketplace'], false);
+      allow delete: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy', 'harvesting', 'marketplace'], true);
+      allow create: if moduleAllowed(request.resource.data.get('organizationId', ''), ['agronomy', 'harvesting', 'marketplace'], true);
+      allow update: if moduleAllowed(resource.data.get('organizationId', ''), ['agronomy', 'harvesting', 'marketplace'], true) &&
+        request.resource.data.get('organizationId', '') == resource.data.get('organizationId', '');
     }
 
     match /subscriptionRequests/{id} {

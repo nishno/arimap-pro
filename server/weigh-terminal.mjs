@@ -1,14 +1,16 @@
+import {moduleAccess} from './module-access.mjs';
 import {createHash} from 'node:crypto';
 import {FarmError} from './farm-store.mjs';
 const id = value => typeof value === 'string' && /^[\w-]{1,128}$/.test(value);
 export function weighTerminal(store) {
- const db=store.db;
+ const db=store.db,grants=moduleAccess(store);
  db.exec(`CREATE TABLE IF NOT EXISTS terminal_operations (
   operation_id TEXT PRIMARY KEY, organization_id TEXT NOT NULL, actor_id TEXT NOT NULL,
   payload_hash TEXT NOT NULL, body TEXT NOT NULL, status TEXT NOT NULL,
   received_at TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1);
   CREATE TABLE IF NOT EXISTS terminal_changes (seq INTEGER PRIMARY KEY AUTOINCREMENT, operation_id TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS terminal_reviews (id INTEGER PRIMARY KEY, operation_id TEXT NOT NULL, actor_id TEXT NOT NULL, at TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT NOT NULL, revision INTEGER NOT NULL);`);
+ const operator = user => {if(user?.role!=='owner'&&!grants.get(user?.id)?.includes('harvesting'))throw new FarmError(403,'Harvest module access required');};
  const owner = user => {if(user?.role!=='owner')throw new FarmError(403,'Terminal pilot requires farm owner access');};
  const transaction = fn => {db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result;}catch(e){db.exec('ROLLBACK');throw e;}};
  const documents = col => db.prepare('SELECT path,body FROM documents WHERE path LIKE ?').all(col+'/%').map(r=>({...JSON.parse(r.body),id:r.path.split('/')[1]})).filter(r=>r.organizationId===store.farm().id);
@@ -17,14 +19,14 @@ export function weighTerminal(store) {
  const changed = operationId => db.prepare('INSERT INTO terminal_changes(operation_id) VALUES(?)').run(operationId);
  return {
   bootstrap(user) {
-   owner(user);
-   return {schemaVersion:1,mode:'LOCAL',pilot:true,organizationId:store.farm().id,userId:user.id,farmName:store.farm().name,
+   operator(user);
+   return {canReview:user.role==='owner',schemaVersion:1,mode:'LOCAL',pilot:true,organizationId:store.farm().id,userId:user.id,farmName:store.farm().name,
     events:documents('harvestEvents').filter(e=>!e.isDeleted&&e.status!=='deleted').map(e=>({id:e.id,name:e.name,status:e.status})),
     workers:documents('employees').filter(e=>e.status==='active').map(e=>({id:e.id,name:e.name})),
     preparedAt:new Date().toISOString()};
   },
   submit(user,input) {
-   owner(user);
+   operator(user);
    if(input.schemaVersion!==1||input.organizationId!==store.farm().id||input.actorId!==user.id)throw new FarmError(403,'Wrong farm or unsupported operation version');
    for(const key of ['operationId','eventId','workerId','deviceId'])if(!id(input[key]))throw new FarmError(400,`Invalid ${key}`);
    if(typeof input.boxQrId!=='string'||!input.boxQrId.trim()||input.boxQrId.trim().length>160)throw new FarmError(400,'Invalid box QR');
@@ -49,7 +51,7 @@ export function weighTerminal(store) {
    });
   },
   changes(user,cursor) {
-   owner(user);if(!Number.isSafeInteger(cursor)||cursor<0)throw new FarmError(400,'Invalid cursor');
+   operator(user);if(!Number.isSafeInteger(cursor)||cursor<0)throw new FarmError(400,'Invalid cursor');
    const changes=db.prepare('SELECT seq,operation_id FROM terminal_changes WHERE seq>? ORDER BY seq LIMIT 200').all(cursor);
    return {cursor:changes.at(-1)?.seq||cursor,hasMore:changes.length===200,records:[...new Set(changes.map(c=>c.operation_id))].map(key=>record(db.prepare('SELECT * FROM terminal_operations WHERE operation_id=?').get(key)))};
   },

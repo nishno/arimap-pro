@@ -27,3 +27,7 @@ Firebase registration completes profiles transactionally without self-granted ro
 Added a personal work/earnings view, hidden denied desktop/mobile modules, contextual active-membership checks, management-only Meet/Chat and AI console entries, workspace URLs and a reversible weather-panel hide control. Removed stale permission retention across account/role changes. Platform administration uses verified claims, not profile role labels.
 
 See [User access and workspaces](../USER_ACCESS.md) for the role matrix, test commands and remaining backend/data-scope work. Production Firebase rules were not changed or deployed.
+
+## 2026-11-18 — persist explicitly assigned company modules
+
+Active membership allowlists now replace default worker navigation. HR grants persist through invitation activation, live snapshots and reload. Canonical IDs, changed-only acknowledged writes and legacy label normalization prevent grants from disappearing. See [module access](../HARDWARE_MODULARIZATION/MODULE_ACCESS.md).

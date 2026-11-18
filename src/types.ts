@@ -1,3 +1,4 @@
+import {normalizeModuleGrants} from './access/moduleGrants.ts';
 
 export type AppMode = 'dashboard' | 'ai' | 'design' | 'community' | 'marketplace' | 'system' | 'agronomy' | 'harvesting' | 'stock' | 'accounting' | 'founders' | 'tools' | 'tasks' | 'personalization' | 'admin' | 'invitations' | 'logs' | 'profile' | 'onboarding' | 'labs' | 'guide' | 'my-work';
 
@@ -85,6 +86,8 @@ export interface Membership {
     organizationId: string;
     role: UserRole;
     permissionLevel: 'read' | 'write' | 'admin';
+    allowedModules?: AppMode[];
+    employeeId?: string;
     isGlobalRegistrationAgreed?: boolean;
     status: 'active' | 'invited' | 'suspended' | 'pending';
     joinedAt: string;
@@ -622,6 +625,7 @@ export type PaymentType = 'hourly' | 'daily' | 'per_weight' | 'salary' | 'combin
 export const PAYMENT_TYPES: PaymentType[] = ['hourly', 'daily', 'per_weight', 'salary', 'combined', 'by_person', 'by_car', 'fixed', 'custom'];
 
 export interface Employee {
+    userId?: string;
     id: string;
     name: string;
     idNumber: string;
@@ -1749,8 +1753,12 @@ export const AI_FREE_LIMIT = 20;
 type AccessLevel = 'full' | 'read' | 'none';
 
 // Navigation policy is contextual; profile role labels never grant platform claims.
-export const activeMembershipsFor = (user: User | null, memberships: Membership[] = [], organizationId?: string) =>
-    memberships.filter(m => m.userId === user?.id && m.status === 'active' && (!organizationId || m.organizationId === organizationId));
+export const activeMembershipsFor = (user: User | null, memberships: Membership[] = [], organizationId?: string) => {
+    const own = memberships.filter(m=>m.userId===user?.id&&(!organizationId||m.organizationId===organizationId));
+    const canonical = new Map<string,Membership>();
+    for(const m of own) { const old=canonical.get(m.organizationId); if(!old || m.id===`${m.userId}_${m.organizationId}`) canonical.set(m.organizationId,m); }
+    return [...canonical.values()].filter(m=>m.status==='active');
+};
 
 export const canUseManagementTools = (user: User | null, organizationId: string | undefined, memberships: Membership[] = [], platformAdmin = false): boolean => {
     if (!user || user.isGuest || ['blocked', 'suspended', 'deleted'].includes(user.status)) return false;
@@ -1792,6 +1800,13 @@ const permissionMatrix: Record<AppMode, Partial<Record<UserRole, AccessLevel>>> 
 
 export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?: Organization, memberships?: Membership[]): AccessLevel => {
     if (user && ['blocked', 'suspended', 'deleted'].includes(user.status)) return 'none';
+    // Explicit grants replace role defaults for this farm, including an explicit empty list.
+    const scopedMembership = activeOrg ? activeMembershipsFor(user, memberships, activeOrg.id)[0] : undefined;
+    if (scopedMembership && Array.isArray(scopedMembership.allowedModules)) {
+        if (['profile','guide','personalization','onboarding'].includes(module)) return 'full';
+        if (!normalizeModuleGrants(scopedMembership.allowedModules).includes(module)) return 'none';
+        return scopedMembership.permissionLevel === 'read' ? 'read' : 'full';
+    }
     if (module === 'my-work') return user && !user.isGuest ? 'full' : 'none';
     // Workers get a personal workspace, not read access to the company's management screens.
     if (isWorkerContext(user, activeOrg?.id, memberships)) {

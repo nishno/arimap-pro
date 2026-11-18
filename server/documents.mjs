@@ -1,3 +1,4 @@
+import {moduleAccess,COLLECTION_MODULES} from './module-access.mjs';
 import { FarmError } from "./farm-store.mjs";
 import { randomUUID } from "node:crypto";
 const collections = new Set(
@@ -67,6 +68,7 @@ function apply(base, input, deep = false) {
   return result;
 }
 export function documentStore(store) {
+  const grants=moduleAccess(store);
   const db = store.db;
   db.exec(
     "CREATE TABLE IF NOT EXISTS documents(path TEXT PRIMARY KEY, body TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL);",
@@ -136,6 +138,7 @@ export function documentStore(store) {
           userId: p.id,
           organizationId: farm.id,
           role: p.role === "owner" ? "Founder" : "Employee",
+          ...(p.role!=="owner" && grants.get(p.id)!==undefined ? {allowedModules:grants.get(p.id),permissionLevel:"write"} : {}),
           status: "active",
           joinedAt: new Date(0).toISOString(),
         }));
@@ -165,6 +168,12 @@ export function documentStore(store) {
         403,
         `Collection ${col} is not a local farm collection`,
       );
+    const explicit=grants.get(user.id);
+    if(user.role!=='owner' && explicit!==undefined){
+      if(!COLLECTION_MODULES[col]?.some(m=>explicit.includes(m)))throw new FarmError(403,'Module access not granted');
+      if(['employees','employeeGroups','accounts','transactions','systemLogs','machinery'].includes(col)&&write)throw new FarmError(403,'Owner approval required for sensitive writes');
+      return;
+    }
     if (user.role !== "owner" && (write || !workerReadable.has(col)))
       throw new FarmError(
         403,

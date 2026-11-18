@@ -1,3 +1,4 @@
+import {moduleAccess} from './module-access.mjs';
 import {weighTerminal} from './weigh-terminal.mjs';
 import {createCloudServer} from './cloud-server.mjs';
 import http from 'node:http';
@@ -57,6 +58,12 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
       const token = /(?:^|;\s*)agrimap_local_session=([a-f0-9]{64})(?:;|$)/.exec(req.headers.cookie || '')?.[1];
       if (route === '/api/local/logout' && req.method === 'POST') { store.logout(token); return json(res, 200, { ok: true }, { 'Set-Cookie': cookie('', true) }); }
       const user = store.authenticate(token);
+      if(route==='/api/local/module-access'&&req.method==='GET'){
+        const userId=url.searchParams.get('userId')||user.id;
+        if(userId!==user.id&&user.role!=='owner')throw new FarmError(403,'Owner access required');
+        return json(res,200,{userId,allowedModules:moduleAccess(store).get(userId)});
+      }
+      if(route==='/api/local/module-access'&&req.method==='POST')return json(res,200,moduleAccess(store).set(user,await body(req)));
       if(route==='/api/local/terminal/bootstrap'&&req.method==='GET')return json(res,200,terminal.bootstrap(user));
       if(route==='/api/local/terminal/operations'&&req.method==='POST')return json(res,200,terminal.submit(user,await body(req)));
       if(route==='/api/local/terminal/changes'&&req.method==='GET')return json(res,200,terminal.changes(user,Number(url.searchParams.get('cursor')||'0')));

@@ -12,6 +12,8 @@ export function FullApplicationFrame({
 }) {
   const {t,language}=useLanguage();
   const [terminal,setTerminal]=useState(false);
+  const [canWeigh,setCanWeigh]=useState(isLocalRuntime && localSession()?.user.role==='owner');
+  useEffect(()=>{if(!isLocalRuntime)return;let active=true;const check=async()=>{try{const r=await fetch('/api/local/module-access',{cache:'no-store',credentials:'same-origin'});if(!r.ok){if(active)setCanWeigh(false);return;}const data=await r.json();if(active)setCanWeigh(localSession()?.user.role==='owner'||data.allowedModules?.includes('harvesting'));}catch{}};void check();const timer=setInterval(check,5000);return()=>{active=false;clearInterval(timer);};},[]);
   const modern = location.pathname.startsWith("/modern");
   const [backup, setBackup] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -67,7 +69,7 @@ export function FullApplicationFrame({
             {modern ? "Switch to Classic" : "Switch to Modern"}
           </a>
           {isLocalRuntime && <a href="/local">Local accounts & records</a>}
-          {isLocalRuntime && localSession()?.user.role === 'owner' && <button onClick={()=>setTerminal(true)}>{language==='ka'?'აწონვის ტერმინალი · საპილოტე':'Weigh terminal · Pilot'}</button>}
+          {isLocalRuntime && canWeigh && <button onClick={()=>setTerminal(true)}>{language==='ka'?'აწონვის ტერმინალი · საპილოტე':'Weigh terminal · Pilot'}</button>}
           {isLocalRuntime && localSession()?.user.role === "owner" && (
             <button onClick={() => setBackup(true)}>Cloud backup</button>
           )}

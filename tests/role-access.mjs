@@ -41,3 +41,26 @@ test('workspace paths round-trip encoded farm identity; URL does not grant a rol
  assert.equal(readWorkspaceRoute('/modern/worker/anything'),null);
  assert.equal(checkModuleAccess(user,readWorkspaceRoute('/admin').module,org,[membership]),'none');
 });
+
+test('explicit farm grants survive invitation activation and override worker defaults without widening access',()=>{
+ const invited={...membership,id:`${user.id}_${org.id}`,status:'invited',allowedModules:['harvesting','stock'],permissionLevel:'write'};
+ assert.equal(checkModuleAccess(user,'stock',org,[invited]),'none');
+ const active={...invited,status:'active'};
+ for(const snapshot of [[active],JSON.parse(JSON.stringify([active])),[{...active,joinedAt:'2026-11-18'}]]) {
+  assert.equal(checkModuleAccess(user,'harvesting',org,snapshot),'full');
+  assert.equal(checkModuleAccess(user,'stock',org,snapshot),'full');
+  for(const module of ['accounting','design','ai','community','marketplace','admin'])assert.equal(checkModuleAccess(user,module,org,snapshot),'none',module);
+ }
+ assert.equal(checkModuleAccess(user,'stock',org,[{...active,allowedModules:[]}]),'none');
+ assert.equal(checkModuleAccess(user,'stock',org,[{...active,permissionLevel:'read'}]),'read');
+ assert.equal(checkModuleAccess({...user,visibleModules:['accounting']},'accounting',org,[active]),'none');
+ assert.equal(checkModuleAccess(user,'stock',{...org,id:'other-farm'},[active]),'none');
+});
+test('a canonical revoked membership cannot be revived by a stale legacy membership',()=>{
+ const stale={...membership,id:'old-random-id',role:'Founder'};
+ const revoked={...membership,id:`${user.id}_${org.id}`,status:'suspended',allowedModules:['stock']};
+ for(const snapshot of [[stale,revoked],[revoked,stale]]) {
+  assert.equal(activeMembershipsFor(user,snapshot).length,0);
+  assert.equal(checkModuleAccess(user,'stock',org,snapshot),'none');
+ }
+});

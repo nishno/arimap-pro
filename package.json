@@ -48,7 +48,9 @@
     "test:access": "node --experimental-strip-types --test tests/role-access.mjs",
     "test:access:browser": "node tests/role-navigation-browser.mjs",
     "test:terminal": "node --test tests/weigh-terminal.mjs",
-    "test:terminal:browser": "node tests/weigh-terminal-browser.mjs"
+    "test:terminal:browser": "node tests/weigh-terminal-browser.mjs",
+    "test:module-grants": "node --experimental-strip-types --test tests/module-grants.mjs",
+    "test:module-grants:browser": "node tests/module-grants-browser.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

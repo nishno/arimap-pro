@@ -1,4 +1,4 @@
-export type Context = {schemaVersion:number;organizationId:string;userId:string;farmName:string;preparedAt:string;events:{id:string;name:string;status:string}[];workers:{id:string;name:string}[]};
+export type Context = {canReview?:boolean;schemaVersion:number;organizationId:string;userId:string;farmName:string;preparedAt:string;events:{id:string;name:string;status:string}[];workers:{id:string;name:string}[]};
 export type Operation = {schemaVersion:1;actorId:string;operationId:string;organizationId:string;deviceId:string;eventId:string;workerId:string;boxQrId:string;grossKg:number;tareKg:number;capturedAt:string};
 export type Row = {key:string;scope:string;actorId:string;operation:Operation;delivery:'pending'|'received';server?:any;localDuplicate:boolean;error?:string};
 const database = () => new Promise<IDBDatabase>((resolve,reject)=>{

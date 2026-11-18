@@ -1,3 +1,4 @@
+import {normalizeModuleGrants} from '../access/moduleGrants';
 import {isLocalRuntime} from '../local/runtime';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -572,6 +573,8 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
                     if (m.userId === targetUser.id && m.organizationId === targetOrgId) {
                         return {
                             ...m,
+                            allowedModules: normalizeModuleGrants(emp.visibleModules) as any,
+                            employeeId: emp.id,
                             role: updatedRole,
                             permissionLevel: updatedPermission,
                             status: 'active' as const
@@ -583,7 +586,9 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
                 const hasMem = memberships.some(m => m.userId === targetUser.id && m.organizationId === targetOrgId);
                 if (!hasMem) {
                     const newMem: Membership = {
-                        id: `mem-${Date.now()}`,
+                        id: `${targetUser.id}_${targetOrgId}`,
+                        allowedModules: normalizeModuleGrants(emp.visibleModules) as any,
+                        employeeId: emp.id,
                         userId: targetUser.id,
                         organizationId: targetOrgId,
                         role: updatedRole,
@@ -695,6 +700,7 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
                 }
 
                 if (targetUser && targetOrgId && targetOrgId !== 'ALL') {
+                    onSetEmployees([...employees,{...newEmp,userId:targetUser.id}]);
                     // Update existing user with new experience record if joining a new company
                     const hasExperience = targetUser.cv?.experience?.some(e => e.organizationId === targetOrgId);
                     if (!hasExperience) {
@@ -721,7 +727,9 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
 
                     // Link ID to Membership
                     const newMembership: Membership = {
-                        id: `mem-${Date.now()}`,
+                        id: `${targetUser.id}_${targetOrgId}`,
+                        allowedModules: normalizeModuleGrants(emp.visibleModules) as any,
+                        employeeId: newEmpId,
                         userId: targetUser.id,
                         organizationId: targetOrgId,
                         role: getRoleOfEmp(emp.roleId) as UserRole,

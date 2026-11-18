@@ -54,3 +54,7 @@ Also required for a full payroll product: trusted employer-issued personal recor
 Run `npm run test:access`, `npm run lint`, `npm run build`, then `npm run test:access:browser`. Browser tests use an isolated temporary LAN database and block external traffic; they do not test or modify production Firebase identities or records.
 
 Verified for this change: production build, TypeScript check, role-policy/route tests, existing LAN document-store tests, and browser coverage of owner reloads, live role downgrade, weather hide/show, desktop/mobile worker navigation and direct finance API denial. No production cloud deployment or live Firebase-role test was performed.
+
+## Explicit grants update — 2026-11-18
+
+When an active membership has `allowedModules`, that exact optional-module list overrides the default role matrix, including an empty list. Profile/help/account controls remain. Granted workers can therefore enter assigned operational modules without receiving the other company modules. Persisted canonical membership grants, LAN access controls, updated cloud rules and rollout limits are documented in [MODULE_ACCESS.md](HARDWARE_MODULARIZATION/MODULE_ACCESS.md). The earlier worker-default table applies when no explicit list is present.

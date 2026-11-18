@@ -1,6 +1,6 @@
 # Authentication and tenant boundaries
 
-Pilot: same-origin LAN application, existing HttpOnly session cookie, owner-only server gate. Worker and anonymous API access are denied. No client-supplied farm/user label grants authority. References and bootstrap data are restricted to the server farm. No cloud rules were changed or deployed.
+Pilot: same-origin LAN application, existing HttpOnly session cookie, owner or explicitly Harvest-granted operator server gate; review remains owner-only. Ungranted worker and anonymous terminal API access are denied. No client-supplied farm/user label grants authority. References and bootstrap data are restricted to the server farm. Updated cloud module/invitation rules are tested locally; production deployment remains separate.
 
 Planned external handshake: allowlisted app URL, authenticated launch request, short-lived one-time code bound to app, actor, farm and purpose; exact-origin/source checks and nonce validation; server-side code redemption. Never use `postMessage('*')`, Firebase tokens in query strings, or client filters as authorization.
 

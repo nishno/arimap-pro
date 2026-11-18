@@ -1,0 +1,10 @@
+import React,{useState} from 'react';
+import {GRANTABLE_MODULES} from '../access/moduleGrants';
+export function LocalModuleAccess({users}:{users:{id:string;name:string;role:string}[]}){
+ const [worker,setWorker]=useState(''),[modules,setModules]=useState<string[]>([]),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+ async function select(id:string){setWorker(id);setModules([]);setMessage('');if(!id)return;setBusy(true);try{const r=await fetch('/api/local/module-access?userId='+encodeURIComponent(id),{cache:'no-store',credentials:'same-origin'});const data=await r.json();if(!r.ok)throw new Error(data.error);setModules(data.allowedModules||[]);}catch(e){setMessage((e as Error).message);setWorker('');}finally{setBusy(false);}}
+ return <form onSubmit={async e=>{e.preventDefault();setBusy(true);try{const r=await fetch('/api/local/module-access',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:worker,allowedModules:modules})});const data=await r.json();if(!r.ok)throw new Error(data.error);setMessage('Module access saved. The worker menu updates automatically.');}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}}>
+ <h3>Worker module access</h3><label>Worker<select aria-label="Module access worker" required value={worker} disabled={busy} onChange={e=>select(e.target.value)}><option value="">Choose worker</option>{users.filter(u=>u.role==='worker').map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></label>
+ <p>Select the complete allowed module list. Saving no modules removes all optional module access.</p><div style={{display:'flex',flexWrap:'wrap',gap:12}}>{GRANTABLE_MODULES.map(m=><label key={m}><input type="checkbox" aria-label={'Grant '+m} checked={modules.includes(m)} disabled={busy||!worker} onChange={e=>setModules(e.target.checked?[...modules,m]:modules.filter(v=>v!==m))}/>{m}</label>)}</div><button disabled={busy||!worker}>Save module access</button>{message&&<p role="status">{message}</p>}
+ </form>;
+}

@@ -279,6 +279,7 @@ export const useFirebaseData = (
     const [layers, setLayers] = useState<Layer[]>([]);
     const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [memberships, setMemberships] = useState<Membership[]>([]);
+    const [managedMemberships,setManagedMemberships]=useState<Membership[]>([]);
     const [resolvedMembershipUserId, setResolvedMembershipUserId] = useState<string | null>(null);
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
     const [harvestEvents, setHarvestEvents] = useState<HarvestEvent[]>([]);
@@ -1268,6 +1269,17 @@ export const useFirebaseData = (
         return () => unsubscribes.forEach(u => u());
     }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin]);
 
+    // Managers need persisted colleagues' membership grants, not only their own row.
+    useEffect(()=>{
+        setManagedMemberships([]);
+        if (!USE_FIREBASE || !isAuthReady || !currentUser || currentUser.isGuest || !activeOrgId) return;
+        const own = memberships.find(m=>m.userId===currentUser.id&&m.organizationId===activeOrgId&&m.status==='active');
+        if (!isSystemAdmin && !own || !isSystemAdmin && !['Founder','Co-Founder','Admin'].includes(own?.role||'')) return;
+        return onSnapshot(query(collection(db,'memberships'),where('organizationId','==',activeOrgId)), snapshot=>{
+            setManagedMemberships(snapshot.docs.map(d=>({...d.data(),id:d.id}) as Membership));
+        },()=>setManagedMemberships([]));
+    },[isAuthReady,currentUser?.id,currentUser?.isGuest,activeOrgId,isSystemAdmin,JSON.stringify(memberships.filter(m=>m.userId===currentUser?.id).map(m=>[m.id,m.role,m.status]))]);
+
     return {
         membershipsReady: Boolean(currentUser?.id && resolvedMembershipUserId === currentUser.id),
         plantationFeatures: sanitizeCollection(plantationFeatures),
@@ -1276,7 +1288,7 @@ export const useFirebaseData = (
         setLayers,
         organizations: sanitizeCollection(organizations),
         setOrganizations,
-        memberships: sanitizeCollection(memberships),
+        memberships: sanitizeCollection([...new Map([...managedMemberships,...memberships].map(m=>[m.id,m])).values()]),
         setMemberships,
         inventoryItems: sanitizeCollection(inventoryItems),
         setInventoryItems,
