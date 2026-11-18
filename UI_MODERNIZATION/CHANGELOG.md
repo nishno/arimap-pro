@@ -31,3 +31,7 @@ See [User access and workspaces](../USER_ACCESS.md) for the role matrix, test co
 ## 2026-11-18 — persist explicitly assigned company modules
 
 Active membership allowlists now replace default worker navigation. HR grants persist through invitation activation, live snapshots and reload. Canonical IDs, changed-only acknowledged writes and legacy label normalization prevent grants from disappearing. See [module access](../HARDWARE_MODULARIZATION/MODULE_ACCESS.md).
+
+## 2026-11-18 — personal workspace and management-only operations
+
+Ordinary accounts now use personal dashboard notices, own earnings, editable CV/services/reviews, personal AI tools and Find Partner/direct messages. Removed Market and company operational navigation for these accounts regardless of historical grants. Added scoped read-only workerActivities projections, an opt-in public partner directory, manager-triggered assignment backfill, LAN API restrictions and matching tested Firestore rules. Cloud rules still require deployment to the configured target; see USER_ACCESS.md.

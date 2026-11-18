@@ -16,14 +16,14 @@ try{
  const user=await browser.newContext({viewport:{width:1440,height:1000}});await user.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());
  await user.request.post(origin+'/api/local/login',{headers:{Origin:origin},data:{username:'worker',password:'test-worker-password'}});
  page=await user.newPage();page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(60000);
- await page.goto(origin+'/modern');await page.waitForURL(/\/my-work$/);await page.getByRole('button',{name:'Stock',exact:true}).waitFor();
- for(const name of ['Harvest','Accounts','AI Agro Analyst','Communicator','Dashboard'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0,name);
- await page.getByRole('button',{name:'Stock',exact:true}).click();await page.getByRole('button',{name:'+ Add Item',exact:true}).waitFor();
- await page.waitForTimeout(5500);await page.reload();await page.getByRole('button',{name:'Stock',exact:true}).waitFor();
- await page.goto(origin+'/modern/farms/'+store.farm().id+'/accounting');await page.getByRole('button',{name:'Stock',exact:true}).waitFor();await page.waitForURL(/\/my-work$/);
- await grant(['harvesting']);await page.getByRole('button',{name:'Harvest',exact:true}).waitFor();await page.getByRole('button',{name:'Stock',exact:true}).waitFor({state:'detached'});
+ await page.goto(origin+'/modern/worker/dashboard');await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();
+ for(const name of ['Stock','Harvest','Accounts','Market','Tasks and Works'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0,name);
+ await page.reload();await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();
+ await page.goto(origin+'/modern/farms/'+store.farm().id+'/stock');await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();await page.waitForURL(/\/dashboard$/);
+ await grant(['harvesting','stock','tasks']);await page.reload();await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();
+ for(const name of ['Stock','Harvest','Tasks and Works'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0,name);
  assert.equal((await user.request.post(origin+'/api/local/documents/read',{headers:{Origin:origin},data:{path:'inventoryItems'}})).status(),403);
- await grant([]);await page.getByRole('button',{name:'Harvest',exact:true}).waitFor({state:'detached'});
- assert.deepEqual(errors,[]);console.log('PASS: only explicit modules, grant survives snapshots/reload, unauthorized route fallback, live replacement/revocation and API denial.');
+ await grant([]);
+ assert.deepEqual(errors,[]);console.log('PASS: historical grants cannot bypass personal-only navigation, reload, route fallback or API denial.');
 }catch(e){console.error(e);if(page)console.error((await page.locator('body').innerText()).slice(0,6000));throw e;}
 finally{await browser?.close();await new Promise(r=>server.close(r));rmSync(directory,{recursive:true,force:true});}

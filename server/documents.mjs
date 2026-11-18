@@ -2,7 +2,7 @@ import {moduleAccess,COLLECTION_MODULES} from './module-access.mjs';
 import { FarmError } from "./farm-store.mjs";
 import { randomUUID } from "node:crypto";
 const collections = new Set(
-  "plantationFeatures layers inventoryItems harvestEvents accounts transactions workAssignments employees machinery projects harvestEntries pallets harvestLogs operationalLogs inventoryTransactions employeeGroups dailyLogs nutritionPlans planExecutions forumPosts listings bids reviews alerts purchaseOrders suppliers notes checkpoints systemLogs crops stockTransactions harvestedProduce cropVarieties roles systemSettings conversations messages agronomicLedger agronomistDiagnoses _connection_test_".split(
+  "plantationFeatures layers inventoryItems harvestEvents accounts transactions workAssignments employees machinery projects harvestEntries pallets harvestLogs operationalLogs inventoryTransactions employeeGroups dailyLogs nutritionPlans planExecutions forumPosts listings bids reviews alerts purchaseOrders suppliers notes checkpoints systemLogs partnerProfiles workerActivities crops stockTransactions harvestedProduce cropVarieties roles systemSettings conversations messages agronomicLedger agronomistDiagnoses _connection_test_".split(
     " ",
   ),
 );
@@ -73,12 +73,10 @@ export function documentStore(store) {
   db.exec(
     "CREATE TABLE IF NOT EXISTS documents(path TEXT PRIMARY KEY, body TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL);",
   );
-  const profile = (user) => ({
-    ...JSON.parse(
-      db
-        .prepare("SELECT body FROM documents WHERE path=?")
-        .get(`users/${user.id}`)?.body || "{}",
-    ),
+  const profile = (user) => {
+    const saved=JSON.parse(db.prepare("SELECT body FROM documents WHERE path=?").get(`users/${user.id}`)?.body||"{}");
+    return ({
+    ...saved,
     id: user.id,
     name: user.name,
     email: `${user.username}@local.invalid`,
@@ -90,12 +88,13 @@ export function documentStore(store) {
     status: "active",
     verificationStatus: "verified",
     kycStatus: "none",
-    isProfileDiscoverable: false,
-    isPubliclyVisible: false,
+    isProfileDiscoverable: saved.isProfileDiscoverable===true,
+    isPubliclyVisible: saved.isProfileDiscoverable===true,
     aiQueryCount: 0,
     createdAt: new Date(0).toISOString(),
     currentOrgId: store.farm().id,
   });
+  };
   function virtual(user, col) {
     const farm = store.farm();
     const people = db
@@ -168,17 +167,11 @@ export function documentStore(store) {
         403,
         `Collection ${col} is not a local farm collection`,
       );
-    const explicit=grants.get(user.id);
-    if(user.role!=='owner' && explicit!==undefined){
-      if(!COLLECTION_MODULES[col]?.some(m=>explicit.includes(m)))throw new FarmError(403,'Module access not granted');
-      if(['employees','employeeGroups','accounts','transactions','systemLogs','machinery'].includes(col)&&write)throw new FarmError(403,'Owner approval required for sensitive writes');
-      return;
+    if(user.role!=='owner'){
+      if(['reviews','forumPosts','partnerProfiles'].includes(col)) return;
+      throw new FarmError(403,'Company management access required');
     }
-    if (user.role !== "owner" && (write || !workerReadable.has(col)))
-      throw new FarmError(
-        403,
-        "Farm owner access required for this collection",
-      );
+
   }
   const getPath = (object, path) =>
     path === "__name__"
@@ -189,7 +182,7 @@ export function documentStore(store) {
     read(user, input) {
       const { path } = input;
       const sameFarm=(input.constraints||[]).some(c=>c.type==='where'&&c.field==='organizationId'&&c.op==='=='&&c.value===store.farm().id);
-      const personalCandidate=typeof path==='string'&&(path==='employees'||path.startsWith('employees/')||path==='harvestEntries'||path==='transactions'||path.startsWith('roles/'));
+      const personalCandidate=typeof path==='string'&&(path==='employees'||path.startsWith('employees/')||path==='harvestEntries'||path==='transactions'||path==='workerActivities'||path.startsWith('roles/'));
       const ownEmployees=user.role==='owner'||!personalCandidate?[]:db.prepare("SELECT path FROM documents WHERE path LIKE 'employees/%' AND json_extract(body,'$.organizationId')=? AND (json_extract(body,'$.userId')=? OR ((json_extract(body,'$.userId') IS NULL OR json_extract(body,'$.userId')='') AND (path=? OR path=?)))").all(store.farm().id,user.id,`employees/${user.id}`,`employees/emp-${user.id}-${store.farm().id}`).map(row=>row.path.split('/')[1]);
       const ownRoleIds=user.role==='owner'||typeof path!=='string'||!path.startsWith('roles/')?[]:db.prepare("SELECT body FROM documents WHERE path LIKE 'employees/%' AND json_extract(body,'$.organizationId')=? AND (json_extract(body,'$.userId')=? OR ((json_extract(body,'$.userId') IS NULL OR json_extract(body,'$.userId')='') AND (path=? OR path=?)))").all(store.farm().id,user.id,`employees/${user.id}`,`employees/emp-${user.id}-${store.farm().id}`).flatMap(row=>{const id=JSON.parse(row.body).roleId;return typeof id==='string'?[id,id.startsWith(store.farm().id+'__')?id:store.farm().id+'__'+id]:[];});
       const fieldEquals=(field,value)=>(input.constraints||[]).some(c=>c.type==='where'&&c.field===field&&c.op==='=='&&c.value===value);
@@ -199,7 +192,7 @@ export function documentStore(store) {
         path.startsWith('employees/')&&ownEmployees.includes(path.split('/')[1]) ||
         path.startsWith('roles/')&&ownRoleIds.includes(path.split('/')[1]) ||
         path==='employees'&&sameFarm&&fieldEquals('userId',user.id) ||
-        path==='harvestEntries'&&scopedOwn ||
+        (path==='harvestEntries'||path==='workerActivities')&&scopedOwn ||
         path==='transactions'&&scopedOwn&&(fieldEquals('creditAccountId','acc-payroll')||fieldEquals('debitAccountId','acc-payroll')));
       if(!privateRead)check(user, path);
       const parts = path.split("/"),
@@ -210,6 +203,8 @@ export function documentStore(store) {
           .prepare("SELECT path,body,revision FROM documents WHERE path LIKE ?")
           .all(`${parts[0]}/%`)
           .map((r) => ({ ...JSON.parse(r.body), id: r.path.split("/")[1] }));
+      if(parts[0]==='forumPosts')rows=rows.filter(row=>row.isDirectMessage?(row.authorId===user.id||row.recipientId===user.id||user.role==='owner'&&row.recipientId===store.farm().id):user.role==='owner');
+      if(parts[0]==='partnerProfiles')rows=rows.filter(row=>row.isDiscoverable===true||row.userId===user.id||user.role==='owner');
       if (parts.length === 2) {
         const row = rows.find((r) => r.id === parts[1]);
         return { document: row || null };
@@ -291,6 +286,10 @@ export function documentStore(store) {
           const existing = db
             .prepare("SELECT body FROM documents WHERE path=?")
             .get(operation.path);
+          const collectionName=operation.path.split('/')[0];
+          if(collectionName==='forumPosts'&&existing){const previous=JSON.parse(existing.body);if(previous.isDirectMessage&&previous.authorId!==user.id)throw new FarmError(403,'Only the sender can change a direct message');}
+          if(user.role!=='owner'&&collectionName==='partnerProfiles'&&operation.path.split('/')[1]!==user.id)throw new FarmError(403,'Only your own profile can be changed');
+          if(user.role!=='owner'&&['reviews','forumPosts','partnerProfiles'].includes(collectionName)&&existing){const previous=JSON.parse(existing.body);if((collectionName==='partnerProfiles'?previous.userId:previous.authorId)!==user.id)throw new FarmError(403,'You can only change your own personal content');}
           if (
             ["users", "organizations"].includes(operation.path.split("/")[0]) &&
             operation.type === "delete"
@@ -317,6 +316,12 @@ export function documentStore(store) {
             throw new FarmError(404, "Document not found");
           let payload = operation.data;
           const kind = operation.path.split("/")[0];
+          if(user.role!=='owner'){
+            if(kind==='forumPosts'&&(payload.authorId!==user.id||payload.isDirectMessage!==true||typeof payload.recipientId!=='string'||!payload.recipientId))throw new FarmError(403,'Only your own direct partner messages are allowed');
+            if(kind==='reviews'&&(payload.authorId!==user.id||typeof payload.rating!=='number'||payload.rating<1||payload.rating>5))throw new FarmError(403,'Invalid personal review');
+            if(kind==='partnerProfiles'&&(operation.path.split('/')[1]!==user.id||payload.userId!==user.id||Object.keys(payload).some(key=>!['userId','name','description','servicesOffered','workingRegions','availability','isDiscoverable','cv'].includes(key))))throw new FarmError(403,'Invalid personal directory profile');
+          }
+
           if (kind === "organizations") {
             if (operation.path.split("/")[1] !== store.farm().id)
               throw new FarmError(403, "This server has one farm workspace");
@@ -371,7 +376,7 @@ export function documentStore(store) {
                   "language",
                   "currency",
                   "country",
-                  "preferences",
+                  "preferences", "cv", "servicesOffered", "publicData", "availability", "isProfileDiscoverable",
                 ].includes(key),
               ),
             );

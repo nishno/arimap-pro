@@ -1,3 +1,4 @@
+import {useLanguage} from '../contexts/LanguageContext';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import L from 'leaflet';
 import { useMapEvents, Marker, MapContainer, TileLayer } from 'react-leaflet';
@@ -35,6 +36,8 @@ import {
 
 interface CommunicationHubPanelProps {
     canUseGoogleTools?: boolean;
+    partnersOnly?: boolean;
+    partnerRecipientIds?:string[];
     currentUser: User | null;
     forumPosts: ForumPost[];
     onAddPost: (post: Partial<ForumPost>) => void;
@@ -62,7 +65,8 @@ const QuickMessageModal: React.FC<{
     onClose: () => void;
     recipientName: string;
     onSend: (text: string, type: 'chat' | 'ticket') => void;
-}> = ({ isOpen, onClose, recipientName, onSend }) => {
+    chatOnly?: boolean;
+}> = ({ isOpen, onClose, recipientName, onSend, chatOnly = false }) => {
     const [text, setText] = useState('');
     const [type, setType] = useState<'chat' | 'ticket'>('chat');
 
@@ -88,12 +92,12 @@ const QuickMessageModal: React.FC<{
                         >
                             Open Conversation
                         </button>
-                        <button 
+                        {!chatOnly && <button
                             onClick={() => setType('ticket')}
                             className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${type === 'ticket' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                         >
                             Send as Ticket
-                        </button>
+                        </button>}
                     </div>
                     <textarea 
                         value={text}
@@ -157,9 +161,11 @@ const isUserOnline = (user?: User) => {
 
 const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
     const { allUsers = [], organizations = [], crops = [], onSetAppMode, mapProps, onAddPost, currentUser, forumPosts, onAddReply, initialConversationId, onClearInitialConversation, onForwardToAnalyst, isManualOffline, setAlerts, onSetAiTab, onMarkPostAsRead } = props;
-    const canUseGoogleTools = props.canUseGoogleTools === true;
-    const [mainTab, setMainTab] = useState<'GOOGLE_CHAT' | 'GOOGLE_MEET' | 'COMMUNICATOR' | 'PARTNERS'>(canUseGoogleTools ? 'GOOGLE_CHAT' : 'COMMUNICATOR');
-    useEffect(() => { if (!canUseGoogleTools) setMainTab('COMMUNICATOR'); }, [canUseGoogleTools]);
+    const {language}=useLanguage();
+    const partnersOnly=props.partnersOnly===true;
+    const canUseGoogleTools = !partnersOnly&&props.canUseGoogleTools === true;
+    const [mainTab, setMainTab] = useState<'GOOGLE_CHAT' | 'GOOGLE_MEET' | 'COMMUNICATOR' | 'PARTNERS'>(partnersOnly?'PARTNERS':canUseGoogleTools ? 'GOOGLE_CHAT' : 'COMMUNICATOR');
+    useEffect(() => { if(partnersOnly)setMainTab('PARTNERS');else if (!canUseGoogleTools) setMainTab('COMMUNICATOR'); }, [canUseGoogleTools,partnersOnly]);
     const [hubType, setHubType] = useState<'INTERNAL' | 'REGIONAL' | 'GLOBAL'>('INTERNAL');
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -518,7 +524,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                (roleFilter === 'SHOP' && u.roles?.includes('Agro-Shop'));
                                
             const matchesSearch = u.name.toLowerCase().includes(query) || 
-                                 u.email.toLowerCase().includes(query) || 
+                                 (u.email||'').toLowerCase().includes(query) || (u.servicesOffered||[]).some(service=>service.toLowerCase().includes(query)) ||
                                  u.region?.toLowerCase().includes(query);
                                  
             return matchesRole && matchesSearch;
@@ -571,7 +577,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
 
     useEffect(() => {
         if (initialConversationId) {
-            setMainTab('COMMUNICATOR');
+            setMainTab(partnersOnly?'PARTNERS':'COMMUNICATOR');
             // If the conversation exists, it will be in the filtered list.
             // If it doesn't exist, the UI will show "No conversations here yet" 
             // unless we trigger one.
@@ -665,13 +671,13 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                         <Video size={16} className="text-blue-500 shrink-0" />
                         <span>Google Meet</span>
                     </button>)}
-                    <button 
+                    {!partnersOnly&&(<button
                         onClick={() => setMainTab('COMMUNICATOR')}
                         className={`flex-1 py-3 px-3.5 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 min-w-[120px] shrink-0 h-full ${mainTab === 'COMMUNICATOR' ? 'border-indigo-600 text-indigo-600 bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
                         <UserGroupIcon size={16} className="shrink-0" />
                         <span>Forum & Hub</span>
-                    </button>
+                    </button>)}
                     <button 
                         onClick={() => setMainTab('PARTNERS')}
                         className={`flex-1 py-3 px-3.5 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 min-w-[120px] shrink-0 h-full ${mainTab === 'PARTNERS' ? 'border-slate-900 text-slate-900 bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
@@ -1307,7 +1313,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                     )}
 
                     {/* Offline / Local Communicator Hub */}
-                    {mainTab === 'COMMUNICATOR' && (
+                    {!partnersOnly&&mainTab === 'COMMUNICATOR' && (
                         <>
                             <div className="p-4 flex gap-2 shrink-0 bg-white border-b border-slate-100">
                                 {['INTERNAL', 'REGIONAL', 'GLOBAL'].map((t) => (
@@ -1429,6 +1435,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                         </>
                     )}
 
+                    {(partnersOnly||mainTab==='PARTNERS')&&<section className="p-4 border-b max-h-64 overflow-auto"><h3 className="font-semibold">{language==='ka'?'პირადი მიმოწერა':'Partner messages'}</h3>{forumPosts.filter(p=>p.isDirectMessage&&(p.authorId===currentUser?.id||(props.partnerRecipientIds||[currentUser?.id]).includes(p.recipientId||''))).slice(-30).map(p=><article key={p.id} className="border rounded p-3 my-2"><b>{p.authorName}</b><p>{p.content}</p><small>{p.timestamp}</small><button className="ml-3 underline" onClick={()=>setQuickMessageRecipient({id:p.authorId===currentUser?.id?p.recipientId!:p.authorId,name:p.authorId===currentUser?.id?p.recipientName||'Partner':p.authorName} as any)}>{language==='ka'?'პასუხი':'Reply'}</button></article>)}</section>}
                     {/* Partners Tab */}
                     {mainTab === 'PARTNERS' && (
                         <div className="flex flex-col h-full overflow-hidden">
@@ -1451,7 +1458,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                     >
                                         Show Online Users
                                     </button>
-                                    <button 
+                                    {!partnersOnly && (<button
                                         onClick={() => {
                                             if (onSetAiTab) onSetAiTab('market');
                                             onSetAppMode('ai');
@@ -1459,7 +1466,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                         className="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border bg-indigo-600 text-white border-indigo-600 shadow-sm hover:bg-indigo-700 transition-all shrink-0"
                                     >
                                         Market Intelligence
-                                    </button>
+                                    </button>)}
                                     {['ALL', 'COMPANY', 'BUYER', 'SELLER', 'WORKER', 'AGRONOMIST', 'SHOP'].map(role => (
                                         <button 
                                             key={role}
@@ -1503,7 +1510,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                                 <div>
                                                     <h4 
                                                         className="font-black text-slate-900 text-sm uppercase tracking-tight hover:text-blue-600 cursor-pointer transition-colors"
-                                                        onClick={() => onSetAppMode('profile')}
+                                                        onClick={partnersOnly?undefined:() => onSetAppMode('profile')}
                                                     >
                                                         {partner.name}
                                                     </h4>
@@ -1522,7 +1529,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                                     </span>
                                                 </div>
 
-                                                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {!partnersOnly && <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button 
                                                         onClick={() => onForwardToAnalyst?.({ 
                                                             name: partner.name, 
@@ -1535,9 +1542,10 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                                     >
                                                         <SparklesIcon size={18} />
                                                     </button>
-                                                </div>
+                                                </div>}
                                             </div>
 
+                                            {partnersOnly && !isOrg && <details className="mb-4 text-sm"><summary className="cursor-pointer">{language==='ka'?'CV და მომსახურებები':'CV & services'}</summary><p>{(partner as any).description}</p><p>{(partner as any).servicesOffered?.join(', ')}</p><p>{(partner as any).workingRegions?.join(', ')}</p><p>{(partner as any).cv?.skills?.join(', ')}</p>{(partner as any).cv?.experience?.map((entry:any,index:number)=><p key={index}>{entry.title} · {entry.company} · {entry.startDate}</p>)}</details>}
                                             {/* Hover Tooltip Details */}
                                             {hoveredPartnerId === partner.id && (
                                                 <div className="absolute left-6 top-0 -translate-y-full mb-2 z-[3000] bg-slate-900 text-white p-4 rounded-2xl shadow-2xl w-48 animate-slide-up pointer-events-none">
@@ -1655,9 +1663,10 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                 <QuickMessageModal 
                     isOpen={!!quickMessageRecipient}
                     onClose={() => setQuickMessageRecipient(null)}
+                    chatOnly={partnersOnly}
                     recipientName={quickMessageRecipient.name}
                     onSend={(text, type) => {
-                        if (type === 'chat') {
+                        if (partnersOnly || type === 'chat') {
                              onAddPost({
                                 title: `Direct Session: ${quickMessageRecipient.name}`,
                                 content: text,
@@ -1666,7 +1675,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                 recipientName: quickMessageRecipient.name,
                                 hubType: 'internal'
                             });
-                            setMainTab('COMMUNICATOR');
+                            setMainTab(partnersOnly?'PARTNERS':'COMMUNICATOR');
                         } else {
                              onAddPost({
                                 title: `Official Ticket for ${quickMessageRecipient.name}`,

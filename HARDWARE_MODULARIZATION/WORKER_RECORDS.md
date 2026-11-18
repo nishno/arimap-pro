@@ -1,3 +1,5 @@
+> Superseded for ordinary-account module access: see [current personal workspace policy](../USER_ACCESS.md). Historical grants no longer open company modules for non-management accounts.
+
 # Worker account links, grants and personal earnings — 2026-11-18
 
 ## Why the empty page was misleading

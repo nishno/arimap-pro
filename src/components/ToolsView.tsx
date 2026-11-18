@@ -563,7 +563,8 @@ const HrManager: React.FC<ToolsViewProps> = (props) => {
             
             // Sync Membership & User Role when editing an existing employee
             const targetOrgId = emp.organizationId || activeOrgId;
-            const targetUser = users.find(u => (u.email && emp.email && u.email.toLowerCase() === emp.email.toLowerCase()) || (u.personalNumber && u.personalNumber === emp.idNumber));
+            const linkedMember=memberships.find(m=>m.organizationId===targetOrgId&&(m.userId===emp.userId||m.employeeId===emp.id));
+            const targetUser = users.find(u => u.id===emp.userId || (u.email && emp.email && u.email.toLowerCase() === emp.email.toLowerCase()) || (u.personalNumber && u.personalNumber === emp.idNumber)) || (linkedMember?{id:linkedMember.userId} as User:undefined);
             if (targetUser && targetOrgId) {
                 const assignedRole=roles.find(r=>r.id===emp.roleId||r.legacyId===emp.roleId||r.name===getRoleOfEmp(emp.roleId));
                 const updatedRole = membershipRoleForEmployee(getRoleOfEmp(emp.roleId)) as UserRole;

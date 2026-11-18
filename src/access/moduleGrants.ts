@@ -14,5 +14,5 @@ export function legacyEmployeeModules(employee:any,role:any):string[]{
 }
 
 export function membershipRoleForEmployee(name:string):string{
- return ['Founder','Co-Founder','Admin','Field Manager','Employee','worker','Agronomist','Accountant','Guest'].includes(name)?name:'Employee';
+ return ['Founder','Co-Founder','Admin','Manager','Field Manager','Employee','worker','Agronomist','Accountant','Guest'].includes(name)?name:'Employee';
 }

@@ -1,3 +1,7 @@
+import {PersonalDashboard} from './worker/PersonalDashboard';
+import {PersonalProfile} from './worker/PersonalProfile';
+import {PersonalAiTools} from './worker/PersonalAiTools';
+import {useActivityPublisher} from './worker/useActivityPublisher';
 import {useWorkerAccount} from './worker/useWorkerAccount';
 import {normalizeModuleGrants,legacyEmployeeModules} from './access/moduleGrants';
 import {readWorkspaceRoute, workspacePath} from './access/routes';
@@ -588,6 +592,7 @@ const App: React.FC = () => {
     const [inProgressShowcasePoints, setInProgressShowcasePoints] = useState<[number, number][]>([]);
 
     const canUsePrivilegedTools = membershipsReady && canUseManagementTools(currentUser, activeOrgId || undefined, memberships, isSystemAdmin);
+    const personalOnly=Boolean(currentUser&&!currentUser.isGuest&&!isSystemAdmin&&!canUsePrivilegedTools);
 
     const handleOpenMeetHub = useCallback(() => {
         if (!canUsePrivilegedTools) return;
@@ -734,6 +739,7 @@ const App: React.FC = () => {
 
     // Automated Evolutionary God AI Learning Cycle (monitors works, tasks, harvest, features)
     useEffect(() => {
+        if(!canUsePrivilegedTools)return;
         const timer = setTimeout(() => {
             try {
                 godAIKnowledgeEngine.runDeepLearningCycle({
@@ -748,7 +754,7 @@ const App: React.FC = () => {
             }
         }, 3000);
         return () => clearTimeout(timer);
-    }, [workAssignments?.length, harvestEntries?.length, organizations?.length]);
+    }, [canUsePrivilegedTools,workAssignments?.length, harvestEntries?.length, organizations?.length]);
 
     const [syncDelay, setSyncDelay] = useState<number>(() => {
         const saved = localStorage.getItem('agrimap-sync-delay');
@@ -1257,6 +1263,7 @@ const App: React.FC = () => {
 
     // Fetch users for Admin/Root or Organization Members for Team Hub
     useEffect(() => {
+        if(personalOnly){setUsers(currentUser?[currentUser]:[]);return;}
         if (!USE_FIREBASE) {
             // Mock users
             setUsers([
@@ -1321,7 +1328,7 @@ const App: React.FC = () => {
         });
         
         return () => unsubscribe();
-    }, [isSystemAdmin, activeOrgId, currentUser?.id]);
+    }, [isSystemAdmin, activeOrgId, currentUser?.id, personalOnly]);
     
     // Dashboard Modular Layout State with User Persistence
     const [dashboardLayout, setDashboardLayout] = useState<DashboardWidget[]>(() => {
@@ -1535,6 +1542,7 @@ const App: React.FC = () => {
 
     // Derived State
     const activeOrg = useMemo(() => organizations.find(o => o.id === activeOrgId), [organizations, activeOrgId]);
+    useActivityPublisher(canUsePrivilegedTools,activeOrg?.id,activeOrg?.name||'',currentUser?.id);
     useEffect(() => { if (activeOrg?.country) setRegion(['georgia','ge','საქართველო'].includes(activeOrg.country.toLowerCase()) ? 'Georgia' : 'Global'); }, [activeOrg?.id, activeOrg?.country]);
 
     useEffect(() => {
@@ -2031,7 +2039,7 @@ const App: React.FC = () => {
         const route = readWorkspaceRoute(location.pathname);
         const worker = !isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships);
         const allowed = checkPermission(appMode) && (!route?.organizationId || route.organizationId === activeOrg?.id);
-        const fallback = worker && checkPermission('my-work') ? 'my-work' : (['dashboard','my-work','harvesting','tasks','stock','ai','community','profile'] as AppMode[]).find(checkPermission) || 'profile';
+        const fallback = worker ? 'dashboard' : (['dashboard','my-work','harvesting','tasks','stock','ai','community','profile'] as AppMode[]).find(checkPermission) || 'profile';
         const next = allowed ? appMode : fallback;
         if (next !== appMode) setAppMode(next);
         const base = location.pathname.startsWith('/modern') ? 'modern' : 'classic';
@@ -5931,7 +5939,8 @@ const App: React.FC = () => {
                         }}
                     />
                 );
-            case 'profile': return (
+            case 'profile': if(personalOnly)return <PersonalProfile employeeId={personalWork.employee?.id} key={currentUser!.id} user={currentUser} activities={personalWork.activities} reviews={personalWork.reviews||[]} organization={activeOrg} onSave={async updated=>{const patch={cv:updated.cv,servicesOffered:updated.servicesOffered,publicData:updated.publicData,availability:updated.availability,isProfileDiscoverable:updated.isProfileDiscoverable};const batch=writeBatch(db);batch.set(doc(db,'users',currentUser!.id),sanitizeObject(patch),{merge:true});if(updated.isProfileDiscoverable){batch.set(doc(db,'partnerProfiles',currentUser!.id),sanitizeObject({userId:currentUser!.id,name:currentUser!.name,description:updated.publicData?.description||'',servicesOffered:updated.servicesOffered||[],workingRegions:updated.cv?.preferredRegions||[],availability:updated.availability,isDiscoverable:true,cv:{skills:updated.cv?.skills||[],education:updated.cv?.education||[],experience:(updated.cv?.experience||[]).map(e=>({title:e.title,company:e.company,startDate:e.startDate,endDate:e.endDate||''}))}}));}else batch.delete(doc(db,'partnerProfiles',currentUser!.id));await batch.commit();setCurrentUser({...currentUser,...patch});}} onReview={async review=>{await setDoc(doc(db,'reviews',review.id),sanitizeObject(review));setReviews(previous=>[...previous.filter(r=>r.id!==review.id),review]);}}/>;
+            return (
                 <ProfileView 
                     currentUser={currentUser!} 
                     onUpdateUser={handleUpdateUser}
@@ -5944,7 +5953,7 @@ const App: React.FC = () => {
                     memberships={userMemberships} 
                     onAddOrg={handleAddOrg} 
                     onSetAppMode={setAppMode} 
-                    onOpenHomepage={() => setShowWelcomeModal(true)}
+                    onOpenHomepage={()=>personalOnly?setAppMode('dashboard'):setShowWelcomeModal(true)}
                     allEmployees={employees} 
                     reviews={reviews} 
                     currentOrganizationContext={activeOrgId || 'personal'}
@@ -6127,7 +6136,7 @@ const App: React.FC = () => {
                     onResetPassword={handleResetPassword}
                 />
             );
-            case 'ai': return (
+            case 'ai': if(personalOnly)return <PersonalAiTools/>; return (
                 <AiAnalystView 
                     onSearch={handleMarketAnalysis} 
                     loading={isAiLoading} 
@@ -6270,20 +6279,22 @@ const App: React.FC = () => {
                 notes={notes || []}
                 currentUser={currentUser}
             />;
-            case 'my-work': return <MyWorkView data={personalWork} tasks={workAssignments||[]} organization={activeOrg} />;
+            case 'my-work': return <MyWorkView data={personalWork} tasks={personalOnly?[]:workAssignments||[]} organization={activeOrg} />;
             case 'community': return (
                 <CommunicationHubPanel 
+                    partnersOnly={personalOnly}
+                    partnerRecipientIds={[currentUser?.id||'',...(!personalOnly&&activeOrgId?[activeOrgId]:[])]}
                     canUseGoogleTools={canUsePrivilegedTools}
                     currentUser={currentUser}
-                    forumPosts={forumPosts || []} 
+                    forumPosts={personalOnly?personalWork.messages:[...new Map([...(forumPosts||[]),...personalWork.messages].map(row=>[row.id,row])).values()]}
                     onAddPost={handleAddPost} 
                     onAddReply={handleAddReply} 
                     plantationFeatures={currentOrgFeatures}
                     onSetFlyToBounds={setFlyToBounds}
                     onSetAppMode={setAppMode}
-                    employees={employees || []}
-                    mapProps={mapProps}
-                    allUsers={users} 
+                    employees={personalOnly?[]:employees || []}
+                    mapProps={personalOnly?{...mapProps,plantationFeatures:[],layers:[],operationalLogs:[],harvestLogs:[],selectedFeatureIds:[],highlightedFeatureIds:[],editingGeometryId:null,cameras:[],showCameras:false,droneMission:null,showDroneMissions:false,hideBottomControls:true,hideUndoRedo:true,onSelectFeature:()=>{},activeDrawingTool:{tool:null},onFeatureDrawn:()=>{},onUpdateFeature:()=>{},onSetActiveDrawingTool:()=>{}}:mapProps}
+                    allUsers={personalOnly?personalWork.partners:[...new Map([...users,...personalWork.partners].map(user=>[user.id,user])).values()]}
                     organizations={discoverableOrganizations}
                     crops={crops}
                     initialConversationId={selectedConversationId}
@@ -6296,7 +6307,7 @@ const App: React.FC = () => {
                     alerts={alerts}
                     setAlerts={setAlerts}
                     onSetAiTab={setAiTab}
-                    onMarkPostAsRead={handleMarkPostAsRead}
+                    onMarkPostAsRead={personalOnly?undefined:handleMarkPostAsRead}
                 />
             );
             case 'stock': 
@@ -6634,7 +6645,7 @@ const App: React.FC = () => {
                         </div>
                     </main>
                 );
-            default: if (!isSystemAdmin && isWorkerContext(currentUser, activeOrg?.id, memberships) && !activeMembershipsFor(currentUser,memberships,activeOrg?.id).some(m=>Array.isArray(m.allowedModules))) return <MyWorkView data={personalWork} tasks={workAssignments||[]} organization={activeOrg} />;
+            default: if(personalOnly)return <PersonalDashboard key={`${currentUser!.id}:${activeOrgId}`} user={currentUser} data={personalWork} organization={activeOrg} onNavigate={setAppMode}/>;
             return (
                 <Dashboard 
                     {...mapProps}
@@ -6653,7 +6664,7 @@ const App: React.FC = () => {
                     isMapFullScreen={isMapFullScreen} 
                     onSetIsMapFullScreen={setIsMapFullScreen} 
                     assistantMessages={assistantMessages} 
-                    onSendCommand={(cmd) => handleSendCommand(cmd, { onAddTask: handleAddTask })} 
+                    onSendCommand={(cmd) => handleSendCommand(cmd, personalOnly?{assistantMode:'standard',currentUser,harvestEntries:personalWork.entries,workAssignments:[],inventoryItems:[],employees:[],plantationFeatures:[],notes:[],organizations:[],setAppMode:(mode)=>{if(checkPermission(mode))setAppMode(mode);}}:{ onAddTask: handleAddTask })}
                     isAssistantLoading={isAssistantLoading} 
                     harvestEntries={harvestEntries || []}
                     users={users}
@@ -6771,6 +6782,7 @@ const App: React.FC = () => {
         <FirebaseDataProvider rawData={rawFirebaseData} isConnectionHealthy={isConnectionHealthy}>
             <div className="flex h-[100dvh] w-screen overflow-hidden font-inter transition-colors duration-200" style={{ backgroundColor: 'var(--bg-canvas, #f3f4f6)', color: 'var(--text-primary, #0f172a)' }}>
             <Sidebar 
+                personalOnly={personalOnly}
                 isPlatformAdmin={isSystemAdmin}
                 appMode={appMode} 
                 onSetAppMode={setAppMode} 
@@ -6779,10 +6791,11 @@ const App: React.FC = () => {
                 activeOrg={activeOrg || null}
                 memberships={memberships}
                 isConnectionHealthy={isConnectionHealthy}
-                onOpenHomepage={() => setShowWelcomeModal(true)}
+                onOpenHomepage={()=>personalOnly?setAppMode('dashboard'):setShowWelcomeModal(true)}
             />
             <div className="flex flex-col flex-1 min-w-0 relative pb-20 lg:pb-0">
                 <Header 
+                    personalOnly={personalOnly}
                     currentUser={currentUser} 
                     onRegister={() => setIsRegisterModalOpen(true)} 
                     onLogin={() => setIsLoginModalOpen(true)} 
@@ -6792,7 +6805,7 @@ const App: React.FC = () => {
                     onOpenProfile={() => setAppMode('profile')}
                     activeOrgName={activeOrgId === 'ALL' ? 'All Tickets' : (activeOrg?.name || t('profile.personal_account'))}
                     onOpenTicketManager={() => setIsTicketManagerOpen(true)}
-                    currentUserRole={memberships.find(m => m.organizationId === activeOrgId)?.role}
+                    currentUserRole={memberships.find(m => m.organizationId === activeOrgId && m.userId === currentUser?.id)?.role}
                     onOpenNotifications={() => setIsNotificationHubOpen(true)}
                     notificationsCount={alerts.filter(a => !a.isRead).length}
                     isManualOffline={isManualOffline}
@@ -6803,7 +6816,7 @@ const App: React.FC = () => {
                     onPushToCloud={handlePushToCloud}
                     pendingSyncCount={pendingSyncCount}
                     onOpenDataAuditor={() => setIsDataStateAuditorOpen(true)}
-                    onOpenHomepage={() => setShowWelcomeModal(true)}
+                    onOpenHomepage={()=>personalOnly?setAppMode('dashboard'):setShowWelcomeModal(true)}
                     onOpenHelp={() => setAppMode('guide')}
                     onOpenChat={handleOpenChatHub}
                     onOpenMeet={handleOpenMeetHub}
@@ -6814,7 +6827,7 @@ const App: React.FC = () => {
                         setAppMode('labs');
                         setLabTab('theme');
                     }}
-                    onOpenGlobalSearch={() => setIsSpotlightOpen(true)}
+                    onOpenGlobalSearch={personalOnly?undefined:()=>setIsSpotlightOpen(true)}
                 />
                 <div className="flex-1 flex flex-col min-h-0 overflow-auto">
                     <Toaster position="top-right" richColors />
@@ -6826,6 +6839,7 @@ const App: React.FC = () => {
                     </ErrorBoundary>
                 </div>
                 <MobileNav 
+                    personalOnly={personalOnly}
                     appMode={appMode} 
                     onSetAppMode={setAppMode} 
                     checkPermission={checkPermission}
@@ -6834,10 +6848,11 @@ const App: React.FC = () => {
                 <div className="pointer-events-none z-[8500]">
                     <div className="pointer-events-auto">
                         <GlobalAssistantPanel 
+                            personalOnly={personalOnly}
                             canUseManagementTools={canUsePrivilegedTools}
                             isPlatformAdmin={isSystemAdmin}
                             messages={assistantMessages}
-                            onSendCommand={(cmd) => handleSendCommand(cmd, {
+                            onSendCommand={(cmd) => handleSendCommand(cmd, personalOnly?{assistantMode:'standard',currentUser,harvestEntries:personalWork.entries,workAssignments:[],inventoryItems:[],employees:[],plantationFeatures:[],notes:[],organizations:[],setAppMode:(mode)=>{if(checkPermission(mode))setAppMode(mode);}}:{
                                 onAddTask: handleAddTask,
                                 onAddNote: handleAddNote,
                                 onAddReminder: handleAddReminder,
@@ -6859,27 +6874,27 @@ const App: React.FC = () => {
                             })}
                             isLoading={isAssistantLoading}
                             activeModuleName={appMode ? appMode.charAt(0).toUpperCase() + appMode.slice(1) : 'Dashboard'}
-                            notes={notes || []}
-                            onAddNote={handleAddNote}
-                            onDeleteNote={handleDeleteNote}
-                            onDeleteMultipleNotes={handleDeleteMultipleNotes}
-                            activeOrgId={activeOrgId}
+                            notes={personalOnly?[]:notes || []}
+                            onAddNote={personalOnly?undefined:handleAddNote}
+                            onDeleteNote={personalOnly?undefined:handleDeleteNote}
+                            onDeleteMultipleNotes={personalOnly?undefined:handleDeleteMultipleNotes}
+                            activeOrgId={personalOnly?'':activeOrgId}
                             activeOrgName={activeOrg?.name}
                             currentUser={currentUser}
                             onOpenChat={handleOpenChatHub}
                             onOpenMeet={handleOpenMeetHub}
                             currentAiMode={assistantMode}
                             onSetAiMode={setAssistantMode}
-                            organizations={organizations || []}
-                            workAssignments={workAssignments || []}
-                            harvestEntries={harvestEntries || []}
-                            plantationFeatures={currentOrgFeatures || plantationFeatures || []}
-                            employees={employees || []}
-                            machinery={machinery || []}
-                            nutritionPlans={nutritionPlans || []}
-                            onNavigateToTasks={() => setAppMode('tasks' as any)}
-                            onAddTask={handleAddTask}
-                            onAddNutritionPlan={(plan) => setNutritionPlans(prev => [plan, ...(prev || [])])}
+                            organizations={personalOnly?[]:organizations || []}
+                            workAssignments={personalOnly?[]:workAssignments || []}
+                            harvestEntries={personalOnly?personalWork.entries:harvestEntries || []}
+                            plantationFeatures={personalOnly?[]:currentOrgFeatures || plantationFeatures || []}
+                            employees={personalOnly?[]:employees || []}
+                            machinery={personalOnly?[]:machinery || []}
+                            nutritionPlans={personalOnly?[]:nutritionPlans || []}
+                            onNavigateToTasks={personalOnly?undefined:()=>setAppMode('tasks')}
+                            onAddTask={personalOnly?undefined:handleAddTask}
+                            onAddNutritionPlan={personalOnly?undefined:(plan) => setNutritionPlans(prev => [plan, ...(prev || [])])}
                         />
                     </div>
                 </div>
@@ -7161,7 +7176,7 @@ const App: React.FC = () => {
                 onPushToCloud={handlePushToFirestore}
                 pendingSyncCount={pendingSyncCount}
                 onOpenDataAuditor={() => setIsDataStateAuditorOpen(true)}
-                onOpenHomepage={() => setShowWelcomeModal(true)}
+                onOpenHomepage={()=>personalOnly?setAppMode('dashboard'):setShowWelcomeModal(true)}
                 onSetMapCenter={(center) => setMapCenter(center)}
                 onSetMapZoom={(zoom) => setMapZoom(zoom)}
                 onSelectFeatureId={(id) => {

@@ -10,7 +10,7 @@ import {
     EmployeeGroup, DailyLogEntry, NutritionPlan, PlanExecution,
     ForumPost, Listing, Bid, Review, Alert, PurchaseOrder, Supplier,
     Note, Checkpoint, SystemLog, SubscriptionRequest, Crop, StockTransaction, HarvestedProduce,
-    isValidCoordinate
+    isValidCoordinate, activeMembershipsFor
 } from '../types';
 import { handleFirestoreError } from '../lib/firebaseUtils';
 import { safeStorage } from '../services/storageService';
@@ -279,6 +279,7 @@ export const useFirebaseData = (
     const [layers, setLayers] = useState<Layer[]>([]);
     const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [memberships, setMemberships] = useState<Membership[]>([]);
+    const companyDataAllowed=isSystemAdmin||activeMembershipsFor(currentUser,memberships,activeOrgId||undefined).some(m=>m.organizationId===activeOrgId&&['Admin','Manager','Field Manager','Founder','Co-Founder'].includes(m.role));
     const [managedMemberships,setManagedMemberships]=useState<Membership[]>([]);
     const [resolvedMembershipUserId, setResolvedMembershipUserId] = useState<string | null>(null);
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -436,6 +437,7 @@ export const useFirebaseData = (
         };
 
         Object.entries(recoveryMap).forEach(([key, setter]) => {
+            if(!['memberships','organizations','discoverableOrganizations'].includes(key))return;
             try {
                 const cached = safeStorage.getItem(`${isLocalRuntime?'local_'+((window as any).__AGRIMAP_LOCAL_SESSION__?.farm.id||'')+'_':''}fb_cache_${key}`);
                 let listToSet: any[] = [];
@@ -667,7 +669,7 @@ export const useFirebaseData = (
             unsubscribePublicUsers();
             unsubscribeAdminUsers();
         };
-    }, [currentUser, isAuthReady]);
+    }, [currentUser?.id, currentUser?.isGuest, isSystemAdmin, isAuthReady]);
 
     const userOrgIds = useMemo(() => {
         return Array.from(new Set(memberships.map(m => m.organizationId))).sort();
@@ -787,7 +789,7 @@ export const useFirebaseData = (
         setCheckpoints([]);
         setSystemLogs([]);
 
-        if (!isAuthReady || !currentUser || currentUser.isGuest) return;
+        if (!isAuthReady || !currentUser || currentUser.isGuest || !companyDataAllowed) return;
 
         const hydrateFromCache = (key: string, setter: (data: any[]) => void, transform?: (data: any) => any) => {
             if(isLocalRuntime)return;
@@ -993,10 +995,10 @@ export const useFirebaseData = (
         }
 
         return () => unsubscribes.forEach(u => u());
-    }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin]);
+    }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin, companyDataAllowed]);
 
     useEffect(() => {
-        if (!USE_FIREBASE || currentUser?.id === 'root-system' || !isAuthReady || !currentUser || currentUser.isGuest || !auth.currentUser) return;
+        if (!USE_FIREBASE || currentUser?.id === 'root-system' || !isAuthReady || !currentUser || currentUser.isGuest || !auth.currentUser || !companyDataAllowed) return;
 
         const unsubscribes: (() => void)[] = [];
         const userOrgIds = memberships.map(m => m.organizationId);
@@ -1056,10 +1058,10 @@ export const useFirebaseData = (
         setupListener('crops', setCrops);
 
         return () => unsubscribes.forEach(u => u());
-    }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin]);
+    }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin, companyDataAllowed]);
 
     useEffect(() => {
-        if (!USE_FIREBASE || currentUser?.id === 'root-system' || !isAuthReady || !currentUser || currentUser.isGuest || !auth.currentUser) return;
+        if (!USE_FIREBASE || currentUser?.id === 'root-system' || !isAuthReady || !currentUser || currentUser.isGuest || !auth.currentUser || !companyDataAllowed) return;
 
         const unsubscribes: (() => void)[] = [];
         const userOrgIds = memberships.map(m => m.organizationId);
@@ -1163,10 +1165,10 @@ export const useFirebaseData = (
         setupListener('planExecutions', setPlanExecutions);
 
         return () => unsubscribes.forEach(u => u());
-    }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin]);
+    }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin, companyDataAllowed]);
 
     useEffect(() => {
-        if (!USE_FIREBASE || currentUser?.id === 'root-system' || !isAuthReady || !currentUser || currentUser.isGuest || !auth.currentUser) return;
+        if (!USE_FIREBASE || currentUser?.id === 'root-system' || !isAuthReady || !currentUser || currentUser.isGuest || !auth.currentUser || !companyDataAllowed) return;
 
         const unsubscribes: (() => void)[] = [];
         
@@ -1267,18 +1269,23 @@ export const useFirebaseData = (
         unsubscribes.push(unsubVarieties);
 
         return () => unsubscribes.forEach(u => u());
-    }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin]);
+    }, [currentUser?.id, isAuthReady, activeOrgId, userOrgIdsHash, isSystemAdmin, companyDataAllowed]);
 
     // Managers need persisted colleagues' membership grants, not only their own row.
     useEffect(()=>{
         setManagedMemberships([]);
         if (!USE_FIREBASE || !isAuthReady || !currentUser || currentUser.isGuest || !activeOrgId) return;
         const own = memberships.find(m=>m.userId===currentUser.id&&m.organizationId===activeOrgId&&m.status==='active');
-        if (!isSystemAdmin && !own || !isSystemAdmin && !['Founder','Co-Founder','Admin'].includes(own?.role||'')) return;
+        if (!isSystemAdmin && !own || !isSystemAdmin && !['Founder','Co-Founder','Admin','Manager','Field Manager'].includes(own?.role||'')) return;
         return onSnapshot(query(collection(db,'memberships'),where('organizationId','==',activeOrgId)), snapshot=>{
             setManagedMemberships(snapshot.docs.map(d=>({...d.data(),id:d.id}) as Membership));
         },()=>setManagedMemberships([]));
     },[isAuthReady,currentUser?.id,currentUser?.isGuest,activeOrgId,isSystemAdmin,JSON.stringify(memberships.filter(m=>m.userId===currentUser?.id).map(m=>[m.id,m.role,m.status]))]);
+
+    useEffect(()=>{
+        if(companyDataAllowed)return;
+        const clear:((value:any[])=>void)[]=[setPlantationFeatures,setLayers,setInventoryItems,setHarvestEvents,setAccounts,setTransactions,setWorkAssignments,setEmployees,setMachinery,setProjects,setHarvestEntries,setPallets,setHarvestLogs,setInventoryTransactions,setStockTransactions,setHarvestedProduce,setEmployeeGroups,setDailyLogs,setNutritionPlans,setPlanExecutions,setForumPosts,setListings,setBids,setAlerts,setPurchaseOrders,setSuppliers,setNotes,setCheckpoints,setSystemLogs,setCrops];clear.forEach(setter=>setter([]));
+    },[companyDataAllowed,currentUser?.id]);
 
     return {
         membershipsReady: Boolean(currentUser?.id && resolvedMembershipUserId === currentUser.id),

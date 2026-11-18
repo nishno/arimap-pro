@@ -144,6 +144,7 @@ export function openFarm(directory) {
     },
     harvests() { return db.prepare('SELECT h.*, f.name AS field_name, u.name AS recorded_by FROM harvests h JOIN fields f ON f.id=h.field_id JOIN users u ON u.id=h.user_id ORDER BY h.recorded_at DESC').all(); },
     recordHarvest(user, input) {
+      requireOwner(user);
       const requestId = text(input.request_id, 'request ID', 80), fieldId = text(input.field_id, 'field ID', 80);
       if (typeof input.kg !== 'number' || !Number.isFinite(input.kg) || input.kg <= 0 || input.kg > 1000000) throw new FarmError(400, 'Invalid harvest weight');
       return transaction(() => {

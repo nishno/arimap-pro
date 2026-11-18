@@ -4,7 +4,7 @@ export type AppMode = 'dashboard' | 'ai' | 'design' | 'community' | 'marketplace
 
 export type NetworkMode = 'cloud' | 'local' | 'offline';
 
-export type UserRole = 'Guest' | 'Employee' | 'Buyer' | 'Agro-Agent' | 'Accountant' | 'Agronomist' | 'Admin' | 'Founder' | 'Co-Founder' | 'ROOT_SUPER_ADMIN' | 'seller' | 'planter' | 'worker' | 'Agro-Shop' | 'company' | 'Independent' | 'Field Manager' | 'Daily Worker' | 'Foreman';
+export type UserRole = 'Manager' | 'Guest' | 'Employee' | 'Buyer' | 'Agro-Agent' | 'Accountant' | 'Agronomist' | 'Admin' | 'Founder' | 'Co-Founder' | 'ROOT_SUPER_ADMIN' | 'seller' | 'planter' | 'worker' | 'Agro-Shop' | 'company' | 'Independent' | 'Field Manager' | 'Daily Worker' | 'Foreman';
 export type SubscriptionTier = 'Free' | 'Pro' | 'Enterprise';
 export type SubscriptionStatus = 'Trial' | 'Paid' | 'Unpaid' | 'Manual';
 
@@ -1765,14 +1765,12 @@ export const activeMembershipsFor = (user: User | null, memberships: Membership[
 export const canUseManagementTools = (user: User | null, organizationId: string | undefined, memberships: Membership[] = [], platformAdmin = false): boolean => {
     if (!user || user.isGuest || ['blocked', 'suspended', 'deleted'].includes(user.status)) return false;
     return platformAdmin || Boolean(organizationId && activeMembershipsFor(user, memberships, organizationId)
-        .some(m => ['Admin', 'Founder', 'Co-Founder'].includes(m.role)));
+        .some(m => ['Admin', 'Manager', 'Field Manager', 'Founder', 'Co-Founder'].includes(m.role)));
 };
 
-export const isWorkerContext = (user: User | null, organizationId?: string, memberships: Membership[] = []): boolean => {
-    if (!user || user.isGuest) return false;
-    const roles = organizationId ? activeMembershipsFor(user, memberships, organizationId).map(m => m.role) : user.roles || [];
-    return roles.length > 0 && roles.every(r => ['Employee', 'worker', 'Daily Worker', 'Foreman'].includes(r));
-};
+// Personal workspace is mandatory for every non-management company role.
+export const isWorkerContext = (user: User | null, organizationId?: string, memberships: Membership[] = []): boolean =>
+    Boolean(user && !user.isGuest && !canUseManagementTools(user, organizationId, memberships));
 
 const permissionMatrix: Record<AppMode, Partial<Record<UserRole, AccessLevel>>> = {
     "my-work": {},
@@ -1803,6 +1801,7 @@ const permissionMatrix: Record<AppMode, Partial<Record<UserRole, AccessLevel>>> 
 export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?: Organization, memberships?: Membership[]): AccessLevel => {
     if (user && ['blocked', 'suspended', 'deleted'].includes(user.status)) return 'none';
     if (module === 'my-work') return user && !user.isGuest ? 'full' : 'none';
+    if (isWorkerContext(user, activeOrg?.id, memberships)) return ['dashboard','ai','community','profile','guide','personalization'].includes(module) ? 'full' : 'none';
     // Explicit grants replace role defaults for this farm, including an explicit empty list.
     const scopedMembership = activeOrg ? activeMembershipsFor(user, memberships, activeOrg.id)[0] : undefined;
     if (scopedMembership && Array.isArray(scopedMembership.allowedModules)) {
@@ -1811,10 +1810,7 @@ export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?
         return scopedMembership.permissionLevel === 'read' ? 'read' : 'full';
     }
 
-    // Workers get a personal workspace, not read access to the company's management screens.
-    if (isWorkerContext(user, activeOrg?.id, memberships)) {
-        return ['dashboard', 'ai', 'community', 'marketplace', 'profile', 'guide', 'personalization', 'onboarding'].includes(module) ? 'full' : 'none';
-    }
+    if (activeOrg && canUseManagementTools(user,activeOrg.id,memberships) && !Array.isArray(scopedMembership?.allowedModules)) return module==='admin'?'none':'full';
     if (module === 'labs' && !canUseManagementTools(user, activeOrg?.id, memberships)) return 'none';
     // Platform overrides are applied by the caller using verified token claims, never a profile label.
 
@@ -1888,7 +1884,7 @@ export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?
         // Allow users with Admin/Founder/Co-Founder privileges (global or via membership) to access management modules
         const hasAdminOrFounderPrivilege = 
             (user.roles || []).some(r => ['Admin', 'Founder', 'Co-Founder'].includes(r)) || 
-            (memberships || []).some(m => m.userId === user.id && ['Admin', 'Founder', 'Co-Founder'].includes(m.role));
+            (memberships || []).some(m => m.userId === user.id && ['Admin', 'Manager', 'Field Manager', 'Founder', 'Co-Founder'].includes(m.role));
             
         if (hasAdminOrFounderPrivilege && (module === 'tools' || module === 'invitations' || module === 'system')) {
             return 'full';

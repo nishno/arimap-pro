@@ -29,8 +29,8 @@ try {
  await assertFails(getDoc(doc(invited,'harvestEntries','entry-a')));
  await assertFails(updateDoc(doc(invited,'memberships','invited-grant_farm-a'),{status:'active',allowedModules:['accounting']}));
  await assertSucceeds(updateDoc(doc(invited,'memberships','invited-grant_farm-a'),{status:'active',joinedAt:'2026-11-18'}));
- await assertSucceeds(getDoc(doc(invited,'harvestEntries','entry-a')));
- await assertSucceeds(setDoc(doc(invited,'harvestEntries','explicit-harvest'),{organizationId:'farm-a',kg:5}));
+ await assertFails(getDoc(doc(invited,'harvestEntries','entry-a')));
+ await assertFails(setDoc(doc(invited,'harvestEntries','explicit-harvest'),{organizationId:'farm-a',kg:5}));
  await assertFails(setDoc(doc(invited,'inventoryItems','forbidden-stock'),{organizationId:'farm-a'}));
  await assertFails(setDoc(doc(invited,'accounts','forbidden-finance'),{organizationId:'farm-a'}));
  await assertSucceeds(setDoc(doc(orgOwner,'employees','employee-grant'),{organizationId:'farm-a',userId:'invited-grant',visibleModules:['harvesting']}));
@@ -38,7 +38,7 @@ try {
  await assertSucceeds(updateDoc(doc(orgOwner,'memberships','invited-grant_farm-a'),{allowedModules:[]}));
  await assertFails(getDoc(doc(invited,'harvestEntries','entry-a')));
  await assertSucceeds(updateDoc(doc(orgOwner,'memberships','invited-grant_farm-a'),{allowedModules:['harvesting'],permissionLevel:'read'}));
- await assertSucceeds(getDoc(doc(invited,'harvestEntries','entry-a')));
+ await assertFails(getDoc(doc(invited,'harvestEntries','entry-a')));
  await assertFails(setDoc(doc(invited,'harvestEntries','read-only-attempt'),{organizationId:'farm-a'}));
  await assertSucceeds(updateDoc(doc(orgOwner,'memberships','invited-grant_farm-a'),{status:'suspended'}));
  await assertFails(getDoc(doc(invited,'harvestEntries','entry-a')));
@@ -63,13 +63,34 @@ try {
  await assertFails(getDoc(doc(personal,'transactions','foreign-paid')));
  await assertFails(getDoc(doc(personal,'transactions','private-expense')));
  await assertFails(updateDoc(doc(personal,'employees','private-employee'),{userId:'someone-else'}));
+ // Personal assignment projections are read-only and employee-scoped.
+ await assertSucceeds(setDoc(doc(payrollOwner,'workerActivities','own-task'),{organizationId:'farm-a',employeeId:'private-employee',sourceId:'task-a',publishedBy:'owner-a',kind:'task',title:'Pruning'}));
+ await assertSucceeds(setDoc(doc(payrollOwner,'workerActivities','other-task'),{organizationId:'farm-a',employeeId:'someone-else',sourceId:'task-b',publishedBy:'owner-a',kind:'task'}));
+ await assertSucceeds(getDocs(query(collection(personal,'workerActivities'),where('organizationId','==','farm-a'),where('employeeId','==','private-employee'))));
+ await assertFails(getDoc(doc(personal,'workerActivities','other-task')));
+ await assertFails(updateDoc(doc(personal,'workerActivities','own-task'),{hours:999}));
+ await assertSucceeds(setDoc(doc(personal,'partnerProfiles','personal-worker'),{userId:'personal-worker',name:'Worker',isDiscoverable:true,servicesOffered:['Pruning']}));
+ await assertFails(updateDoc(doc(personal,'partnerProfiles','personal-worker'),{salary:123}));
+ await assertFails(setDoc(doc(personal,'partnerProfiles','someone-else'),{userId:'someone-else',isDiscoverable:true}));
+ await assertSucceeds(getDocs(query(collection(personal,'partnerProfiles'),where('isDiscoverable','==',true))));
+ await assertSucceeds(setDoc(doc(personal,'forumPosts','direct-private'),{organizationId:'farm-a',authorId:'personal-worker',recipientId:'owner-a',isDirectMessage:true,text:'Hello'}));
+ await assertSucceeds(getDoc(doc(payrollOwner,'forumPosts','direct-private')));
+ await assertFails(getDoc(doc(attacker,'forumPosts','direct-private')));
+ await assertFails(setDoc(doc(personal,'forumPosts','public-forum'),{organizationId:'farm-a',authorId:'personal-worker',isDirectMessage:false,text:'No'}));
+ for(const role of ['Admin','Manager','Field Manager','Founder','Co-Founder']) {
+  const uid='management-'+role.replaceAll(' ','');
+  await assertSucceeds(setDoc(doc(payrollOwner,'memberships',uid+'_farm-a'),{userId:uid,organizationId:'farm-a',role,status:'active'}));
+  const manager=env.authenticatedContext(uid).firestore();
+  await assertSucceeds(getDoc(doc(manager,'harvestEntries','entry-a')));
+  await assertFails(getDoc(doc(manager,'harvestEntries','entry-b')));
+ }
  const member=env.authenticatedContext('member-a').firestore();
- await assertSucceeds(getDoc(doc(member,'harvestEntries','entry-a')));
+ await assertFails(getDoc(doc(member,'harvestEntries','entry-a')));
  await assertFails(getDoc(doc(member,'harvestEntries','entry-b')));
  await assertFails(getDocs(collection(member,'harvestEntries')));
- await assertSucceeds(getDocs(query(collection(member,'harvestEntries'),where('organizationId','==','farm-a'))));
+ await assertFails(getDocs(query(collection(member,'harvestEntries'),where('organizationId','==','farm-a'))));
  await assertFails(updateDoc(doc(member,'harvestEntries','entry-a'),{organizationId:'farm-b'}));
- await assertSucceeds(setDoc(doc(member,'harvestEntries','new'),{organizationId:'farm-a',kg:50}));
+ await assertFails(setDoc(doc(member,'harvestEntries','new'),{organizationId:'farm-a',kg:50}));
  const owner=env.authenticatedContext('owner-a').firestore();
  await assertSucceeds(setDoc(doc(owner,'memberships','invited_farm-a'),{userId:'invited',organizationId:'farm-a',role:'Employee'}));
  await assertFails(updateDoc(doc(owner,'memberships','invited_farm-a'),{organizationId:'farm-b'}));

@@ -42,19 +42,16 @@ test('workspace paths round-trip encoded farm identity; URL does not grant a rol
  assert.equal(checkModuleAccess(user,readWorkspaceRoute('/admin').module,org,[membership]),'none');
 });
 
-test('explicit farm grants survive invitation activation and override worker defaults without widening access',()=>{
- const invited={...membership,id:`${user.id}_${org.id}`,status:'invited',allowedModules:['harvesting','stock'],permissionLevel:'write'};
- assert.equal(checkModuleAccess(user,'stock',org,[invited]),'none');
- const active={...invited,status:'active'};
- for(const snapshot of [[active],JSON.parse(JSON.stringify([active])),[{...active,joinedAt:'2026-11-18'}]]) {
-  assert.equal(checkModuleAccess(user,'harvesting',org,snapshot),'full');
-  assert.equal(checkModuleAccess(user,'stock',org,snapshot),'full');
-  for(const module of ['accounting','design','ai','community','marketplace','admin'])assert.equal(checkModuleAccess(user,module,org,snapshot),'none',module);
+test('historical grants cannot elevate personal accounts; management is explicit',()=>{
+ const active={...membership,allowedModules:['harvesting','stock','tasks','marketplace'],permissionLevel:'write'};
+ for(const role of ['Employee','Agronomist','Independent','Foreman','Buyer']) {
+  for(const module of ['harvesting','stock','tasks','design','marketplace','accounting']) assert.equal(checkModuleAccess(user,module,org,[{...active,role}]),'none',role+module);
+  for(const module of ['dashboard','my-work','ai','community','profile']) assert.equal(checkModuleAccess(user,module,org,[{...active,role}]),'full',role+module);
  }
- assert.equal(checkModuleAccess(user,'stock',org,[{...active,allowedModules:[]}]),'none');
- assert.equal(checkModuleAccess(user,'stock',org,[{...active,permissionLevel:'read'}]),'read');
- assert.equal(checkModuleAccess({...user,visibleModules:['accounting']},'accounting',org,[active]),'none');
- assert.equal(checkModuleAccess(user,'stock',{...org,id:'other-farm'},[active]),'none');
+ for(const role of ['Admin','Manager','Field Manager','Founder','Co-Founder']) {
+  assert.equal(canUseManagementTools(user,org.id,[{...membership,role}]),true);
+  assert.equal(checkModuleAccess(user,'harvesting',org,[{...membership,role}]),'full');
+ }
 });
 test('a canonical revoked membership cannot be revived by a stale legacy membership',()=>{
  const stale={...membership,id:'old-random-id',role:'Founder'};

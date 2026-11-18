@@ -9,6 +9,7 @@ import { motion } from 'motion/react';
 import { APP_VERSION_NAME } from '../utils/version';
 
 interface HeaderProps {
+  personalOnly?: boolean;
   currentUser: User | null;
   onRegister: () => void;
   onLogin: () => void;
@@ -41,6 +42,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
+  personalOnly=false,
   currentUser, onRegister, onLogin, onLogout, onOpenProjects, onSaveProject, 
   activeOrgName, onOpenTicketManager, onOpenProfile, currentUserRole,
   onOpenNotifications, notificationsCount, isManualOffline, onToggleOffline,
@@ -56,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({
   const { isDark, currentTheme } = useAppTheme();
   const [storageUsage, setStorageUsage] = useState(0);
 
-  const canManageLocalServer = currentUser?.roles?.some(r => r === 'Founder' || r === 'Admin' || r === 'ROOT_SUPER_ADMIN');
+  const canManageLocalServer = !personalOnly&&currentUser?.roles?.some(r => r === 'Founder' || r === 'Admin' || r === 'ROOT_SUPER_ADMIN');
 
   const handleSyncClick = async () => {
       if (!onPushToCloud) return;
@@ -277,13 +279,13 @@ const Header: React.FC<HeaderProps> = ({
                 <span className="hidden sm:inline font-bold">{currency}</span>
             </button>
 
-            <button 
+            {!personalOnly&&(<button
               onClick={onSaveProject} 
               className="hidden md:flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-95 flex-shrink-0 snap-end standing-light standing-beam"
             >
               <SaveIcon className="h-4 w-4 flex-shrink-0"/>
               {t('common.save')}
-            </button>
+            </button>)}
         </div>
 
         {/* Right Side: Fixed core elements (Notifications, Help, & Profile) */}
@@ -356,9 +358,9 @@ const Header: React.FC<HeaderProps> = ({
                         <button onClick={() => { onOpenProfile(); setIsDropdownOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 font-bold transition-colors ${isDark ? 'hover:bg-slate-800' : 'hover:bg-indigo-50'}`}>
                             <UserCircleIcon className="h-4 w-4 text-indigo-400" /> My Profile
                         </button>
-                        <button onClick={() => { onOpenProjects(); setIsDropdownOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 font-bold transition-colors ${isDark ? 'hover:bg-slate-800' : 'hover:bg-green-50'}`}>
+                        {!personalOnly&&(<button onClick={() => { onOpenProjects(); setIsDropdownOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 font-bold transition-colors ${isDark ? 'hover:bg-slate-800' : 'hover:bg-green-50'}`}>
                             <FolderIcon className="h-4 w-4 text-emerald-400" /> My Projects
-                        </button>
+                        </button>)}
                         {onOpenHomepage && (
                             <button onClick={() => { onOpenHomepage(); setIsDropdownOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm text-emerald-400 flex items-center gap-3 font-bold transition-colors ${isDark ? 'hover:bg-slate-800' : 'hover:bg-emerald-50'}`}>
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>

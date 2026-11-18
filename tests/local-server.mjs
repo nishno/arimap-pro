@@ -25,12 +25,13 @@ test('local farm: identities, roles, duplicate retries, backup and restart persi
     assert.throws(() => store.createField(worker, { name: 'Bad', crop: 'Bad', area_ha: 1 }), /Owner access/);
     assert.throws(() => store.exportData(worker), /Owner access/);
     const input = { field_id: field.id, kg: 125, request_id: 'retry-1' };
-    const first = store.recordHarvest(worker, input);
-    assert.equal(store.recordHarvest(worker, input).id, first.id);
+    assert.throws(() => store.recordHarvest(worker, input), /Owner access/);
+    const first = store.recordHarvest(owner, input);
+    assert.equal(store.recordHarvest(owner, input).id, first.id);
     assert.equal(store.harvests().length, 1);
-    assert.throws(() => store.recordHarvest(worker, { ...input, kg: 200 }), /another entry/);
-    assert.throws(() => store.recordHarvest(owner, input), /another entry/);
-    assert.throws(() => store.recordHarvest(worker, { ...input, request_id: 'new', kg: -1 }), /Invalid/);
+    assert.throws(() => store.recordHarvest(owner, { ...input, kg: 200 }), /another entry/);
+    assert.throws(() => store.recordHarvest(worker, input), /Owner access/);
+    assert.throws(() => store.recordHarvest(owner, { ...input, request_id: 'new', kg: -1 }), /Invalid/);
     const exported = store.exportData(owner);
     assert.equal(exported.farm.id, farm.id); assert(!JSON.stringify(exported).includes('password_hash')); assert(!JSON.stringify(exported).includes(workerLogin.token));
     const backupFile = path.join(dir, 'recovery.sqlite'); await backup(store.db, backupFile);

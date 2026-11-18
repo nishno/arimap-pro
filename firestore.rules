@@ -71,7 +71,7 @@ service cloud.firestore {
         isAdmin() ||
         (exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) && 
          get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.get('status','active') == 'active' &&
-         get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder']) ||
+         get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)).data.role in ['Founder', 'Admin', 'founder', 'admin', 'Founder/CEO', 'Co-Founder', 'Manager', 'Field Manager']) ||
         (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
          (get(/databases/$(database)/documents/organizations/$(orgId)).data.get('creatorId', '') == request.auth.uid || 
           get(/databases/$(database)/documents/organizations/$(orgId)).data.get('createdBy', '') == request.auth.uid)) ||
@@ -82,12 +82,7 @@ service cloud.firestore {
     }
 
     function moduleAllowed(orgId, modules, write) {
-      let memberPath = /databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId);
-      let member = exists(memberPath) ? get(memberPath).data : {};
-      return isAuthenticated() && (isOrgAdmin(orgId) ||
-        (isMemberOf(orgId) && member.get('status', 'active') == 'active' &&
-         (!('allowedModules' in member) || (member.allowedModules is list && member.allowedModules.hasAny(modules))) &&
-         (!write || member.get('permissionLevel', 'write') in ['write', 'admin'])));
+      return isOrgAdmin(orgId);
     }
 
     function ownEmployee(orgId, employeeId) {
@@ -201,6 +196,13 @@ service cloud.firestore {
       allow delete: if isOrgAdmin(resource.data.get('organizationId',''));
     }
 
+    match /workerActivities/{id} {
+      allow read: if isOrgAdmin(resource.data.get('organizationId','')) || ownEmployee(resource.data.get('organizationId',''),resource.data.get('employeeId',''));
+      allow create: if isOrgAdmin(request.resource.data.get('organizationId','')) && request.resource.data.publishedBy == request.auth.uid;
+      allow update: if isOrgAdmin(resource.data.get('organizationId','')) && request.resource.data.publishedBy == request.auth.uid && request.resource.data.organizationId == resource.data.organizationId && request.resource.data.employeeId == resource.data.employeeId && request.resource.data.sourceId == resource.data.sourceId;
+      allow delete: if isOrgAdmin(resource.data.get('organizationId',''));
+    }
+
     match /projects/{projectId} {
       allow list: if isAuthenticated();
       allow get: if isAuthenticated() && (resource.data.userId == request.auth.uid || isMemberOf(resource.data.organizationId) || isAdmin());
@@ -270,7 +272,7 @@ service cloud.firestore {
 
     // Employee module assignments are authority-bearing: ordinary members cannot edit them.
     match /employees/{id} {
-      allow read: if (isVerified() && isMemberOf(resource.data.get('organizationId', ''))) || ownEmployee(resource.data.get('organizationId',''),id);
+      allow read: if isOrgAdmin(resource.data.get('organizationId','')) || (isMemberOf(resource.data.get('organizationId','')) && resource.data.get('userId','') == request.auth.uid) || ownEmployee(resource.data.get('organizationId',''),id);
       allow delete: if isOrgAdmin(resource.data.get('organizationId', ''));
       allow create: if isOrgAdmin(request.resource.data.get('organizationId', ''));
       allow update: if isOrgAdmin(resource.data.get('organizationId', '')) &&
@@ -318,9 +320,16 @@ service cloud.firestore {
     }
 
     match /forumPosts/{id} {
-      allow read, write: if isAuthenticated(); // Posts can be made by anyone authenticated for now? Or verified? Let's use isVerified for writes.
-      allow write: if isVerified();
-      allow get: if isAuthenticated();
+      allow read: if (resource.data.get('isDirectMessage',false) == false && isOrgAdmin(resource.data.get('organizationId',''))) || (isAuthenticated() && resource.data.get('isDirectMessage',false) == true && (resource.data.authorId == request.auth.uid || resource.data.get('recipientId','') == request.auth.uid || isOrgAdmin(resource.data.get('recipientId',''))));
+      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid && (isOrgAdmin(request.resource.data.get('organizationId','')) || (request.resource.data.get('isDirectMessage',false) == true && request.resource.data.get('recipientId','') != ''));
+      allow update: if (resource.data.get('isDirectMessage',false) == false && isOrgAdmin(resource.data.get('organizationId',''))) || (isAuthenticated() && resource.data.authorId == request.auth.uid && request.resource.data.authorId == resource.data.authorId && resource.data.get('isDirectMessage',false) == true && request.resource.data.isDirectMessage == true && request.resource.data.get('recipientId','') == resource.data.get('recipientId',''));
+      allow delete: if (resource.data.get('isDirectMessage',false) == false && isOrgAdmin(resource.data.get('organizationId',''))) || isOwner(resource.data.authorId);
+    }
+
+    match /partnerProfiles/{uid} {
+      allow read: if isAuthenticated() && (resource.data.get('isDiscoverable',false) == true || isOwner(uid));
+      allow create, update: if isOwner(uid) && request.resource.data.userId == uid && request.resource.data.keys().hasOnly(['userId','name','description','servicesOffered','workingRegions','availability','isDiscoverable','cv']);
+      allow delete: if isOwner(uid);
     }
 
     match /listings/{id} {

@@ -10,7 +10,7 @@ export function weighTerminal(store) {
   received_at TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1);
   CREATE TABLE IF NOT EXISTS terminal_changes (seq INTEGER PRIMARY KEY AUTOINCREMENT, operation_id TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS terminal_reviews (id INTEGER PRIMARY KEY, operation_id TEXT NOT NULL, actor_id TEXT NOT NULL, at TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT NOT NULL, revision INTEGER NOT NULL);`);
- const operator = user => {if(user?.role!=='owner'&&!grants.get(user?.id)?.includes('harvesting'))throw new FarmError(403,'Harvest module access required');};
+ const operator = user => {if(user?.role!=='owner')throw new FarmError(403,'Company management access required');};
  const owner = user => {if(user?.role!=='owner')throw new FarmError(403,'Terminal pilot requires farm owner access');};
  const transaction = fn => {db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result;}catch(e){db.exec('ROLLBACK');throw e;}};
  const documents = col => db.prepare('SELECT path,body FROM documents WHERE path LIKE ?').all(col+'/%').map(r=>({...JSON.parse(r.body),id:r.path.split('/')[1]})).filter(r=>r.organizationId===store.farm().id);

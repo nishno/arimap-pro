@@ -17,6 +17,7 @@ import ContextualStatusEngine from './ContextualStatusEngine';
 import { APP_VERSION_CODE, APP_VERSION_NAME, MODERN_UI_VERSION } from '../utils/version';
 
 interface SidebarProps {
+  personalOnly?: boolean;
   isPlatformAdmin?: boolean;
   appMode: AppMode;
   onSetAppMode: (mode: AppMode) => void;
@@ -71,6 +72,7 @@ const NavItem: React.FC<{
 );
 
 const Sidebar: React.FC<SidebarProps> = ({ 
+  personalOnly = false,
   isPlatformAdmin = false,
   appMode, 
   onSetAppMode, 
@@ -181,7 +183,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <a href={location.pathname.startsWith('/modern')?'/classic':'/modern?from=classic'} className="block px-5 py-3 text-xs text-emerald-700 hover:underline" style={{minHeight:44}}>{MODERN_UI_VERSION} · {location.pathname.startsWith('/modern')?'Classic UI':'Try new UI'}</a>
       </div>
       <nav className="flex-1 p-3 overflow-y-auto custom-scrollbar">
-        <div className="mb-5 px-1">
+        {!personalOnly&&(<div className="mb-5 px-1">
           <div 
             className={`p-3.5 rounded-2xl border flex flex-col items-center cursor-pointer transition-all group standing-light standing-beam ${
               appMode === 'guide'
@@ -207,7 +209,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </p>
               <p className="text-[9px] font-bold text-slate-400 mt-0.5 text-center">SOPs & AI Models</p>
           </div>
-        </div>
+        </div>)}
       {renderSection(t('nav.public_portal'), publicPortal as any)}
       {renderSection(t('nav.indiv_tools'), individualTools as any)}
       {renderSection(t('nav.enterprise'), companyEnterprise)}

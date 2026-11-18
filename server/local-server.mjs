@@ -61,7 +61,7 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
       if(route==='/api/local/module-access'&&req.method==='GET'){
         const userId=url.searchParams.get('userId')||user.id;
         if(userId!==user.id&&user.role!=='owner')throw new FarmError(403,'Owner access required');
-        return json(res,200,{userId,allowedModules:moduleAccess(store).get(userId)});
+        return json(res,200,{userId,role:user.role,allowedModules:moduleAccess(store).get(userId)});
       }
       if(route==='/api/local/module-access'&&req.method==='POST')return json(res,200,moduleAccess(store).set(user,await body(req)));
       if(route==='/api/local/terminal/bootstrap'&&req.method==='GET')return json(res,200,terminal.bootstrap(user));
@@ -77,6 +77,7 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
       if (route === '/api/local/users' && req.method === 'POST') return json(res, 201, await store.createWorker(user, await body(req)));
       if (route === '/api/local/worker-access' && req.method === 'POST') { await store.manageWorker(user, await body(req)); return json(res, 200, { ok: true }); }
       if (route === '/api/local/password' && req.method === 'POST') { await store.changePassword(user, await body(req)); return json(res, 200, { ok: true }, { 'Set-Cookie': cookie('', true) }); }
+      if(['/api/local/fields','/api/local/harvests'].includes(route)&&user.role!=='owner')throw new FarmError(403,'Company management access required');
       if (route === '/api/local/fields' && req.method === 'GET') return json(res, 200, store.fields());
       if (route === '/api/local/fields' && req.method === 'POST') return json(res, 201, store.createField(user, await body(req)));
       if (route === '/api/local/harvests' && req.method === 'GET') return json(res, 200, store.harvests());

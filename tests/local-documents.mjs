@@ -150,7 +150,7 @@ test("full local document store: durable writes, role boundary, transactions, tr
       () => read("accounts", worker),
       (e) => e.status === 403,
     );
-    assert.equal(read("plantationFeatures", worker).documents.length, 1);
+    assert.throws(() => read("plantationFeatures", worker), e => e.status === 403);
     commit([
       {
         type: "set",

@@ -1,64 +1,33 @@
-# User access and workspaces
+# Personal and company workspaces
 
-## What changed
+## Current policy — 2026-11-18
 
-Navigation now hides modules denied by the shared module policy on desktop and mobile. Direct module navigation uses the same policy. A worker's dashboard shows their personal work view instead of the company's operational dashboard. Previously cached permissions are no longer retained when permissions disappear or an account changes. Membership role/status updates now propagate even when record IDs stay the same, and deep-link normalization waits for membership loading.
+This policy supersedes earlier worker module grants in MODULE_ACCESS.md and WORKER_RECORDS.md.
 
-Only an **active membership belonging to the signed-in user in the selected farm** contributes farm permissions. A membership in another farm, an invitation, or a suspended/pending membership does not grant access. Platform administration is separate and uses verified Firebase token claims; a profile label or URL cannot grant it.
+Signed-in non-management accounts see Dashboard, My work & earnings, AI tools and Communicator. Their profile provides CV, offered services, availability, discovery consent and reviews. Communicator exposes Find Partner and direct partner messages only. Market, company Harvest, Planner, Tasks & Works, Accounting, Stock and administration are hidden and direct routes return to the personal dashboard. Historical allowedModules, HR checkboxes and custom-role operational permissions cannot elevate these accounts.
 
-| Context | Workspace |
-| --- | --- |
-| Worker / Employee / Daily Worker / Foreman | Personal work and recorded earnings, profile, AI, communicator, marketplace, help and personal settings. No company accounting, stock, map planner, harvest administration, system management, logs or Labs. |
-| Founder / Co-Founder / farm Admin | Farm modules according to existing role permissions and subscription access; management Meet/Chat and AI console. |
-| Accountant / Agronomist / Field Manager | Existing contextual module policy; no management Google/AI console unless also granted an active management membership. |
-| Platform administrator / platform owner | Platform permissions verified through token claims. Global AI scope remains limited to platform administrators. |
-| Guest | Existing public/demo access; no management tool console or personal earnings. |
+Company operations require an active membership for the selected company as Admin, Manager (including the existing Field Manager role), Founder or Co-Founder. Verified platform administrators retain platform access. A profile role label or a URL never grants platform authority. Managers' explicit module lists still constrain their navigation. LAN currently provisions owner and worker accounts; its owner is the management account. LAN manager provisioning is not implemented by this change.
 
-The personal work view reads only the signed-in profile's `workRecords` whose `userId` matches that profile. It does not infer a worker's identity from their name or email. It shows recorded earnings, not proof of payment, and does not invent working hours, currency or payment status. Empty records are explicitly displayed as empty. This is not a new authoritative payroll ledger or an automatic linkage to historical employee records.
+## Assignment notices and CV
 
-## URLs
+When a manager opens the updated application/company, useActivityPublisher watches server-confirmed workAssignments and harvestEvents and publishes deterministic, per-employee workerActivities documents. Existing assignments are backfilled then. Each projection contains only that employee's assignment, hours, recorded quantity and agreed rate. Workers cannot edit these records or read other employees' projections. Removed assignments are marked withdrawn, preserving history.
 
-Modern examples:
+Dashboard notices are in-app notices, not background push notifications. Offline cached notices may be older than the server. Publication requires a connected manager session; there is no deployed background Cloud Function. Stable content hashes avoid repeated publication. This projection never changes payroll, source assignments or inventory.
 
-- `/modern/worker/my-work`
-- `/modern/farms/<farm-id>/stock`
-- `/modern/personal/profile`
-- `/modern/admin/admin`
+Completed assignments generate a work-experience preview. The user can add that preview and manual experience to their editable CV. Discovery is opt-in. A separate partnerProfiles directory publishes selected CV/service fields, excluding payroll and rates; switching off discovery deletes that directory document. Public CV experience is user-editable and is not verified financial evidence.
 
-Classic uses the same paths under `/classic`. `/admin` is accepted as an entry alias and normalized to a workspace URL. Existing `/modern`, `/classic`, `/local`, cloud registration and sign-in entries still work. Refresh restores the module; unauthorized or mismatched-farm routes return to a permitted workspace. A farm ID in a URL does not switch accounts, select an unauthorized farm, or grant access. Select farms through the existing account controls.
+## Own work and money
 
-## Toolbar behavior
+The employer must link the account using membership.employeeId or employee.userId. Ambiguous or conflicting links stop aggregation. Personal harvest and payroll queries require the linked employee and company. Payroll reads additionally require the payroll account. Workers cannot modify these records.
 
-The floating assistant's Meet/Chat and management console entries are hidden for ordinary users. The same restriction applies to the Google tabs in the communicator. Management hub open events are checked again, and an already open privileged panel closes when eligibility changes. Ordinary internal communication remains available.
+My work & earnings shows recorded quantities, hours, accruals, payments and balances separately by ledger currency. Per-work payment allocation is shown only when a ledger referenceId matches the source work/event ID. Payer, payment method and dates are shown when recorded; missing details are labelled rather than guessed. Historical records without those fields need employer correction. Display currency switching does not convert ledger values.
 
-The weather panel in Hardware & Devices has a reversible Show/Hide control. Its input and loaded results remain mounted while hidden. This branch does not contain the newer separately labelled Google/weather toolbar described in the request; apply the same policy to that version when its source is supplied.
+## Rollout
 
-## Security boundaries and remaining work
+1. Pull demo-preview, install dependencies, build and restart the local server. Do not reinitialize an existing farm or clear unsynced browser storage.
+2. For Firebase mode, deploy firestore.rules to the actual project AND database used by the application. Git pull does not deploy cloud rules. npm run firebase:target identifies the configured target. No production rules were deployed during this change.
+3. Open the company as its manager once to publish existing assignments. Verify employee links, then sign in as the worker.
 
-These changes implement navigation and component-entry restrictions; they are not a replacement for database rules. Existing LAN/API authorization remains in place, including denial of worker access to finance collections. No production Firebase rules or deployment were changed.
+## Verification
 
-Before a production role rollout, review Firebase rules and subscriptions collection by collection. Several existing cloud collections grant reads to organization members more broadly than the new menus. LAN workers can still read certain shared field/harvest/work collections under the existing server policy. Hiding their modules does not revoke those API reads. Tightening those policies requires defining which assignments, operational records and employee identities each role legitimately needs, then testing the server and cloud rules together.
-
-Also required for a full payroll product: trusted employer-issued personal records, canonical user-to-employee links, currency and working-hours fields, payment status, and field-level protection against editing one's own earnings. Existing profile work records may be self-editable and are not suitable as financial evidence.
-
-## Implementation and verification
-
-- `src/types.ts`: contextual access helpers and module policy.
-- `src/access/routes.ts`: URL parsing and workspace paths; no authority derived from a URL.
-- `src/App.tsx`: shared entry guards, scoped grants, role-change handling and URL synchronization.
-- `src/components/{Sidebar,MobileNav}.tsx`: hidden denied modules.
-- `src/components/MyWorkView.tsx`: personal work records.
-- `src/components/{GlobalAssistantPanel,CommunicationHubPanel}.tsx`: privileged tool visibility.
-- `src/components/SystemManagement/HardwareLabs/WeatherStationLab.tsx`: weather collapse.
-
-Run `npm run test:access`, `npm run lint`, `npm run build`, then `npm run test:access:browser`. Browser tests use an isolated temporary LAN database and block external traffic; they do not test or modify production Firebase identities or records.
-
-Verified for this change: production build, TypeScript check, role-policy/route tests, existing LAN document-store tests, and browser coverage of owner reloads, live role downgrade, weather hide/show, desktop/mobile worker navigation and direct finance API denial. No production cloud deployment or live Firebase-role test was performed.
-
-## Explicit grants update — 2026-11-18
-
-When an active membership has `allowedModules`, that exact optional-module list overrides the default role matrix, including an empty list. Profile/help/account controls remain. Granted workers can therefore enter assigned operational modules without receiving the other company modules. Persisted canonical membership grants, LAN access controls, updated cloud rules and rollout limits are documented in [MODULE_ACCESS.md](HARDWARE_MODULARIZATION/MODULE_ACCESS.md). The earlier worker-default table applies when no explicit list is present.
-
-## Worker records and role recovery
-
-The earnings view now reads linked employee harvest entries, individual accessible task logs and payroll ledger records. Legacy HR module grants and assigned company roles are read from the server when membership grants are absent. Explicit membership lists, including empty lists, retain precedence. See [worker records](HARDWARE_MODULARIZATION/WORKER_RECORDS.md).
+TypeScript, production build, role-policy tests, LAN document/API tests, projection tests, Firestore emulator authorization tests, and isolated browser flows cover this change. Tests do not use live customer data. Legacy public listing/project rules outside company operations remain a separate audit scope.

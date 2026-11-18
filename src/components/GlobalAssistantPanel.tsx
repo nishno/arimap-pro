@@ -71,6 +71,7 @@ interface GlobalAssistantPanelProps {
   activeOrgName?: string;
   currentUser?: User | null;
   canUseManagementTools?: boolean;
+  personalOnly?: boolean;
   isPlatformAdmin?: boolean;
   onOpenChat?: () => void;
   onOpenMeet?: () => void;
@@ -123,6 +124,7 @@ const Message: React.FC<{ message: AssistantMessage; onOpenSettings?: () => void
 
 const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({ 
   canUseManagementTools = false,
+  personalOnly = false,
   isPlatformAdmin = false,
   messages, 
   onSendCommand, 
@@ -251,15 +253,18 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
   };
 
   useEffect(() => {
-    const handleOpenNotes = () => setIsVoiceNotesOpen(true);
+    const handleOpenNotes = () => {if(!personalOnly)setIsVoiceNotesOpen(true);};
+    const personalAnalysis=(event:any)=>{setAnalysisInitialTool(event.detail?.tool==='document'?'document':'disease');setIsAnalysisModalOpen(true);};
+    window.addEventListener('agrimap_open_personal_analysis',personalAnalysis);
     const handleOpenAssistant = () => setIsCollapsed(false);
     window.addEventListener('agrimap_open_voice_notes', handleOpenNotes);
     window.addEventListener('agrimap_open_assistant', handleOpenAssistant);
     return () => {
+      window.removeEventListener('agrimap_open_personal_analysis',personalAnalysis);
       window.removeEventListener('agrimap_open_voice_notes', handleOpenNotes);
       window.removeEventListener('agrimap_open_assistant', handleOpenAssistant);
     };
-  }, []);
+  }, [personalOnly]);
 
   // Viewport resize clamping to ensure chat never slips off-screen or becomes inaccessible
   useEffect(() => {
@@ -608,7 +613,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                 </button>)}
 
                 {/* 3. AI Voice Notes Button (Third Darker Green / Teal Circle with subtle ring) */}
-                <button
+                {!personalOnly&&(<button
                     onClick={() => setIsVoiceNotesOpen(true)}
                     className="w-12 h-12 rounded-full bg-emerald-800 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-950/60 flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 border-2 border-emerald-400/50 relative cursor-pointer"
                     title="AI Voice Notes & Field Memos"
@@ -619,7 +624,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                             {notes.length}
                         </span>
                     )}
-                </button>
+                </button>)}
 
                 {/* 4. AI Agro Diagnostics Pop-up Modal Button (Pop-up window directly) */}
                 <button

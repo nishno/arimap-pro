@@ -11,12 +11,13 @@ import type { AppMode } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface MobileNavProps {
+  personalOnly?:boolean;
   appMode: AppMode;
   onSetAppMode: (mode: AppMode) => void;
   checkPermission: (mode: AppMode) => boolean;
 }
 
-const MobileNav: React.FC<MobileNavProps> = ({ appMode, onSetAppMode, checkPermission }) => {
+const MobileNav: React.FC<MobileNavProps> = ({ appMode, onSetAppMode, checkPermission,personalOnly=false }) => {
   const { t, language } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +54,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ appMode, onSetAppMode, checkPermi
           const active = appMode === item.mode;
           const isHelp = item.mode === 'guide';
           
-          if (!hasAccess) return null;
+          if (!hasAccess || personalOnly&&item.mode==='guide') return null;
 
           return (
             <button

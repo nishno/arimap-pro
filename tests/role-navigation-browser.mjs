@@ -56,10 +56,11 @@ try {
   for(const name of ['Stock','Accounts','Map Planner','Labs','Admin']) assert.equal(await worker.page.getByRole('button',{name,exact:true}).count(),0,name);
   for(const title of ['Google Meet Video Call','Google Chat Workspace Hub','Agronomy PM Intelligence Console']) assert.equal(await worker.page.getByTitle(title,{exact:true}).count(),0,title);
   await worker.page.goto(origin+'/modern/farms/'+store.farm().id+'/accounting');
-  await worker.page.getByRole('heading',{name:'My work & earnings',exact:true}).waitFor();
-  await worker.page.waitForURL(/\/modern\/worker\/my-work$/);
+  await worker.page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();
+  await worker.page.waitForURL(/\/modern\/worker\/dashboard$/);
   await worker.page.getByRole('button',{name:'Communicator',exact:true}).click();
-  await worker.page.getByRole('button',{name:'Forum & Hub',exact:true}).waitFor();
+  assert.equal(await worker.page.getByRole('button',{name:'Forum & Hub',exact:true}).count(),0);
+  await worker.page.getByRole('button',{name:'Partners Find',exact:true}).waitFor();
   assert.equal(await worker.page.getByRole('button',{name:'Google Chat',exact:true}).count(),0);
   await worker.page.evaluate(()=>window.dispatchEvent(new CustomEvent('agrimap_open_meet')));
   assert.equal(await worker.page.getByRole('button',{name:'Launch Instant Video Meeting',exact:true}).count(),0);
