@@ -73,3 +73,11 @@ The planner preview now starts with a valid empty drawing tool and its own draft
 - Browser checks: desktop/mobile role navigation; legacy-grant restrictions; own earnings and CV/services/reviews persistence; job publishing and region/map/company discovery; recipe dispatch without duplicate plans; AI/manual/combined archive creation, edit, reuse and delete; honest missing-Gemini configuration errors; mobile assistant controls and popup isolation.
 - Isolated original-planner preview rendering, shared-draft isolation, registration prompt and absence of company writes.
 - Visual inspection of desktop clinical editor and mobile diagnostics screenshots using test data. Live paid Gemini requests and production Firebase deployment were not performed.
+
+## 2026-11-19 — reference-style Announcements, earnings and prescriptions
+
+Analyzed agrimap_new at commit 19d4bbd and adapted its unified feed and restrained card-based styling. Added Announcements & Plantations as the primary Communicator tab, with synchronized feed/map search and region, work/service, contract and crop filters. Companies, published vacancies and opt-in service profiles share one discovery view. Details/contact/map actions reuse existing authorized workflows. Missing map coordinates remain explicitly unavailable.
+
+Rebuilt My work & earnings around four summary cards, currency-separated balances, Activities/Harvest/Payroll tabs and the existing expandable CV/service tools. Restyled clinical diagnosis and prescription screens with the same spacing, typography, card surfaces and action hierarchy. Earnings calculations, account links, clinical archive persistence and company permissions remain unchanged.
+
+Detailed analysis, reference source and adaptation boundaries: UI_MODERNIZATION/REFERENCE_STYLE_2026-11-19.md. No database migration or production deployment is part of this update.

@@ -1,3 +1,5 @@
+import {DiscoveryPanel,DiscoveryCheckpoints} from '../worker/DiscoveryPanel';
+import {discoveryItems,filterDiscovery,emptyDiscoveryFilters,DiscoveryItem} from '../worker/discovery';
 import {CompanyCheckpoints,CompanyDetails,Announcements,useJobAnnouncements} from '../worker/CompanyDiscovery';
 import {useLanguage} from '../contexts/LanguageContext';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -167,8 +169,8 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
     const {language}=useLanguage();
     const partnersOnly=props.partnersOnly===true;
     const canUseGoogleTools = false;
-    const [mainTab, setMainTab] = useState<'GOOGLE_CHAT' | 'GOOGLE_MEET' | 'COMMUNICATOR' | 'PARTNERS'>(partnersOnly?'PARTNERS':canUseGoogleTools ? 'GOOGLE_CHAT' : 'COMMUNICATOR');
-    useEffect(() => { if(partnersOnly)setMainTab('PARTNERS');else if (!canUseGoogleTools) setMainTab('COMMUNICATOR'); }, [canUseGoogleTools,partnersOnly]);
+    const [mainTab, setMainTab] = useState<'DISCOVERY' | 'GOOGLE_CHAT' | 'GOOGLE_MEET' | 'COMMUNICATOR' | 'PARTNERS'>('DISCOVERY');
+    useEffect(() => { setMainTab('DISCOVERY'); }, [canUseGoogleTools,partnersOnly]);
     const [hubType, setHubType] = useState<'INTERNAL' | 'REGIONAL' | 'GLOBAL'>('INTERNAL');
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -516,8 +518,16 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
     const [companyDetails,setCompanyDetails]=useState<any>(null);
     const [showAnnouncements,setShowAnnouncements]=useState(false);
     const [regionFilter,setRegionFilter]=useState('');
-    useEffect(()=>{if(sessionStorage.getItem('agrimap_community_work')==='1'){sessionStorage.removeItem('agrimap_community_work');setMainTab('PARTNERS');setShowAnnouncements(true);}},[]);
-    useEffect(()=>{const open=()=>{setMainTab('PARTNERS');setShowAnnouncements(true);};window.addEventListener('agrimap_find_partner_work',open);return()=>window.removeEventListener('agrimap_find_partner_work',open);},[]);
+    const [discoveryFilters,setDiscoveryFilters]=useState(emptyDiscoveryFilters);
+    const [discoveryComposer,setDiscoveryComposer]=useState(false);
+    const [offerDetails,setOfferDetails]=useState<DiscoveryItem|null>(null);
+    const discoveryRows=useMemo(()=>discoveryItems(organizations,jobs,allUsers,crops),[organizations,jobs,allUsers,crops]);
+    const visibleDiscovery=useMemo(()=>filterDiscovery(discoveryRows,discoveryFilters),[discoveryRows,discoveryFilters]);
+    const openDiscoveryDetails=(item:DiscoveryItem)=>{if(item.company)setCompanyDetails(item.company);else setOfferDetails(item);};
+    const messageDiscovery=(item:DiscoveryItem)=>setQuickMessageRecipient({id:item.company?.id||item.profile?.id,name:item.name,type:item.company?'org':'user'});
+
+    useEffect(()=>{if(sessionStorage.getItem('agrimap_community_work')==='1'){sessionStorage.removeItem('agrimap_community_work');setMainTab('DISCOVERY');}},[]);
+    useEffect(()=>{const open=()=>{setMainTab('DISCOVERY');};window.addEventListener('agrimap_find_partner_work',open);return()=>window.removeEventListener('agrimap_find_partner_work',open);},[]);
     const filteredPartners = useMemo(() => {
         const query = searchQuery.toLowerCase();
         
@@ -655,10 +665,10 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
     }, [filteredPosts, currentUser, onMarkPostAsRead]);
 
     return (
-        <main className="w-full h-full bg-white overflow-hidden flex flex-col md:flex-row min-h-0">
+        <main className="communicator-shell w-full h-full bg-white overflow-hidden flex flex-col md:flex-row min-h-0">
             {/* Left Panel */}
             <div 
-                className="w-full flex flex-col border-r h-full bg-white relative z-20 shadow-2xl min-h-0 flex-shrink-0"
+                className="communicator-sidebar w-full flex flex-col border-r h-full bg-white relative z-20 min-h-0 flex-shrink-0"
                 style={{
                     width: typeof window !== 'undefined' && window.innerWidth > 768 ? `${communicatorPanelWidth}px` : undefined,
                     maxWidth: '85vw'
@@ -666,6 +676,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
             >
                 {/* Main Tabs */}
                 <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-hide bg-slate-50/90 shrink-0 min-h-[52px] h-[52px] items-stretch">
+                    <button className="ad-discovery-tab" aria-pressed={mainTab==='DISCOVERY'} onClick={()=>setMainTab('DISCOVERY')}>{language==='ka'?'განცხადებები და პლანტაციები':'Announcements & Plantations'}</button>
                     {false && (<button
                         onClick={() => setMainTab('GOOGLE_CHAT')}
                         className={`flex-1 py-3 px-3.5 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 min-w-[120px] shrink-0 h-full ${mainTab === 'GOOGLE_CHAT' ? 'border-emerald-600 text-emerald-600 bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
@@ -698,6 +709,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
 
                 {/* Sub Content View */}
                 <div className="flex-grow flex flex-col overflow-hidden min-h-0">
+                    {mainTab==='DISCOVERY'&&<DiscoveryPanel items={visibleDiscovery} allItems={discoveryRows} filters={discoveryFilters} onFilters={setDiscoveryFilters} onDetails={openDiscoveryDetails} onMessage={messageDiscovery} error={jobsError} canPostJobs={Boolean(props.canManageAnnouncements&&props.activeOrganization)} isPosting={discoveryComposer} onPost={()=>props.canManageAnnouncements&&props.activeOrganization?setDiscoveryComposer(value=>!value):onSetAppMode('profile')} onFocus={item=>{if(item.position){const [lat,lng]=item.position;props.onSetFlyToBounds([[lat-.003,lng-.003],[lat+.003,lng+.003]]);}}} onFit={()=>{const points=visibleDiscovery.flatMap(item=>item.position?[item.position]:[]);if(points.length)props.onSetFlyToBounds(points);}} composer={discoveryComposer&&props.canManageAnnouncements&&props.activeOrganization?<Announcements jobs={[]} error="" user={currentUser} organization={props.activeOrganization} canManage={Boolean(props.canManageAnnouncements)} onMessage={company=>setQuickMessageRecipient({...company,type:'org'})}/>:undefined}/>}
                     {/* Google Chat Tab */}
                     {canUseGoogleTools && mainTab === 'GOOGLE_CHAT' && (
                         <div className="flex-grow flex flex-col overflow-hidden">
@@ -1444,7 +1456,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                         </>
                     )}
 
-                    {(partnersOnly||mainTab==='PARTNERS')&&<section className="p-4 border-b max-h-64 overflow-auto"><h3 className="font-semibold">{language==='ka'?'პირადი მიმოწერა':'Partner messages'}</h3>{forumPosts.filter(p=>p.isDirectMessage&&(p.authorId===currentUser?.id||(props.partnerRecipientIds||[currentUser?.id]).includes(p.recipientId||''))).slice(-30).map(p=><article key={p.id} className="border rounded p-3 my-2"><b>{p.authorName}</b><p>{p.content}</p><small>{p.timestamp}</small><button className="ml-3 underline" onClick={()=>setQuickMessageRecipient({id:p.authorId===currentUser?.id?p.recipientId!:p.authorId,name:p.authorId===currentUser?.id?p.recipientName||'Partner':p.authorName} as any)}>{language==='ka'?'პასუხი':'Reply'}</button></article>)}</section>}
+                    {mainTab==='PARTNERS'&&<section className="p-4 border-b max-h-64 overflow-auto"><h3 className="font-semibold">{language==='ka'?'პირადი მიმოწერა':'Partner messages'}</h3>{forumPosts.filter(p=>p.isDirectMessage&&(p.authorId===currentUser?.id||(props.partnerRecipientIds||[currentUser?.id]).includes(p.recipientId||''))).slice(-30).map(p=><article key={p.id} className="border rounded p-3 my-2"><b>{p.authorName}</b><p>{p.content}</p><small>{p.timestamp}</small><button className="ml-3 underline" onClick={()=>setQuickMessageRecipient({id:p.authorId===currentUser?.id?p.recipientId!:p.authorId,name:p.authorId===currentUser?.id?p.recipientName||'Partner':p.authorName} as any)}>{language==='ka'?'პასუხი':'Reply'}</button></article>)}</section>}
                     {/* Partners Tab */}
                     {mainTab === 'PARTNERS' && (
                         <div className="flex flex-col h-full overflow-hidden">
@@ -1647,11 +1659,12 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                         (u.location || u.workingArea?.center)
                     ) : []} 
                 >
+                    {mainTab==='DISCOVERY'&&<DiscoveryCheckpoints items={visibleDiscovery} onDetails={openDiscoveryDetails}/>}
                     {mainTab==='PARTNERS'&&<CompanyCheckpoints companies={filteredPartners.filter(partner=>(partner as any).type!==undefined)} crops={crops} onDetails={setCompanyDetails}/>}
                 </MapComponent>
                 
                 {/* Map Overlays */}
-                <StatsCard buyers={stats.buyers} sellers={stats.sellers} workers={stats.workers} />
+                {mainTab==='DISCOVERY'?<div className="ad-map-legend">{(['PLANTATIONS','HIRING','OFFERS'] as const).map((kind,index)=><span key={kind}>{language==='ka'?['პლანტაციები','ვაკანსიები','მომსახურებები'][index]:['Plantations','Hiring','Services'][index]} <b>{visibleDiscovery.filter(item=>item.kind===kind).length}</b></span>)}</div>:<StatsCard buyers={stats.buyers} sellers={stats.sellers} workers={stats.workers}/>}
                 
                 <div className="absolute top-6 left-6 z-[1000]">
                     <span className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-blue-200">
@@ -1659,13 +1672,14 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                     </span>
                 </div>
 
-                <div className="absolute bottom-6 right-6 z-[1000]">
+                {mainTab!=='DISCOVERY'&&<div className="absolute bottom-6 right-6 z-[1000]">
                     <button onClick={() => setMainTab('PARTNERS')} className="px-6 py-3 bg-white text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl border border-indigo-50 hover:bg-indigo-50 transition-all flex items-center gap-2">
                         <SparklesIcon size={18}/> AI Partner Helper
                     </button>
-                </div>
+                </div>}
             </div>
 
+            {offerDetails&&<div className="ad-modal-backdrop" role="dialog" aria-modal="true" aria-label="Service offer details"><section className="ad-offer-modal"><header><span className="ad-eyebrow">{language==='ka'?'მომსახურება':'Service offer'}</span><button aria-label="Close service details" onClick={()=>setOfferDetails(null)}>✕</button></header><h2>{offerDetails.name}</h2><p>{offerDetails.title}</p><p>{offerDetails.region}</p><p>{offerDetails.description}</p><h3>{language==='ka'?'უნარები':'Skills'}</h3><p>{offerDetails.profile?.cv?.skills?.join(', ')||'—'}</p>{offerDetails.profile?.cv?.experience?.map((entry:any,index:number)=><p key={index}>{entry.title} · {entry.company} · {entry.startDate}</p>)}<button className="ad-primary" onClick={()=>{messageDiscovery(offerDetails);setOfferDetails(null);}}>{language==='ka'?'შეტყობინება':'Message'}</button></section></div>}
             {companyDetails&&<CompanyDetails company={companyDetails} crops={crops} jobs={jobs} onClose={()=>setCompanyDetails(null)} onMessage={()=>{setQuickMessageRecipient({id:companyDetails.id,name:companyDetails.name,type:'org'});setCompanyDetails(null);}}/>}
             {quickMessageRecipient && (
                 <QuickMessageModal 

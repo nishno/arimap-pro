@@ -194,3 +194,10 @@ Add or update a row when a tracked root code file is added, renamed or removed. 
 - `src/components/AiAnalysisSuite.tsx`: diagnostic uploads, AI/manual/combined prescription workflow and selective archive detail.
 - `src/services/clinicalAnalysisService.ts`: user/company-scoped persisted clinical archive, historical-record import and deletion tombstones.
 - `UPDATE_HISTORY.md`: dated record of each update and its rollout requirements.
+
+## 2026-11-19 — reference-style discovery and personal workspaces
+
+- `src/worker/discovery.ts`: combines published vacancies, companies and opt-in service profiles; validates coordinates and applies shared list/map filters.
+- `src/worker/DiscoveryPanel.tsx`: Announcements & Plantations feed, filter controls, result cards and map checkpoints.
+- `src/components/reference-ui.css`: scoped reference-inspired styles for discovery and My work & earnings.
+- `UI_MODERNIZATION/REFERENCE_STYLE_2026-11-19.md`: source comparison, adaptation decisions and rollout scope.

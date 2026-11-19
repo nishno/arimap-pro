@@ -57,7 +57,9 @@
     "test:ai-gateway": "node --test tests/ai-service.mjs",
     "test:community": "node --test tests/personal-community.mjs",
     "test:community:browser": "node tests/community-clinical-browser.mjs",
-    "test:planner:preview": "node tests/draft-preview-browser.mjs"
+    "test:planner:preview": "node tests/draft-preview-browser.mjs",
+    "test:discovery": "node --experimental-strip-types --test tests/discovery.mjs",
+    "test:reference-ui": "node tests/reference-style-browser.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

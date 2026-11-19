@@ -39,3 +39,7 @@ Ordinary accounts now use personal dashboard notices, own earnings, editable CV/
 ## 2026-11-19 — restore familiar screens and organize clinical workflows
 
 Restored the original Dashboard and AI Analyst layouts with role-specific widget/tool filtering. Moved personal CV/services/reviews into My work & earnings, retained profile onboarding and added durable join requests. Added company map checkpoints, region filters, company details and job announcements; removed duplicate Google tabs from Communicator. Fixed assistant controls and diagnostic popup overlap. Replaced canned chat fallbacks with explicit Gemini errors and added an authenticated server gateway. Reorganized prescription planning and a categorized, dated, persisted archive. Full rollout/configuration notes: root UPDATE_HISTORY.md.
+
+## 2026-11-19 — reference-style discovery, earnings and clinical workspaces
+
+Adapted agrimap_new's Announcements & Plantations interface to the existing safe data sources. Added a unified filtered feed and synchronized map checkpoints. Rebuilt personal earnings presentation with a KPI strip, balance cards and tabbed history. Applied the same visual system to diagnostic/prescription cards and actions. Reference analysis and scope: REFERENCE_STYLE_2026-11-19.md; root update summary: UPDATE_HISTORY.md.
