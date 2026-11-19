@@ -1,5 +1,8 @@
 # AgriMap Pro — full local application and Modern UI
 
+[Illustrated user guide, screenshots and daily SOPs](docs/user-guide/README.md) · [Printable PDF](docs/user-guide/AgriMap-Pro-User-Guide-en.pdf)
+
+
 [Code file guide: file purposes and documentation explained](CODE_FILE_GUIDE.md)
 
 ## Run the full application locally

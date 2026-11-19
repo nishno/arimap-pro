@@ -1,0 +1,434 @@
+{
+  "capturedAt": "2026-11-19T15:28:23.903Z",
+  "sourceCommit": "d71db7253e1268271961776e27c507e586ce2143",
+  "language": "en",
+  "trainingData": true,
+  "liveHardware": false,
+  "externalProvidersBlocked": true,
+  "entries": [
+    {
+      "id": "01-register",
+      "title": "Cloud account registration",
+      "path": "screenshots/01-register.png",
+      "url": "/",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "02-local-login",
+      "title": "Local farm login",
+      "path": "screenshots/02-local-login.png",
+      "url": "/local",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "04-dashboard",
+      "title": "Management dashboard",
+      "path": "screenshots/04-dashboard.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "05-profile",
+      "title": "Management profile",
+      "path": "screenshots/05-profile.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/profile",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "06-verification",
+      "title": "Profile verification form",
+      "path": "screenshots/06-verification.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/profile",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "07-agent",
+      "title": "Agro-agent entry requires profile verification",
+      "path": "screenshots/07-agent.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/profile",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "08-company",
+      "title": "Company registration",
+      "path": "screenshots/08-company.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "09-map-planner",
+      "title": "Map Planner and boundary tools",
+      "path": "screenshots/09-map-planner.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/design",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "42-crops",
+      "title": "Crop and variety management",
+      "path": "screenshots/42-crops.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "10-workers",
+      "title": "Workers and HR",
+      "path": "screenshots/10-workers.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/tools",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "11-teams",
+      "title": "Worker teams",
+      "path": "screenshots/11-teams.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/tools",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "12-stock",
+      "title": "Stock and depots",
+      "path": "screenshots/12-stock.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/stock",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "13-stock-item",
+      "title": "Inventory item form",
+      "path": "screenshots/13-stock-item.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/stock",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "14-purchases",
+      "title": "Purchase orders",
+      "path": "screenshots/14-purchases.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/stock",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "15-purchase-form",
+      "title": "Purchase order form",
+      "path": "screenshots/15-purchase-form.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/stock",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "16-harvest-list",
+      "title": "Harvest sessions",
+      "path": "screenshots/16-harvest-list.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/harvesting",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "17-harvest-create",
+      "title": "Choose a harvest protocol",
+      "path": "screenshots/17-harvest-create.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/harvesting",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "40-session-form",
+      "title": "Harvest session details",
+      "path": "screenshots/40-session-form.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/harvesting",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "18-live",
+      "title": "Live harvest monitoring",
+      "path": "screenshots/18-live.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/harvesting",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "19-weigh",
+      "title": "Operational Weigh Station",
+      "path": "screenshots/19-weigh.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/harvesting",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "20-finalize",
+      "title": "Finalize harvest destination",
+      "path": "screenshots/20-finalize.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/harvesting",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "21-yield",
+      "title": "Produce and storage",
+      "path": "screenshots/21-yield.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/stock",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "22-accounts",
+      "title": "Financial overview",
+      "path": "screenshots/22-accounts.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/accounting",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "23-ledger",
+      "title": "Double-entry ledger",
+      "path": "screenshots/23-ledger.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/accounting",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "24-scheduler",
+      "title": "Planner and reminders",
+      "path": "screenshots/24-scheduler.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/tasks",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "25-work",
+      "title": "Tasks and Works",
+      "path": "screenshots/25-work.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/system",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "26-agronomy",
+      "title": "Agronomy plans",
+      "path": "screenshots/26-agronomy.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/agronomy",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "27-labs",
+      "title": "Hardware tools",
+      "path": "screenshots/27-labs.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/labs",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "28-weather",
+      "title": "Weather station configuration",
+      "path": "screenshots/28-weather.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/labs",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "29-soil",
+      "title": "Soil sensors",
+      "path": "screenshots/29-soil.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/labs",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "30-ai",
+      "title": "Agro AI Analyst",
+      "path": "screenshots/30-ai.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/ai",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "31-prescription",
+      "title": "Agronomist prescription workflow",
+      "path": "screenshots/31-prescription.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/ai",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "41-prescription-actions",
+      "title": "Prescription save and archive actions",
+      "path": "screenshots/41-prescription-actions.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/ai",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "32-announcements",
+      "title": "Announcements and plantations",
+      "path": "screenshots/32-announcements.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/community",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "34-forum",
+      "title": "Company forum",
+      "path": "screenshots/34-forum.png",
+      "url": "/modern/farms/3dcc3de6-355f-4598-affb-00a1a00748df/community",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "35-terminal-pilot",
+      "title": "Separate terminal pilot",
+      "path": "screenshots/35-terminal-pilot.png",
+      "url": "/terminal/index.html",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "36-earnings",
+      "title": "Worker work and earnings",
+      "path": "screenshots/36-earnings.png",
+      "url": "/modern/worker/my-work",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "38-find-work",
+      "title": "Worker company and job discovery",
+      "path": "screenshots/38-find-work.png",
+      "url": "/modern/worker/community",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "id": "39-mobile",
+      "title": "Mobile discovery",
+      "path": "screenshots/39-mobile.png",
+      "url": "/modern/worker/community",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "id": "03-local-users",
+      "title": "Owner-managed local accounts",
+      "path": "screenshots/03-local-users.png",
+      "url": "/local",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "captureRegion": "viewport"
+    },
+    {
+      "id": "33-post",
+      "title": "Company vacancy composer",
+      "path": "screenshots/33-post.png",
+      "url": "/modern/farms/62407cf9-6d8f-4a2c-b023-45561fe41be7/community",
+      "viewport": {
+        "width": 1440,
+        "height": 2400
+      },
+      "captureRegion": ".ad-composer"
+    },
+    {
+      "id": "37-services",
+      "title": "Personal CV and service profile",
+      "path": "screenshots/37-services.png",
+      "url": "/modern/worker/my-work",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "captureRegion": "viewport"
+    }
+  ],
+  "errors": []
+}

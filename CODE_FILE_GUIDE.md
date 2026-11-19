@@ -201,3 +201,13 @@ Add or update a row when a tracked root code file is added, renamed or removed. 
 - `src/worker/DiscoveryPanel.tsx`: Announcements & Plantations feed, filter controls, result cards and map checkpoints.
 - `src/components/reference-ui.css`: scoped reference-inspired styles for discovery and My work & earnings.
 - `UI_MODERNIZATION/REFERENCE_STYLE_2026-11-19.md`: source comparison, adaptation decisions and rollout scope.
+
+## 2026-11-19 — illustrated user guide and SOPs
+
+- `docs/user-guide/README.md`: role-aware user instructions for registration, profile, plantation setup, operations, finance, Communicator and personal earnings; includes real screen captures from fictional training records and states current integration limitations.
+- `docs/user-guide/SOP-CHECKLISTS.md`: ten operator/manager checklists with responsibilities and acceptance checks.
+- `docs/user-guide/index.html`: generated browsable guide with chapter navigation, responsive layout and print styles; open locally beside the screenshots.
+- `docs/user-guide/AgriMap-Pro-User-Guide-en.pdf`: generated printable English guide and SOP appendix.
+- `docs/user-guide/screenshots/`: PNG captures and a manifest recording capture time, application source commit, routes and fixture/provider boundaries.
+- `scripts/capture-user-guide.mjs`: launches isolated temporary local/cloud UI servers and a fictional SQLite farm, captures management/worker/mobile screens using Chromium, then removes the temporary database. Does not use production accounts or connect hardware/providers. Requires a built application and Playwright/Chromium; run from repository root.
+- `scripts/build-user-guide.mjs`: validates local Markdown references, generates the HTML guide and prints the PDF through Chromium. Run from repository root with `node scripts/build-user-guide.mjs` after editing the Markdown.

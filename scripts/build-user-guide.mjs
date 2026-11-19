@@ -1,0 +1,29 @@
+import {readFileSync,writeFileSync,existsSync} from 'node:fs';
+import {resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createServer} from 'node:http';
+import {marked} from 'marked';
+import {chromium} from 'playwright';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),directory=resolve(root,'docs/user-guide');
+const manifest=JSON.parse(readFileSync(resolve(directory,'screenshots/manifest.json'),'utf8'));
+if(manifest.errors.length)throw Error('Resolve screenshot capture failures before building the guide');
+const guide=readFileSync(resolve(directory,'README.md'),'utf8'),sop=readFileSync(resolve(directory,'SOP-CHECKLISTS.md'),'utf8');
+// Validate Markdown assets and repository references before publishing.
+for(const [text,base] of [[guide,directory],[sop,directory]])for(const match of text.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)){
+ const target=match[1].split('#')[0];if(!target||/^https?:/.test(target)||['index.html','AgriMap-Pro-User-Guide-en.pdf'].includes(target))continue;
+ if(!existsSync(resolve(base,target)))throw Error('Missing guide reference: '+target);
+}
+const esc=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+const headings=[];let count=0;
+const renderer=new marked.Renderer();renderer.heading=({text,depth})=>{const id='section-'+(++count);if(depth===2)headings.push({id,text:text.replace(/<[^>]*>/g,'')});return `<h${depth} id="${id}">${text}</h${depth}>`;};
+let body=marked.parse(guide,{renderer})+'<section class="sop">'+marked.parse(sop.replace(/^# /,'# Appendix — '),{renderer})+'</section>';
+// Keep downloadable source references on GitHub while screenshots remain portable beside the HTML.
+body=body.replace(/href="(\.\.\/[^"#]+)(#[^"]*)?"/g,(_,target,hash='')=>{const path=resolve(directory,target).slice(root.length+1);return `href="https://github.com/nishno/arimap-pro/blob/demo-preview/${path}${hash}"`;});
+const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AgriMap Pro — Illustrated User Guide</title><style>
+:root{font-family:Arial,sans-serif;color:#20312c;background:#f5f8f6;font-size:16px;line-height:1.65}*{box-sizing:border-box}body{margin:0}nav{position:fixed;inset:0 auto 0 0;width:275px;overflow:auto;background:#eef4ef;padding:24px 18px;border-right:1px solid #d7e3da}nav strong{color:#176448;font-size:21px}nav a{display:block;padding:6px 0;color:#345448;font-size:13px;text-decoration:none}main{max-width:1100px;margin-left:275px;padding:36px 48px;background:white}h1{color:#165e43;font-size:34px;line-height:1.2}h2{border-top:2px solid #dce9df;padding-top:24px;margin-top:48px;font-size:25px;color:#195e46;scroll-margin-top:20px}h3{font-size:19px;color:#294d3e}a{color:#17694d}img{max-width:100%;height:auto;border:1px solid #dce5df;border-radius:8px;display:block;margin:18px auto}p:has(>img){margin:22px 0}table{table-layout:fixed;overflow-wrap:anywhere;border-collapse:collapse;width:100%;font-size:13px}td,th{border:1px solid #dce5df;text-align:left;vertical-align:top;padding:10px}th{background:#edf4ef}code{background:#f1f5f2;padding:2px 4px;overflow-wrap:anywhere}li{margin-bottom:7px}.actions{background:#176448;color:white;border:0;padding:10px 15px;border-radius:6px;cursor:pointer;margin:12px 0}.sop{margin-top:60px}blockquote{border-left:4px solid #77a48a;padding-left:16px}@media(max-width:900px){nav{position:static;width:auto;max-height:240px}main{margin:0;padding:22px}table{font-size:11px}td,th{padding:5px}h1{font-size:28px}}@page{size:A4;margin:15mm 14mm 18mm}@media print{:root{background:white;font-size:10pt;line-height:1.45}nav,.actions{display:none}main{max-width:none;margin:0;padding:0}h1{font-size:25pt}h2{font-size:17pt;break-before:page;margin-top:0;padding-top:0}h3{font-size:12pt;break-after:avoid}img{max-height:170mm;width:auto;max-width:100%;object-fit:contain;break-inside:avoid}p:has(>img){break-inside:avoid}table{font-size:8pt}tr{break-inside:avoid}a{color:inherit;text-decoration:none}li{margin-bottom:4px}pre{white-space:pre-wrap}}
+</style></head><body><nav><strong>AgriMap Pro</strong><p>Illustrated guide · 19 Nov 2026</p><button class="actions" onclick="window.print()">Print / Save as PDF</button>${headings.map(x=>`<a href="#${x.id}">${esc(x.text)}</a>`).join('')}</nav><main>${body}</main></body></html>`;
+writeFileSync(resolve(directory,'index.html'),html);
+const server=createServer((req,res)=>{try{const target=resolve(directory,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!target.startsWith(directory+'/')){res.writeHead(403).end();return;}const ext=target.split('.').pop();res.setHeader('Content-Type',({html:'text/html; charset=utf-8',png:'image/png',md:'text/plain; charset=utf-8',json:'application/json'})[ext]||'application/octet-stream');res.end(readFileSync(target));}catch{res.writeHead(404).end();}});
+await new Promise((ok,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',ok);});
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+try{const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);await page.evaluate(()=>Promise.all([...document.images].map(img=>img.decode())));await page.evaluate(()=>document.fonts.ready);await page.pdf({path:resolve(directory,'AgriMap-Pro-User-Guide-en.pdf'),printBackground:true,displayHeaderFooter:true,headerTemplate:'<div></div>',footerTemplate:'<div style="font:8px Arial;width:100%;text-align:center;color:#66756c">AgriMap Pro · Training guide · 19 November 2026 · <span class="pageNumber"></span> / <span class="totalPages"></span></div>',preferCSSPageSize:true});console.log('Built HTML and PDF; images:',await page.locator('main img').count());}finally{await browser.close();await new Promise(r=>server.close(r));}

@@ -1,0 +1,512 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AgriMap Pro — Illustrated User Guide</title><style>
+:root{font-family:Arial,sans-serif;color:#20312c;background:#f5f8f6;font-size:16px;line-height:1.65}*{box-sizing:border-box}body{margin:0}nav{position:fixed;inset:0 auto 0 0;width:275px;overflow:auto;background:#eef4ef;padding:24px 18px;border-right:1px solid #d7e3da}nav strong{color:#176448;font-size:21px}nav a{display:block;padding:6px 0;color:#345448;font-size:13px;text-decoration:none}main{max-width:1100px;margin-left:275px;padding:36px 48px;background:white}h1{color:#165e43;font-size:34px;line-height:1.2}h2{border-top:2px solid #dce9df;padding-top:24px;margin-top:48px;font-size:25px;color:#195e46;scroll-margin-top:20px}h3{font-size:19px;color:#294d3e}a{color:#17694d}img{max-width:100%;height:auto;border:1px solid #dce5df;border-radius:8px;display:block;margin:18px auto}p:has(>img){margin:22px 0}table{table-layout:fixed;overflow-wrap:anywhere;border-collapse:collapse;width:100%;font-size:13px}td,th{border:1px solid #dce5df;text-align:left;vertical-align:top;padding:10px}th{background:#edf4ef}code{background:#f1f5f2;padding:2px 4px;overflow-wrap:anywhere}li{margin-bottom:7px}.actions{background:#176448;color:white;border:0;padding:10px 15px;border-radius:6px;cursor:pointer;margin:12px 0}.sop{margin-top:60px}blockquote{border-left:4px solid #77a48a;padding-left:16px}@media(max-width:900px){nav{position:static;width:auto;max-height:240px}main{margin:0;padding:22px}table{font-size:11px}td,th{padding:5px}h1{font-size:28px}}@page{size:A4;margin:15mm 14mm 18mm}@media print{:root{background:white;font-size:10pt;line-height:1.45}nav,.actions{display:none}main{max-width:none;margin:0;padding:0}h1{font-size:25pt}h2{font-size:17pt;break-before:page;margin-top:0;padding-top:0}h3{font-size:12pt;break-after:avoid}img{max-height:170mm;width:auto;max-width:100%;object-fit:contain;break-inside:avoid}p:has(>img){break-inside:avoid}table{font-size:8pt}tr{break-inside:avoid}a{color:inherit;text-decoration:none}li{margin-bottom:4px}pre{white-space:pre-wrap}}
+</style></head><body><nav><strong>AgriMap Pro</strong><p>Illustrated guide · 19 Nov 2026</p><button class="actions" onclick="window.print()">Print / Save as PDF</button><a href="#section-2">1. Choose your working mode</a><a href="#section-3">2. Register and sign in</a><a href="#section-6">3. Profile, verification, services and agro-agents</a><a href="#section-10">4. Roles and navigation</a><a href="#section-11">5. Register Company &amp; Varieties</a><a href="#section-12">6. Map Planner &amp; Boundaries</a><a href="#section-13">7. Register Workers &amp; Teams</a><a href="#section-14">8. Manage Stock &amp; Inventory</a><a href="#section-15">9. Purchase Orders &amp; Materials</a><a href="#section-16">10. Start Harvest Session</a><a href="#section-17">11. Live Monitoring</a><a href="#section-18">12. Weigh Station</a><a href="#section-21">13. Finalize: Storage, Market, or Sell</a><a href="#section-22">14. Tasks, Works and Scheduler</a><a href="#section-25">15. Agronomy Module</a><a href="#section-26">16. Agro AI Analyst &amp; Prescription Coordinator</a><a href="#section-27">17. IoT Station, Soil Monitors &amp; Weather</a><a href="#section-28">18. Double-Entry Ledger Logs</a><a href="#section-29">19. Communicator: Announcements, Partners &amp; Forum</a><a href="#section-33">20. My Work &amp; Earnings, CV, Services &amp; Reviews</a><a href="#section-34">21. Tablet and Mobile Use</a><a href="#section-35">22. Offline Work, Concurrent Users and Recovery</a><a href="#section-38">23. Glossary and Documentation Sources</a><a href="#section-40">SOP 01 — Account and company onboarding</a><a href="#section-41">SOP 02 — Open a harvest shift</a><a href="#section-42">SOP 03 — Weigh and record a crate</a><a href="#section-43">SOP 04 — Duplicate or suspicious record</a><a href="#section-44">SOP 05 — Connection loss and operator handover</a><a href="#section-45">SOP 06 — Close and finalize harvest</a><a href="#section-46">SOP 07 — Receive stock or materials</a><a href="#section-47">SOP 08 — Work completion and payroll review</a><a href="#section-48">SOP 09 — Agronomy plan to execution</a><a href="#section-49">SOP 10 — Weather, soil and sensor review</a></nav><main><h1 id="section-1">AgriMap Pro — Illustrated User Guide</h1><p><strong>English edition · 19 November 2026 · sonik g2.0.1.4</strong></p>
+<p>Application reference: <code>d71db7253e1268271961776e27c507e586ce2143</code> on <code>demo-preview</code>.</p>
+<p><a href="index.html">Open the illustrated HTML guide</a> · <a href="AgriMap-Pro-User-Guide-en.pdf">Printable PDF</a> · <a href="SOP-CHECKLISTS.md">Daily SOP checklists</a> · <a href="screenshots/manifest.json">Screenshot provenance</a></p>
+<p>This guide follows the current application, including its existing English menu labels. All screenshots use a fictional <strong>Training Farm · Guria</strong> and fictional people. They are examples, not your plantation or financial records. Screenshots were captured in the Modern UI; Classic shares the business workflows. External map tiles, AI providers and hardware are not connected in the capture environment. A visible configuration panel is not proof of a live device integration.</p>
+<h2 id="section-2">1. Choose your working mode</h2><table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>How to enter</th>
+<th>Account and data authority</th>
+<th>Before you start</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Firebase cloud</td>
+<td>Hosted application, or the cloud UI at <code>http://localhost:3101</code> when started locally</td>
+<td>Firebase account and company memberships</td>
+<td>Internet, correct Firebase project and approved company membership</td>
+</tr>
+<tr>
+<td>Local farm / LAN</td>
+<td><code>http://localhost:3100/local</code>, or the farm server&#39;s approved LAN URL</td>
+<td>Farm server account and SQLite records</td>
+<td>Running farm server; owner-created account</td>
+</tr>
+<tr>
+<td>Offline device</td>
+<td>Previously opened supported cloud screens; separate terminal pilot supports its own queue</td>
+<td>Cached data is incomplete; permissions and available data depend on previous authentication</td>
+<td>Test the exact workflow before leaving coverage</td>
+</tr>
+</tbody></table>
+<p>Cloud and local accounts are separate identities. The same email or username does not automatically join or merge them. <strong>Cloud backup is a manual snapshot, not automatic two-way synchronization.</strong> Do not switch between unrelated workspaces and expect records to combine.</p>
+<p>On a prepared computer, start the installed farm with <code>npm run local:start</code>. For a fresh installation: install dependencies with <code>npm ci --include=dev</code>, build with <code>npm run build</code>, initialize a <strong>new</strong> farm once with <code>npm run local:init</code>, then start. Use a maintained Node version supporting the application&#39;s SQLite runtime. In PowerShell, <code>npm.cmd</code> can be used where the <code>npm.ps1</code> execution policy blocks npm. Never initialize again to recover a forgotten account or change a farm name.</p>
+<p>The startup output gives the actual URLs. Open the local URL for LAN work and the cloud URL for Firebase work. Other tablets need the server&#39;s LAN address, not <code>localhost</code> (which means the tablet itself). Use the documented HTTPS LAN configuration for non-loopback access and hardware permissions. Keep the server powered on during the shift.</p>
+<p><strong>Check:</strong> confirm farm/company name, user and mode before entering business records. A locally served page may still show legacy “Cloud Mode” wording inside a module; the server banner and account authority determine the actual mode.</p>
+<h2 id="section-3">2. Register and sign in</h2><h3 id="section-4">Cloud registration</h3><ol>
+<li>Open <strong>Register with Firebase / Register</strong> and select the appropriate account type.</li>
+<li>Enter your name, email and a strong password. Submit once and wait for the result.</li>
+<li>Sign in and open your profile. Register a company, request to join one, or complete a public service profile according to your goal.</li>
+<li>Follow email verification instructions if offered. Company membership is separate from email verification.</li>
+</ol>
+<p><img src="screenshots/01-register.png" alt="Cloud registration"></p>
+<p><em>Cloud registration entry. This screenshot shows the form, not a successful production account creation.</em></p>
+<h3 id="section-5">Local registration and owner-managed workers</h3><ol>
+<li>The farm owner initializes the server once and signs in with the owner username.</li>
+<li>Open <strong>Local accounts &amp; records</strong> and scroll to <strong>Add a worker</strong>.</li>
+<li>Enter <strong>Worker name</strong>, <strong>Worker username</strong> and <strong>Initial password</strong>, then choose <strong>Create worker</strong>.</li>
+<li>Give the person the farm&#39;s correct LAN address and their own credentials through an appropriate private channel.</li>
+<li>Link the person&#39;s account to the correct HR employee record. A similar name alone is not a reliable identity link.</li>
+</ol>
+<p><img src="screenshots/02-local-login.png" alt="Local sign-in"></p>
+<p><img src="screenshots/03-local-users.png" alt="Local user administration"></p>
+<p><em>Local sign-in and owner-managed accounts. Public self-signup and creation of a second farm owner are not local registration workflows in this release.</em></p>
+<p><strong>Check:</strong> sign in as the worker and confirm the expected personal workspace. Do not share the owner account with a weighing team. Recover an existing account before creating another one for the same person.</p>
+<h2 id="section-6">3. Profile, verification, services and agro-agents</h2><h3 id="section-7">Maintain your personal profile</h3><ol>
+<li>Open your account/profile menu.</li>
+<li>Review your name, contact details, region and organization membership.</li>
+<li>In <strong>My work &amp; earnings</strong>, expand <strong>My CV, services &amp; reviews</strong>.</li>
+<li>Add skills, experience, offered services and working regions. Keep availability current.</li>
+<li>Enable public discovery only if you want companies and potential partners to find your service profile. Save and reopen to confirm it persisted.</li>
+</ol>
+<p><strong>Check:</strong> distinguish your private work/payroll history from public profile fields. Never add passwords, identity documents or bank details to public CV/free-text fields.</p>
+<p><img src="screenshots/05-profile.png" alt="Management profile"></p>
+<h3 id="section-8">Verification: what the current screen means</h3><p>The legacy profile offers <strong>Verified Profile / Verify Your Profile</strong>, asking for phone number, region and personal ID. The current application does not provide a verified end-to-end self-service identity-checking service. Filling a form does not establish legal identity, a paid subscription or administrator authority. Firebase protects verification and elevated-role fields; a local server-derived verified account is not legal KYC.</p>
+<p><img src="screenshots/06-verification.png" alt="Profile verification form"></p>
+<p><em>Legacy verification screen. Follow your platform administrator&#39;s approved verification process; do not interpret the screen&#39;s older “unlock” wording as permission to self-grant access.</em></p>
+<h3 id="section-9">Register services or request agro-agent onboarding</h3><p>For an individual service provider, use the personal service profile: specify service, skills, operating regions and availability. Companies can then discover your opted-in profile and agree terms directly.</p>
+<p>The legacy <strong>Become Agro-Agent</strong> entry currently requires verification and does not provide proven self-service accreditation. Request onboarding from an authorized platform/company administrator. A company can organize approved people under <strong>Individual Tools → Human Resources → Teams &amp; Units</strong>. An agro-agent description on a public profile does not grant access to another person&#39;s payroll or company operations.</p>
+<p><img src="screenshots/07-agent.png" alt="Agro-agent verification requirement"></p>
+<p><em>Current agro-agent entry redirects to verification; no accreditation was submitted.</em></p>
+<p><strong>Check:</strong> confirm the approved organization, team scope and permissions with an administrator. Keep worker consent and an explicit account-to-employee link. Do not create duplicate identities to bypass a verification block.</p>
+<h2 id="section-10">4. Roles and navigation</h2><table>
+<thead>
+<tr>
+<th>Account</th>
+<th>Main workspace</th>
+<th>Important boundary</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Individual / worker</td>
+<td>Dashboard, My work &amp; earnings, AI Agro Analyst, Communicator, profile</td>
+<td>No direct company Harvest, Accounts, Stock, Agronomy or Tasks/Works access</td>
+</tr>
+<tr>
+<td>Newly registered individual without an active company membership</td>
+<td>Personal workspace and draft Map Planner</td>
+<td>May draw a draft; cannot save company plantation data before company registration</td>
+</tr>
+<tr>
+<td>Company Admin, Manager, Founder or Co-Founder</td>
+<td>Authorized operational modules</td>
+<td>Must belong to the active company; role does not authorize other companies</td>
+</tr>
+<tr>
+<td>Verified platform administrator / root</td>
+<td>Platform administration according to verified authority</td>
+<td>Not a public signup option</td>
+</tr>
+<tr>
+<td>Local owner</td>
+<td>Local management workspace</td>
+<td>Local worker provisioning does not create cloud roles</td>
+</tr>
+</tbody></table>
+<p>Older per-module HR checkboxes do not elevate an ordinary account into management. A worker receives assignments and harvest notifications on their dashboard and sees their own work/pay records. Management sees the operational screens used throughout this guide.</p>
+<p><img src="screenshots/04-dashboard.png" alt="Management dashboard"></p>
+<p><strong>If a module is missing:</strong> check active company, membership status and current signed-in account. Ask the company administrator to verify the membership. Refresh after an approved change; do not change local browser role values.</p>
+<h2 id="section-11">5. Register Company & Varieties</h2><p><strong>Who:</strong> an eligible company creator or authorized management user.</p>
+<ol>
+<li>Open <strong>Dashboard → Map Tools → Company Registration</strong> (or the company registration action in your profile).</li>
+<li>Enter legal/display name, country, region and the requested registration/contact details.</li>
+<li>Confirm the company location and area carefully. Submit <strong>Register Organization</strong> once.</li>
+<li>Select the newly created company and confirm your management membership.</li>
+<li>Open <strong>Crops Management</strong> from <strong>Dashboard → Map Tools</strong> (also available in Map Planner tools). Register the crop first, then varieties; use consistent spelling.</li>
+<li>Assign the correct crop and variety to each sector/row so harvest and agronomy reports can be grouped reliably.</li>
+</ol>
+<p><img src="screenshots/08-company.png" alt="Company registration"></p>
+<p><img src="screenshots/42-crops.png" alt="Crop and variety management"></p>
+<p><strong>Local difference:</strong> company registration configures the existing farm workspace. It does not create multiple independent local farm tenants. If you see “This server has one farm workspace,” return to the current farm and configure it instead of creating a second one.</p>
+<p><strong>Check:</strong> reopen the active company and sector. Confirm region, units, area, crop and variety before inviting staff. Do not create two companies to fix a display-name problem.</p>
+<h2 id="section-12">6. Map Planner & Boundaries</h2><p><strong>Before starting:</strong> know the correct plantation location and whether you are editing a company map or an unsaved personal draft.</p>
+<ol>
+<li>Open <strong>Map Planner</strong> and locate the plantation with search or map navigation.</li>
+<li>Select/create the appropriate layer. Keep boundaries, sectors and rows organized in clear named layers.</li>
+<li>Choose the boundary/polygon tool; place the corners and close the polygon. Zoom in to inspect the edges.</li>
+<li>Draw sectors inside the boundary, then rows/trenches and planting features where needed.</li>
+<li>Give each feature a clear name and assign crop/variety and other required attributes.</li>
+<li>Save only under the correct company. Reload and confirm geometry and labels remain.</li>
+</ol>
+<p><img src="screenshots/09-map-planner.png" alt="Map Planner"></p>
+<p><em>Training geometry only. The capture has external basemap tiles disabled; use the configured provider in the live application. This is not a surveyed boundary.</em></p>
+<p><strong>Check:</strong> latitude/longitude order, units and overlaps. A drawn polygon is a management aid, not a cadastral ownership record. A personal draft is memory-only: do not close it expecting a saved company map.</p>
+<h2 id="section-13">7. Register Workers & Teams</h2><ol>
+<li>Open <strong>Individual Tools → Human Resources</strong>.</li>
+<li>Create one employee per real person. Enter identifying contact details, employment type and the agreed payment model/rate.</li>
+<li>Where available, link the signed-in user/account to the employee ID. This link makes the person&#39;s own earnings visible.</li>
+<li>Open <strong>Teams &amp; Units</strong> and create a named team. Add the correct employee records and designate coordination responsibilities.</li>
+<li>Review <strong>Daily Attendance</strong> for the correct day and record actual attendance/hours.</li>
+<li>For cloud joining, invite/request membership using the supported company flow and have management approve it. Accepting an invitation is not a substitute for confirming the persisted membership and employee link.</li>
+</ol>
+<p><img src="screenshots/10-workers.png" alt="Human Resources"></p>
+<p><img src="screenshots/11-teams.png" alt="Teams and units"></p>
+<p><strong>Check:</strong> confirm agreed currency and rate basis: per kilogram, hourly, daily, salary or combined. Never treat a rate as a payment. Use a test worker login to confirm access and personal history without granting management rights.</p>
+<h2 id="section-14">8. Manage Stock & Inventory</h2><ol>
+<li>Open <strong>Stock → Main Stock &amp; Depots</strong>.</li>
+<li>Choose the warehouse/depot. Add an item with a clear name, category, unit, quantity and cost.</li>
+<li>For packaging, record the correct tare and units where supported; distinguish a crate from a kilogram of produce.</li>
+<li>Use receipt/intake for deliveries, transfer for movement between depots and charge/issue for actual use.</li>
+<li>Record the source reference and responsible person. Review the inventory history before correcting a balance.</li>
+<li>Reload the catalog and verify the item and movement in the intended depot.</li>
+</ol>
+<p><img src="screenshots/12-stock.png" alt="Stock catalog"></p>
+<p><img src="screenshots/13-stock-item.png" alt="Inventory item editor"></p>
+<p><strong>Check:</strong> do not add a delivery manually and then receive the same purchase order again. Transfers move stock; they are not purchases. An application/treatment plan is not evidence that materials were actually used.</p>
+<h2 id="section-15">9. Purchase Orders & Materials</h2><ol>
+<li>Open <strong>Stock → Orders &amp; Logistics</strong>.</li>
+<li>Create a purchase order. Select supplier, destination depot and required items.</li>
+<li>Verify quantities, units, prices, currency and expected delivery date. Save the order.</li>
+<li>When goods arrive, compare the physical delivery with the order and invoice.</li>
+<li>Receive only the delivered quantity through the supported receipt action; record shortages or discrepancies.</li>
+<li>Confirm the resulting stock movement before booking payment separately.</li>
+</ol>
+<p><img src="screenshots/14-purchases.png" alt="Orders and logistics"></p>
+<p><img src="screenshots/15-purchase-form.png" alt="Purchase order form"></p>
+<p><strong>AI document assistance:</strong> extracted invoice data is a draft. Verify supplier, quantities, tax and totals against the original before accepting it. A purchase order, goods receipt and supplier payment are different events; do not assume every screen automatically posts all three.</p>
+<h2 id="section-16">10. Start Harvest Session</h2><p><strong>Before starting:</strong> company/sector/variety, workers, rates and packaging must be correct. If the event form says <strong>No areas defined</strong>, create and save the plantation’s area/sector features first, then reopen the form.</p>
+<ol>
+<li>Open <strong>Harvest → Start New Session</strong>.</li>
+<li>Name the event and select the date, targeted sector(s) and variety.</li>
+<li>Choose the protocol that matches your actual workflow. Confirm scanner/scale compatibility before using it for live pay calculations.</li>
+<li>Assign pickers and their payment models/rates. Add vehicles/materials where relevant.</li>
+<li>Verify tare, units and whether quantities are boxes or kilograms. Save/start the event.</li>
+<li>Open the event card and check the live dashboard before the first real entry.</li>
+</ol>
+<p><img src="screenshots/16-harvest-list.png" alt="Harvest event list"></p>
+<p><img src="screenshots/17-harvest-create.png" alt="Create harvest session"></p>
+<p><img src="screenshots/40-session-form.png" alt="Harvest session detail form"></p>
+<p><em>Some protocol names/descriptions remain Georgian even with English selected. This guide explains the workflow in English; these legacy strings were not changed in this documentation update.</em></p>
+<p>The UI offers QR, bracelet, rapid-cycle, stock-oriented, bulk, smart/RFID and other protocols. Availability of a named protocol does not prove a particular physical device works. Passive NFC cards do not provide GPS by themselves; location requires a separate location-capable device/integration.</p>
+<p><strong>Check:</strong> one real event has one agreed operating protocol and worker rate basis. Avoid running two events for the same picking session accidentally.</p>
+<h2 id="section-17">11. Live Monitoring</h2><ol>
+<li>Open <strong>Harvest</strong> and select the active event card.</li>
+<li>Review event status, assigned workers, net/gross weight, box count and material/labor totals.</li>
+<li>Filter by worker, sector or variety where offered. Inspect individual records when a total looks wrong.</li>
+<li>Compare a recently accepted entry on the weighing device with the management view.</li>
+<li>Pause the session for a genuine interruption; resume before further work. Ensure operators know the status.</li>
+</ol>
+<p><img src="screenshots/18-live.png" alt="Live harvest dashboard"></p>
+<p><strong>Check:</strong> “live” depends on connection and confirmed server data. A disconnected tablet is not proof that a second user&#39;s entries are missing. Wait for synchronization and review record-level history before entering the same quantity again.</p>
+<h2 id="section-18">12. Weigh Station</h2><h3 id="section-19">Operational weighing inside Harvest</h3><ol>
+<li>Open the correct active event and select its <strong>Weigh / Add Entry</strong> action (label depends on protocol).</li>
+<li>Confirm the picker, crate/QR identity, sector and variety.</li>
+<li>Read a stable gross weight, confirm tare and inspect the calculated net weight: <strong>net = gross − tare</strong>.</li>
+<li>Save once. Wait for acceptance and verify the new record and total before weighing the next crate.</li>
+<li>If an entry looks duplicated, stop and compare the original worker, QR, weight and time. Correct the existing record through authorized controls rather than blindly adding another.</li>
+</ol>
+<p><img src="screenshots/19-weigh.png" alt="Operational Weigh Station"></p>
+<p><strong>Hardware:</strong> grant camera/Bluetooth/USB permissions only for the intended device. Browser support and secure-context requirements differ. A USB keyboard-wedge scanner can type a code into a focused input; this does not prove Bluetooth scale, camera or Zebra support on every tablet. Keep a tested manual-entry fallback.</p>
+<h3 id="section-20">Separate Weigh Terminal — Pilot</h3><p>The top <strong>Weigh terminal · Pilot</strong> opens a separate owner-only terminal. It supports manual/keyboard-wedge QR entry, manual gross/tare, its own IndexedDB queue, idempotent submission and suspicious-duplicate review with timestamps/reasons.</p>
+<p><img src="screenshots/35-terminal-pilot.png" alt="Separate terminal pilot"></p>
+<p><strong>This pilot stores staging records only. It does not post into operational harvest, payroll or inventory.</strong> Do not enter a real session in both paths expecting automatic reconciliation. Device integrations and full production posting require additional validation.</p>
+<p>For a suspected duplicate, review the flagged record, original scan, capture time, server receipt time and responsible user/device. Document a reason for an authorized override. Treat red/suspicious entries as unresolved until reconciled, not extra payable produce.</p>
+<h2 id="section-21">13. Finalize: Storage, Market, or Sell</h2><ol>
+<li>Stop new entries and ask all operators whether any work is unsynchronized.</li>
+<li>Reconcile workers, individual weights, crate count, tare, materials and unresolved duplicates.</li>
+<li>In the event dashboard choose <strong>Finish Job / Finalize</strong>.</li>
+<li>Choose the physical destination: storage, market/listing or sale as offered by the selected workflow.</li>
+<li>Enter destination depot or buyer, quantity, unit price and other required details. Save once.</li>
+<li>Confirm event status and the resulting produce/stock records. Record actual received payment separately.</li>
+</ol>
+<p><img src="screenshots/20-finalize.png" alt="Finalize harvest"></p>
+<p><img src="screenshots/21-yield.png" alt="Produce and storage"></p>
+<p><strong>Check:</strong> a market listing is not a completed sale; an invoice is not cash received. Reconcile quantities before finalization and verify resulting stock rather than assuming every destination has an identical posting path.</p>
+<h2 id="section-22">14. Tasks, Works and Scheduler</h2><h3 id="section-23">Tasks and Works</h3><ol>
+<li>Open <strong>Tasks and Works</strong> to define or review the work to be performed.</li>
+<li>Select sector, date, employees/team, work type and agreed pay basis.</li>
+<li>Save the assignment and confirm that the intended workers can see their published assignment/notification.</li>
+<li>Record actual hours/quantities when work is completed. Review corrections before payroll.</li>
+</ol>
+<p><img src="screenshots/25-work.png" alt="Tasks and Works"></p>
+<h3 id="section-24">Planner and Remainder</h3><ol>
+<li>Open <strong>Planner and Remainder</strong> (the current menu label).</li>
+<li>Select date/calendar view and create the scheduled item or reminder.</li>
+<li>Include clear instructions, location, responsible person and due date.</li>
+<li>Update status after the work is performed; a calendar appointment is not proof of execution or payment.</li>
+</ol>
+<p><img src="screenshots/24-scheduler.png" alt="Planner and reminders"></p>
+<p><strong>Field sprayers:</strong> schedule inspection/application only after confirming product, dose, area, actual weather and agronomist approval. Scheduler and device panels are planning/configuration interfaces unless a tested control integration is installed. They do not establish autonomous safe spraying or automatic material deduction.</p>
+<h2 id="section-25">15. Agronomy Module</h2><ol>
+<li>Open <strong>Agronomy</strong> and select the relevant plan/recipe workflow.</li>
+<li>Specify purpose, target sector, timing and materials/quantities using correct units.</li>
+<li>Review availability and the agronomic suitability of the proposal. Save the plan.</li>
+<li>Schedule or register execution through the relevant work/execution controls.</li>
+<li>Record what was actually applied, by whom and when; compare actual material use with inventory history.</li>
+<li>Retain notes and references for later review. Reusing a plan requires a fresh check of crop, stage, location and weather.</li>
+</ol>
+<p><img src="screenshots/26-agronomy.png" alt="Agronomy plans"></p>
+<p><em>The module also contains legacy demonstration tank/mix controls. Do not treat their prefilled ingredients or quantities as your actual installation; configure and verify your own records before logging a real application.</em></p>
+<p><strong>Check:</strong> saving a prescription/plan is not completing an application. The “Training nutrient” in screenshots is fictional and is not a dose or treatment recommendation.</p>
+<h2 id="section-26">16. Agro AI Analyst & Prescription Coordinator</h2><ol>
+<li>Open <strong>AI Agro Analyst</strong>. Choose the relevant question, document or diagnostic tool.</li>
+<li>Provide crop/variety, location/sector, date, symptoms and clear photos or supported documents.</li>
+<li>Ask a specific question and review the response against your observations. Distinguish missing configuration/provider errors from a genuine analysis.</li>
+<li>Open <strong>Diagnostics &amp; Clinical Tools</strong> for the prescription workflow.</li>
+<li>Set <strong>Severity Level</strong> and <strong>Target Sector</strong>. Use <strong>AI-Generated Plan</strong>, <strong>Create Plan</strong> or combined editing as appropriate.</li>
+<li>Add your conclusion/comment. Review all material quantities and assumptions.</li>
+<li><strong>Save</strong> to the archive, or use <strong>Save and add to Agronomy</strong> when authorized and ready to create an execution plan.</li>
+<li>Open an archived item to read full content, edit, reuse or delete according to permissions. Check the source category and date.</li>
+</ol>
+<p><img src="screenshots/30-ai.png" alt="AI Analyst"></p>
+<p><img src="screenshots/31-prescription.png" alt="Agronomist conclusion and prescription"></p>
+<p><img src="screenshots/41-prescription-actions.png" alt="Prescription actions after scrolling"></p>
+<p>Archive categories distinguish <strong>AI-generated</strong>, <strong>Agronomist-created</strong> and <strong>Combined</strong>. Saving to Agronomy creates a plan; it does not automatically execute treatment or consume stock.</p>
+<p><strong>Gemini:</strong> “copilot” describes the assistant&#39;s role, not necessarily a different provider. This version uses a server-side Gemini gateway for supported AI requests. A server provider key/authentication must be configured. No live provider was connected for these screenshots, and no disease-accuracy percentage is claimed. If every prompt returns a fixed response, report the exact tool, mode and error to the administrator; do not rely on it as a diagnosis.</p>
+<h2 id="section-27">17. IoT Station, Soil Monitors & Weather</h2><ol>
+<li>Open <strong>Labs / Hardware &amp; Devices</strong> and the relevant weather or sensor tool.</li>
+<li>Register the intended device and assign its location/sector. Record model, identifier and expected units.</li>
+<li>Configure the approved gateway/backend integration. Keep credentials in server configuration, not public notes or map labels.</li>
+<li>Confirm a real measurement reaches the correct company and location, with a timestamp and unit.</li>
+<li>Test disconnection and stale-data handling before enabling operational alerts.</li>
+<li>Compare forecasts separately from local observations; verify alert thresholds and delivery with a controlled test.</li>
+</ol>
+<p><img src="screenshots/27-labs.png" alt="Hardware workspace"></p>
+<p><img src="screenshots/28-weather.png" alt="Weather station configuration"></p>
+<p><img src="screenshots/29-soil.png" alt="Soil monitor configuration"></p>
+<p><em>The displayed probe values and “Online” badges are demonstration UI, not readings from connected field instruments.</em></p>
+<p>The current weather/hardware screens include planning/configuration and demonstration elements. This guide does not certify live sensor ingestion, autonomous irrigation or universal device compatibility. Missing readings are not zero; old readings are not current conditions.</p>
+<p>For Guria, a typical design is <strong>LoRaWAN sensors → gateway → LTE/Ethernet → network server → authenticated application ingestion</strong>. Choose the regional radio plan and survey coverage before purchasing multiple nodes. A D20S-LB is a temperature sensor, not a complete humidity/rainfall station. Add appropriate humidity, rainfall and soil sensors as needed. LoRaWAN carries small measurements; cameras require a separate video connection. An always-on local gateway is needed for local acquisition even if the user works only on a tablet.</p>
+<h2 id="section-28">18. Double-Entry Ledger Logs</h2><ol>
+<li>Open <strong>Accounts</strong> and review the company/currency and reporting period.</li>
+<li>Open ledger/log entries and inspect a source transaction.</li>
+<li>For a new entry, choose the correct debit and credit accounts, date, amount, currency and description/reference.</li>
+<li>Confirm the business event: expense accrual, payment, sale, receipt or transfer.</li>
+<li>Save once and verify both sides and the source reference. Review the employee/payroll link where applicable.</li>
+<li>Correct mistakes with an authorized traceable correction/reversal, preserving the explanation.</li>
+</ol>
+<p><img src="screenshots/22-accounts.png" alt="Accounts overview"></p>
+<p><img src="screenshots/23-ledger.png" alt="Double-entry audit trail"></p>
+<p><em>This legacy ledger formats amounts with the selected display symbol. It is not evidence of currency conversion: the training transactions retain GEL, as shown in the worker payroll view. Confirm source currency before financial decisions.</em></p>
+<p><strong>Example, not accounting advice:</strong> recording a worker&#39;s earned amount creates a payable; paying them reduces that payable and cash/bank. Do not record the same expense again as a second accrual when entering the payment. Never net different currencies together without an explicit exchange transaction and rate.</p>
+<h2 id="section-29">19. Communicator: Announcements, Partners & Forum</h2><h3 id="section-30">Find plantations and work</h3><ol>
+<li>Open <strong>Communicator → Announcements &amp; Plantations</strong>.</li>
+<li>Filter by region and the available company/crop/variety criteria.</li>
+<li>Switch between list and map as offered. Open a company marker/card for details: plantation, varieties, area and published vacancies.</li>
+<li>Review job type, location, dates and compensation, then contact the company using the offered partner/contact action.</li>
+<li>Confirm employment terms directly before starting work. A listing is not a confirmed contract.</li>
+</ol>
+<p><img src="screenshots/32-announcements.png" alt="Announcements and plantations"></p>
+<h3 id="section-31">Publish a company vacancy</h3><ol>
+<li>An authorized company user selects <strong>Post Announcement</strong>.</li>
+<li>Enter title, work type, region, employment type, required number of people, compensation and a clear description.</li>
+<li>Publish and verify it in the filtered list. Update or close outdated vacancies.</li>
+<li>Publish only approved business details; do not put worker identity or payroll information in the announcement.</li>
+</ol>
+<p><img src="screenshots/33-post.png" alt="Vacancy composer"></p>
+<p><em>Form detail captured in a tall browser viewport. In shorter windows the current composer can collapse into a narrow scrolling strip; enlarge the window or reduce browser zoom to inspect the fields. This is a known UI limitation, not a missing permission. The form may need internal scrolling.</em></p>
+<h3 id="section-32">Forum and partner communication</h3><p>Management can open <strong>Forum &amp; Hub</strong>, choose the appropriate channel/audience and post a clear topic or reply. Ordinary workers use the permitted discovery/partner communication features; they do not gain the full company forum or administration workspace. Use toolbar Google/chat tools only where separately authorized; they are not a prerequisite for Communicator discovery.</p>
+<p><img src="screenshots/34-forum.png" alt="Management forum"></p>
+<p><img src="screenshots/38-find-work.png" alt="Worker company and job discovery"></p>
+<p><strong>Check:</strong> choose the intended public/company/private audience before posting and confirm the visible result after publishing.</p>
+<h2 id="section-33">20. My Work & Earnings, CV, Services & Reviews</h2><ol>
+<li>Open <strong>My work &amp; earnings</strong>.</li>
+<li>Review your summary totals, currency and unpaid/paid balances.</li>
+<li>Open each work/harvest record to inspect date, employer, hours/quantity, rate and calculation.</li>
+<li>Compare payment history with actual payments received: payer, time, method, amount and reference where recorded.</li>
+<li>Expand <strong>My CV, services &amp; reviews</strong> to maintain your experience and offered services.</li>
+<li>Use <strong>Find partner &amp; work</strong> / Communicator discovery to find companies and vacancies.</li>
+<li>If a record is missing, ask management to check the explicit account-to-employee link and the saved source records. Do not create a second account to recover history.</li>
+</ol>
+<p><img src="screenshots/36-earnings.png" alt="Worker earnings and records"></p>
+<p><img src="screenshots/37-services.png" alt="CV and service profile"></p>
+<p><em>Fictional training example: 20 kg picked and 5 hours worked; recorded accrual 100 GEL, payment 40 GEL, remaining balance 60 GEL. These are seeded demonstration records, not a live payment or a certification of automatic posting.</em></p>
+<p>Workers see their own data, not everyone&#39;s payroll. A calculated earning does not mean it has been paid. Dispute a specific record with its date/event/reference so management can investigate without destroying the audit trail.</p>
+<h2 id="section-34">21. Tablet and Mobile Use</h2><ol>
+<li>Use the approved server URL and a supported up-to-date browser.</li>
+<li>Confirm the connection and intended account at shift start.</li>
+<li>Use the mobile menu where the sidebar is collapsed; scroll within the active panel/modal to reach its actions.</li>
+<li>Keep camera and hardware permissions limited to the tested workflow. Close unnecessary camera/video panels when not in use.</li>
+<li>Before leaving coverage, test the exact offline workflow and which records are already cached. Keep the tablet charged and do not clear browser data while work is queued.</li>
+</ol>
+<p><img src="screenshots/39-mobile.png" alt="Mobile discovery"></p>
+<h2 id="section-35">22. Offline Work, Concurrent Users and Recovery</h2><p>A complete universal offline merge is not implemented for every module. The rich LAN application requires confirmed server writes; the separate terminal pilot has its own offline outbox and <strong>staging-only</strong> sync. Cloud caching supports a subset of previously loaded data and does not guarantee every action is available without internet.</p>
+<p>When two operators work on the same event:</p>
+<ol>
+<li>Agree event, assigned devices and entry responsibilities before starting.</li>
+<li>Give each physical transaction a unique record identity; distinguish a transport retry from a genuinely new crate/entry.</li>
+<li>On reconnection, let queued submissions settle; do not re-enter everything manually.</li>
+<li>Compare individual records, capture times, server receipt times and user/device information where available.</li>
+<li>Resolve duplicate/suspect records explicitly before payroll or closing. Avoid restoring a whole stale snapshot over a colleague&#39;s newer work.</li>
+</ol>
+<p>If uncertain, pause finalization and retain device data until management reconciles it. The terminal pilot&#39;s idempotency protects its own submissions; it does not guarantee global deduplication across unrelated offline devices or automatically reconcile staging into operational harvest.</p>
+<h3 id="section-36">Training screenshot index</h3><p>The <a href="screenshots/manifest.json">capture manifest</a> lists every screenshot, viewport, application route and source commit. Captures show screen availability and training data, not certification of every save, provider or hardware path.</p>
+<h3 id="section-37">Quick troubleshooting</h3><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>First checks</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Registration/company error</td>
+<td>Cloud vs local URL, existing farm, signed-in account</td>
+<td>Configure existing local farm or use the correct cloud registration flow</td>
+</tr>
+<tr>
+<td>Missing operational modules</td>
+<td>Membership role, active company, approval</td>
+<td>Administrator verifies persisted membership; ordinary workers intentionally have personal tools only</td>
+</tr>
+<tr>
+<td>No earnings</td>
+<td>Employee/account link, source entries, transaction currency</td>
+<td>Management checks records and explicit IDs; avoid duplicate users</td>
+</tr>
+<tr>
+<td>Scan repeats</td>
+<td>Same crate/code, capture times, original record</td>
+<td>Stop, inspect, document authorized correction/override</td>
+</tr>
+<tr>
+<td>AI repeats/fails</td>
+<td>Tool, provider configuration, server error</td>
+<td>Administrator checks Gemini gateway; retain input for review</td>
+</tr>
+<tr>
+<td>Weather blank/stale</td>
+<td>Sensor timestamp, gateway, units, connection</td>
+<td>Treat as unavailable; verify acquisition before relying on alerts</td>
+</tr>
+<tr>
+<td>Local page unavailable</td>
+<td>Server process, startup URL, LAN address, HTTPS</td>
+<td>Restart existing server; do not rerun farm initialization</td>
+</tr>
+<tr>
+<td>Old UI after update</td>
+<td>Correct Git checkout/build and cached PWA</td>
+<td>Rebuild/restart, then reload; preserve unsynced data before changing caches</td>
+</tr>
+</tbody></table>
+<h2 id="section-38">23. Glossary and Documentation Sources</h2><ul>
+<li><strong>Company / organization:</strong> the data and access boundary for a farm workspace.</li>
+<li><strong>Account / user:</strong> login identity. <strong>Employee:</strong> company HR record; explicitly link it to the account.</li>
+<li><strong>Gross / tare / net:</strong> loaded weight / packaging weight / produce weight.</li>
+<li><strong>Accrual / payment:</strong> money recorded as earned / money recorded as transferred.</li>
+<li><strong>Order / receipt / issue:</strong> request to buy / goods physically received / materials consumed or issued.</li>
+<li><strong>Plan / execution:</strong> intended work / recorded actual work.</li>
+<li><strong>Forecast / observation:</strong> predicted weather / measured conditions at a known time/location.</li>
+<li><strong>Duplicate / retry:</strong> a repeated business entry / another delivery attempt for the same record.</li>
+</ul>
+<p>The guide was checked against current screens and these repository documents. Historical plans describe intentions and are not evidence that an integration is operational:</p>
+<ul>
+<li><a href="https://github.com/nishno/arimap-pro/blob/demo-preview/USER_ACCESS.md">User access policy</a></li>
+<li><a href="https://github.com/nishno/arimap-pro/blob/demo-preview/UI_MODERNIZATION/REGISTRATION_AND_DATA_AUTHORITY.md">Registration and data authority</a></li>
+<li><a href="https://github.com/nishno/arimap-pro/blob/demo-preview/docs/LOCAL_SERVER.md">Local server operations</a></li>
+<li><a href="https://github.com/nishno/arimap-pro/blob/demo-preview/HARDWARE_MODULARIZATION/WEIGH_TERMINAL.md">Weigh terminal pilot boundaries</a></li>
+<li><a href="https://github.com/nishno/arimap-pro/blob/demo-preview/docs/GURIA_PILOT.md">Guria pilot</a></li>
+<li><a href="https://github.com/nishno/arimap-pro/blob/demo-preview/docs/WEATHER_AND_CAMERAS.md">Weather and camera integration planning</a></li>
+<li><a href="https://github.com/nishno/arimap-pro/blob/demo-preview/CODE_FILE_GUIDE.md">Code file guide</a></li>
+<li><a href="https://github.com/nishno/arimap-pro/blob/demo-preview/UPDATE_HISTORY.md">Update history</a></li>
+</ul>
+<p><strong>Maintenance:</strong> update this guide when a workflow changes, record the date/source commit, recapture the affected screenshots and rebuild HTML/PDF. Screenshot reproduction uses an isolated temporary farm through <code>scripts/capture-user-guide.mjs</code>; it does not connect to production accounts or devices.</p>
+<section class="sop"><h1 id="section-39">Appendix — AgriMap Pro — Daily SOP Checklists</h1><p><strong>English edition · 19 November 2026 · application reference d71db72</strong></p>
+<p>Use with the <a href="README.md">illustrated user guide</a>. These procedures describe human checks around current workflows. They do not certify unconnected hardware or a complete cross-device offline merge.</p>
+<h2 id="section-40">SOP 01 — Account and company onboarding</h2><p><strong>Responsible:</strong> farm owner / authorized company administrator.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Confirm cloud or local/LAN mode and the correct company.</li>
+<li><input disabled="" type="checkbox"> Create or approve one account per person; do not share management credentials.</li>
+<li><input disabled="" type="checkbox"> Create/check one HR employee record and its explicit account link.</li>
+<li><input disabled="" type="checkbox"> Confirm role, rate model, currency and relevant team membership.</li>
+<li><input disabled="" type="checkbox"> Worker signs in and sees personal Dashboard, AI, Communicator and My work &amp; earnings.</li>
+<li><input disabled="" type="checkbox"> Management-only operations remain hidden from ordinary workers.</li>
+<li><input disabled="" type="checkbox"> Person reviews service-profile public visibility and contact details.</li>
+</ul>
+<p><strong>Accepted when:</strong> the correct person can sign in, sees the expected workspace and is linked to their own employee record. Verification/accreditation follows the authorized process; a profile label is not proof of KYC.</p>
+<h2 id="section-41">SOP 02 — Open a harvest shift</h2><p><strong>Responsible:</strong> harvest manager and weigh operator.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Confirm active company, event, date, sector and variety.</li>
+<li><input disabled="" type="checkbox"> Confirm assigned workers, rates, currency and packaging tare.</li>
+<li><input disabled="" type="checkbox"> Test scale stability and one scanner/manual entry with approved training data before real operations.</li>
+<li><input disabled="" type="checkbox"> Confirm server connection and where entries will be stored.</li>
+<li><input disabled="" type="checkbox"> Assign devices/operators to avoid recording the same physical crate twice.</li>
+<li><input disabled="" type="checkbox"> Confirm a newly accepted entry appears in the management view.</li>
+<li><input disabled="" type="checkbox"> Agree what to do if connection, scale or scanner fails.</li>
+</ul>
+<p><strong>Accepted when:</strong> the event and first accepted record are correct and visible. Do not use the separate staging terminal as production payroll input.</p>
+<h2 id="section-42">SOP 03 — Weigh and record a crate</h2><p><strong>Responsible:</strong> weigh operator.</p>
+<ol>
+<li>Select the correct worker and identify the crate/code.</li>
+<li>Read stable gross weight; confirm tare and unit.</li>
+<li>Check net = gross − tare and that the value is plausible.</li>
+<li>Save once and wait for acceptance.</li>
+<li>Confirm the record and updated total before the next crate.</li>
+<li>If a duplicate is suspected, stop and compare the original instead of repeatedly saving.</li>
+</ol>
+<p><strong>Accepted when:</strong> one physical transaction has one accepted operational record, with correct person, event, quantity and timestamp.</p>
+<h2 id="section-43">SOP 04 — Duplicate or suspicious record</h2><p><strong>Responsible:</strong> operator reports; manager reviews.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Preserve the suspect record and its original code/reference.</li>
+<li><input disabled="" type="checkbox"> Compare worker, event, weight, capture time and server receipt time where available.</li>
+<li><input disabled="" type="checkbox"> Determine whether it is a retry, repeat scan, corrected weighing or genuinely new transaction.</li>
+<li><input disabled="" type="checkbox"> Record the decision and reason using authorized correction/review controls.</li>
+<li><input disabled="" type="checkbox"> Inspect resulting totals and payroll impact.</li>
+<li><input disabled="" type="checkbox"> Keep unresolved/suspicious records out of final approved totals until reconciled.</li>
+</ul>
+<p><strong>Accepted when:</strong> the decision is traceable and totals include the intended physical quantity once. A red flag is an instruction to review, not permission to pay twice. The staging terminal&#39;s review does not automatically repair operational harvest records.</p>
+<h2 id="section-44">SOP 05 — Connection loss and operator handover</h2><p><strong>Responsible:</strong> operator and shift manager.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Note event, device, operator, last confirmed record and disconnect time.</li>
+<li><input disabled="" type="checkbox"> Confirm whether the specific workflow supports offline entry. Rich LAN operations need the server; the terminal pilot has a separate staging queue.</li>
+<li><input disabled="" type="checkbox"> Do not clear browser storage, reinstall the PWA or restore a snapshot while records are unsynchronized.</li>
+<li><input disabled="" type="checkbox"> Reconnect to the original workspace and let supported queued submissions settle.</li>
+<li><input disabled="" type="checkbox"> Compare record-level history with other operators&#39; entries; do not re-enter the whole shift.</li>
+<li><input disabled="" type="checkbox"> Record unresolved differences and transfer responsibility explicitly.</li>
+</ul>
+<p><strong>Accepted when:</strong> both operators agree the last confirmed record and every pending item has a known owner/status. Do not close the harvest while unresolved device data remains.</p>
+<h2 id="section-45">SOP 06 — Close and finalize harvest</h2><p><strong>Responsible:</strong> harvest manager.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Ask every operator about pending/offline work.</li>
+<li><input disabled="" type="checkbox"> Reconcile worker records, boxes, gross/tare/net, materials and duplicates.</li>
+<li><input disabled="" type="checkbox"> Confirm destination: storage, market or sale.</li>
+<li><input disabled="" type="checkbox"> Complete finalization once; verify event status and resulting produce/stock record.</li>
+<li><input disabled="" type="checkbox"> Compare physical delivered/stored quantity with application quantity.</li>
+<li><input disabled="" type="checkbox"> Record actual money received separately from listing/invoice value.</li>
+<li><input disabled="" type="checkbox"> Retain references and record unresolved issues for follow-up.</li>
+</ul>
+<p><strong>Accepted when:</strong> physical quantity and recorded destination agree, with traceable references and no unexplained duplicates.</p>
+<h2 id="section-46">SOP 07 — Receive stock or materials</h2><p><strong>Responsible:</strong> storekeeper / authorized management.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Confirm supplier, order, destination depot and delivery reference.</li>
+<li><input disabled="" type="checkbox"> Count/weigh actual delivery and inspect units/condition.</li>
+<li><input disabled="" type="checkbox"> Receive delivered quantities once, noting shortages.</li>
+<li><input disabled="" type="checkbox"> Confirm resulting item balances and movement history.</li>
+<li><input disabled="" type="checkbox"> Match invoice to receipt; record payment separately.</li>
+</ul>
+<p><strong>Accepted when:</strong> one delivery has one receipt and the correct depot balance. Never combine a duplicate manual intake with the same purchase-order receipt.</p>
+<h2 id="section-47">SOP 08 — Work completion and payroll review</h2><p><strong>Responsible:</strong> supervisor and accounts reviewer.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Review actual hours, harvested quantity and agreed rate/currency.</li>
+<li><input disabled="" type="checkbox"> Confirm employee/user link and source event/work reference.</li>
+<li><input disabled="" type="checkbox"> Check accrued, paid and outstanding amounts separately.</li>
+<li><input disabled="" type="checkbox"> Record a real payment only when made; include method/reference where available.</li>
+<li><input disabled="" type="checkbox"> Worker reviews their own detailed history; investigate specific disputed records.</li>
+<li><input disabled="" type="checkbox"> Use authorized traceable corrections rather than unexplained deletion/re-entry.</li>
+</ul>
+<p><strong>Accepted when:</strong> the worker&#39;s own view matches approved source work and actual recorded payments, without mixing currencies or counting payment as a second expense accrual.</p>
+<h2 id="section-48">SOP 09 — Agronomy plan to execution</h2><p><strong>Responsible:</strong> qualified agronomist / authorized operator.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Confirm crop, stage, sector, symptoms, date and actual conditions.</li>
+<li><input disabled="" type="checkbox"> Label the source: AI-generated, agronomist-created or combined.</li>
+<li><input disabled="" type="checkbox"> Review materials, quantities, units and suitability before saving.</li>
+<li><input disabled="" type="checkbox"> Archive the conclusion; add to Agronomy only when authorized.</li>
+<li><input disabled="" type="checkbox"> Schedule the work and verify required equipment/materials.</li>
+<li><input disabled="" type="checkbox"> Record actual execution and compare stock movements; saving a plan is not execution.</li>
+<li><input disabled="" type="checkbox"> Review the result and retain references for later learning.</li>
+</ul>
+<p><strong>Accepted when:</strong> approved plan, actual execution and consumed materials are distinguishable and traceable. AI output is not evidence of a confirmed diagnosis.</p>
+<h2 id="section-49">SOP 10 — Weather, soil and sensor review</h2><p><strong>Responsible:</strong> device administrator / farm manager.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Check device identity, sector, units and last observation timestamp.</li>
+<li><input disabled="" type="checkbox"> Distinguish measured observations from forecasts/demo values.</li>
+<li><input disabled="" type="checkbox"> Treat missing/stale readings as unavailable, not safe/zero.</li>
+<li><input disabled="" type="checkbox"> Test the configured alert and disconnect/recovery behavior.</li>
+<li><input disabled="" type="checkbox"> Document maintenance, calibration and connectivity failures.</li>
+</ul>
+<p><strong>Accepted when:</strong> a known physical measurement reaches the correct company/location with a trustworthy timestamp. A visible hardware dashboard alone does not satisfy this check.</p>
+</section></main></body></html>

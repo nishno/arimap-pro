@@ -81,3 +81,9 @@ Analyzed agrimap_new at commit 19d4bbd and adapted its unified feed and restrain
 Rebuilt My work & earnings around four summary cards, currency-separated balances, Activities/Harvest/Payroll tabs and the existing expandable CV/service tools. Restyled clinical diagnosis and prescription screens with the same spacing, typography, card surfaces and action hierarchy. Earnings calculations, account links, clinical archive persistence and company permissions remain unchanged.
 
 Detailed analysis, reference source and adaptation boundaries: UI_MODERNIZATION/REFERENCE_STYLE_2026-11-19.md. No database migration or production deployment is part of this update.
+
+## 2026-11-19 — illustrated user guide and daily SOPs
+
+Added an English user guide covering registration and account modes, profile/verification/services/agro-agent onboarding boundaries, company/crops/varieties, Map Planner, workers/teams, inventory/purchases, harvest setup/live weighing/finalization, scheduler/tasks/works, agronomy and AI prescriptions, sensor configuration, ledger review, Communicator and personal earnings. Added ten daily SOPs, role/mode guidance and troubleshooting. Screenshots use fictional training records in an isolated temporary farm; no production user, financial, device or cloud data was changed.
+
+Included browsable HTML, a printable PDF and screenshot provenance. Explicitly documented current limits: the standalone terminal is staging-only, universal offline merge is not complete, legacy verification is not legal KYC, and weather/soil/provider screens are not proof of live hardware or AI connections. Documentation and screenshot/build tooling only; application workflows and authorization rules were not modified.
