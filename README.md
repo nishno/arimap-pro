@@ -50,3 +50,7 @@ The local server defaults to local mode and supports fields, harvest records, ow
 [User access, workspaces and toolbar controls](USER_ACCESS.md)
 
 [Hardware modularization and terminal pilot](HARDWARE_MODULARIZATION/PLAN.md)
+
+### Update record — 2026-11-19
+
+See [UPDATE_HISTORY.md](UPDATE_HISTORY.md) for dated changes, role behavior and rollout requirements. Server-only Gemini configuration is documented there and in [.env.server.example](.env.server.example).

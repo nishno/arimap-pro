@@ -1,3 +1,4 @@
+import {CompanyCheckpoints,CompanyDetails,Announcements,useJobAnnouncements} from '../worker/CompanyDiscovery';
 import {useLanguage} from '../contexts/LanguageContext';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import L from 'leaflet';
@@ -37,6 +38,8 @@ import {
 interface CommunicationHubPanelProps {
     canUseGoogleTools?: boolean;
     partnersOnly?: boolean;
+    canManageAnnouncements?:boolean;
+    activeOrganization?:any;
     partnerRecipientIds?:string[];
     currentUser: User | null;
     forumPosts: ForumPost[];
@@ -163,7 +166,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
     const { allUsers = [], organizations = [], crops = [], onSetAppMode, mapProps, onAddPost, currentUser, forumPosts, onAddReply, initialConversationId, onClearInitialConversation, onForwardToAnalyst, isManualOffline, setAlerts, onSetAiTab, onMarkPostAsRead } = props;
     const {language}=useLanguage();
     const partnersOnly=props.partnersOnly===true;
-    const canUseGoogleTools = !partnersOnly&&props.canUseGoogleTools === true;
+    const canUseGoogleTools = false;
     const [mainTab, setMainTab] = useState<'GOOGLE_CHAT' | 'GOOGLE_MEET' | 'COMMUNICATOR' | 'PARTNERS'>(partnersOnly?'PARTNERS':canUseGoogleTools ? 'GOOGLE_CHAT' : 'COMMUNICATOR');
     useEffect(() => { if(partnersOnly)setMainTab('PARTNERS');else if (!canUseGoogleTools) setMainTab('COMMUNICATOR'); }, [canUseGoogleTools,partnersOnly]);
     const [hubType, setHubType] = useState<'INTERNAL' | 'REGIONAL' | 'GLOBAL'>('INTERNAL');
@@ -509,6 +512,12 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
         }).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }, [forumPosts, hubType, mainTab, currentUser]);
 
+    const {jobs,error:jobsError}=useJobAnnouncements();
+    const [companyDetails,setCompanyDetails]=useState<any>(null);
+    const [showAnnouncements,setShowAnnouncements]=useState(false);
+    const [regionFilter,setRegionFilter]=useState('');
+    useEffect(()=>{if(sessionStorage.getItem('agrimap_community_work')==='1'){sessionStorage.removeItem('agrimap_community_work');setMainTab('PARTNERS');setShowAnnouncements(true);}},[]);
+    useEffect(()=>{const open=()=>{setMainTab('PARTNERS');setShowAnnouncements(true);};window.addEventListener('agrimap_find_partner_work',open);return()=>window.removeEventListener('agrimap_find_partner_work',open);},[]);
     const filteredPartners = useMemo(() => {
         const query = searchQuery.toLowerCase();
         
@@ -541,17 +550,17 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
         }
 
         const orgPartners = organizations.filter(o => {
-            if (!o.isDiscoverable) return false;
+            if (regionFilter&&!String(o.region||'').toLowerCase().includes(regionFilter.toLowerCase()))return false;
             if (roleFilter !== 'ALL' && roleFilter !== 'COMPANY') return false;
             
             const matchesSearch = o.name.toLowerCase().includes(query) || 
                                  o.region?.toLowerCase().includes(query) ||
-                                 o.type.toLowerCase().includes(query);
+                                 (o.type||'').toLowerCase().includes(query);
             return matchesSearch;
         });
 
         return [...individualPartners, ...orgPartners];
-    }, [allUsers, organizations, currentUser, roleFilter, searchQuery, sortByOnline]);
+    }, [allUsers, organizations, currentUser, roleFilter, searchQuery, sortByOnline,regionFilter]);
 
     const handleExportPartners = () => {
         const headers = ['Name', 'Type', 'Region', 'Crops', 'Area', 'Contact Email'];
@@ -657,14 +666,14 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
             >
                 {/* Main Tabs */}
                 <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-hide bg-slate-50/90 shrink-0 min-h-[52px] h-[52px] items-stretch">
-                    {canUseGoogleTools && (<button
+                    {false && (<button
                         onClick={() => setMainTab('GOOGLE_CHAT')}
                         className={`flex-1 py-3 px-3.5 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 min-w-[120px] shrink-0 h-full ${mainTab === 'GOOGLE_CHAT' ? 'border-emerald-600 text-emerald-600 bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
                         <MessageSquare size={16} className="text-emerald-500 shrink-0" />
                         <span>Google Chat</span>
                     </button>)}
-                    {canUseGoogleTools && (<button
+                    {false && (<button
                         onClick={() => setMainTab('GOOGLE_MEET')}
                         className={`flex-1 py-3 px-3.5 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 min-w-[120px] shrink-0 h-full ${mainTab === 'GOOGLE_MEET' ? 'border-blue-600 text-blue-600 bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
@@ -1485,6 +1494,8 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                 </div>
                             </div>
 
+                            <div className="px-4 py-2 flex flex-wrap gap-2"><input aria-label="Search region" placeholder={language==='ka'?'რეგიონით ძიება':'Search region'} className="border rounded p-2 min-w-0 flex-1" value={regionFilter} onChange={e=>setRegionFilter(e.target.value)}/><button className="border rounded p-2" onClick={()=>setShowAnnouncements(value=>!value)}>{language==='ka'?'განცხადებები':'Announcements'}</button></div>
+                            {showAnnouncements&&<Announcements filterRegion={regionFilter} jobs={jobs} error={jobsError} user={currentUser} organization={props.activeOrganization} canManage={Boolean(props.canManageAnnouncements)} onMessage={company=>setQuickMessageRecipient(company)}/>}
                             {/* Partners List */}
                             <div className="flex-grow overflow-y-auto p-4 space-y-4">
                                 {filteredPartners.map(partner => {
@@ -1510,7 +1521,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                                 <div>
                                                     <h4 
                                                         className="font-black text-slate-900 text-sm uppercase tracking-tight hover:text-blue-600 cursor-pointer transition-colors"
-                                                        onClick={partnersOnly?undefined:() => onSetAppMode('profile')}
+                                                        onClick={()=>{if(isOrg)setCompanyDetails(partner);}}
                                                     >
                                                         {partner.name}
                                                     </h4>
@@ -1546,6 +1557,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                                             </div>
 
                                             {partnersOnly && !isOrg && <details className="mb-4 text-sm"><summary className="cursor-pointer">{language==='ka'?'CV და მომსახურებები':'CV & services'}</summary><p>{(partner as any).description}</p><p>{(partner as any).servicesOffered?.join(', ')}</p><p>{(partner as any).workingRegions?.join(', ')}</p><p>{(partner as any).cv?.skills?.join(', ')}</p>{(partner as any).cv?.experience?.map((entry:any,index:number)=><p key={index}>{entry.title} · {entry.company} · {entry.startDate}</p>)}</details>}
+                                            {isOrg&&<button className="underline mb-3" onClick={()=>setCompanyDetails(partner)}>{language==='ka'?'მეტი ინფორმაცია':'More details'}</button>}
                                             {/* Hover Tooltip Details */}
                                             {hoveredPartnerId === partner.id && (
                                                 <div className="absolute left-6 top-0 -translate-y-full mb-2 z-[3000] bg-slate-900 text-white p-4 rounded-2xl shadow-2xl w-48 animate-slide-up pointer-events-none">
@@ -1628,20 +1640,15 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
             {/* Map Area */}
             <div className="flex-1 h-full relative overflow-hidden bg-slate-200">
                 <MapComponent 
-                    {...mapProps} 
+                    {...mapProps} disableAnimations
                     showSearch={false} 
                     externalUsers={mainTab === 'PARTNERS' ? (allUsers || []).filter(u => 
                         (u.isPubliclyVisible || u.isProfileDiscoverable) && 
                         (u.location || u.workingArea?.center)
                     ) : []} 
-                    externalOrganizations={mainTab === 'PARTNERS' ? (organizations || []).filter(o => 
-                        o.isDiscoverable && (o.location || o.areaGeometry)
-                    ) : []}
-                    onMapClick={(ll) => {
-                        // Region search trigger
-                        if (mainTab === 'PARTNERS') setSearchQuery(`${ll.lat.toFixed(2)}, ${ll.lng.toFixed(2)}`);
-                    }}
-                />
+                >
+                    {mainTab==='PARTNERS'&&<CompanyCheckpoints companies={filteredPartners.filter(partner=>(partner as any).type!==undefined)} crops={crops} onDetails={setCompanyDetails}/>}
+                </MapComponent>
                 
                 {/* Map Overlays */}
                 <StatsCard buyers={stats.buyers} sellers={stats.sellers} workers={stats.workers} />
@@ -1659,6 +1666,7 @@ const CommunicationHubPanel: React.FC<CommunicationHubPanelProps> = (props) => {
                 </div>
             </div>
 
+            {companyDetails&&<CompanyDetails company={companyDetails} crops={crops} jobs={jobs} onClose={()=>setCompanyDetails(null)} onMessage={()=>{setQuickMessageRecipient({id:companyDetails.id,name:companyDetails.name,type:'org'});setCompanyDetails(null);}}/>}
             {quickMessageRecipient && (
                 <QuickMessageModal 
                     isOpen={!!quickMessageRecipient}

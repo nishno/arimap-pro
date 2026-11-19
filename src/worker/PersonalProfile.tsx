@@ -1,10 +1,11 @@
-import React,{useState} from 'react';
+import React,{useEffect,useState} from 'react';
 import {useLanguage} from '../contexts/LanguageContext';
 import {completedActivity} from './activities';
 export function PersonalProfile({user,activities,reviews,organization,employeeId,onSave,onReview}:{user:any;activities:any[];reviews:any[];organization:any;employeeId?:string;onSave:(user:any)=>Promise<any>;onReview:(review:any)=>Promise<any>}){
  const {language}=useLanguage(),ka=language==='ka',t=(ge:string,en:string)=>ka?ge:en;
  const [skills,setSkills]=useState((user.cv?.skills||[]).join(', ')),[education,setEducation]=useState((user.cv?.education||[]).join('\n')),[services,setServices]=useState((user.servicesOffered||[]).join(', ')),[regions,setRegions]=useState((user.cv?.preferredRegions||[]).join(', ')),[description,setDescription]=useState(user.publicData?.description||''),[available,setAvailable]=useState(user.availability!=='Unavailable'),[publicProfile,setPublic]=useState(user.isProfileDiscoverable===true);
  const [experience,setExperience]=useState<any[]>(user.cv?.experience||[]),[title,setTitle]=useState(''),[company,setCompany]=useState(''),[date,setDate]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[rating,setRating]=useState(5),[comment,setComment]=useState('');
+ useEffect(()=>setServices((user.servicesOffered||[]).join(', ')),[JSON.stringify(user.servicesOffered||[])]);
  const split=(text:string)=>text.split(',').map(s=>s.trim()).filter(Boolean);
  const recorded=activities.filter(completedActivity);
  return <section className="p-4 md:p-8 max-w-4xl w-full mx-auto space-y-5"><h1 className="text-2xl font-semibold">{t('ჩემი CV და მომსახურებები','My CV & services')}</h1><h2 className="text-xl">{user.name}</h2>

@@ -1,3 +1,5 @@
+> Updated 2026-11-19: familiar Dashboard/AI Analyst/Communicator screens are retained with filtered tools. New users without an active company membership can draw a memory-only plantation draft; workers with a company membership do not gain operational Planner access. Personal CV/services/reviews are also available under My work & earnings. See [dated update history](UPDATE_HISTORY.md).
+
 # Personal and company workspaces
 
 ## Current policy — 2026-11-18

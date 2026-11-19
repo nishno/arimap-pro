@@ -1,5 +1,5 @@
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where, deleteDoc, runTransaction } from 'firebase/firestore';
 import { readFileSync } from 'node:fs';
 const env = await initializeTestEnvironment({projectId:'demo-agrimap',firestore:{host:'127.0.0.1',port:8080,rules:readFileSync('firestore.rules','utf8')}});
 try {
@@ -84,6 +84,28 @@ try {
   await assertSucceeds(getDoc(doc(manager,'harvestEntries','entry-a')));
   await assertFails(getDoc(doc(manager,'harvestEntries','entry-b')));
  }
+ // Public jobs and personal clinical records have separate authority from company operations.
+ await assertSucceeds(setDoc(doc(payrollOwner,'jobAnnouncements','job-a'),{organizationId:'farm-a',authorId:'owner-a',title:'Seasonal pickers',description:'Blueberry harvest',employmentType:'Seasonal',status:'published'}));
+ await assertSucceeds(getDocs(query(collection(personal,'jobAnnouncements'),where('status','==','published'))));
+ await assertFails(setDoc(doc(personal,'jobAnnouncements','forged-job'),{organizationId:'farm-a',authorId:'personal-worker',title:'Forged',description:'No',status:'published'}));
+ await assertSucceeds(setDoc(doc(personal,'clinicalRecords','personal-clinical'),{ownerId:'personal-worker',organizationId:'',sourceCategory:'Agronomist-created',title:'My draft'}));
+ await assertSucceeds(getDocs(query(collection(personal,'clinicalRecords'),where('ownerId','==','personal-worker'))));
+ await assertFails(getDoc(doc(attacker,'clinicalRecords','personal-clinical')));
+ await assertFails(setDoc(doc(personal,'clinicalRecords','foreign-clinical'),{ownerId:'personal-worker',organizationId:'farm-b',sourceCategory:'AI-generated'}));
+ await assertFails(updateDoc(doc(personal,'clinicalRecords','personal-clinical'),{ownerId:'owner-a'}));
+ await assertSucceeds(setDoc(doc(payrollOwner,'clinicalRecords','company-clinical'),{ownerId:'owner-a',organizationId:'farm-a',sourceCategory:'Combined'}));
+ await assertFails(getDoc(doc(personal,'clinicalRecords','company-clinical')));
+ await assertSucceeds(setDoc(doc(personal,'joinRequests','personal-worker_farm-b'),{userId:'personal-worker',userName:'Worker',organizationId:'farm-b',status:'pending',createdAt:'2026-11-19'}));
+ await assertFails(updateDoc(doc(personal,'joinRequests','personal-worker_farm-b'),{status:'approved'}));
+ await assertFails(getDoc(doc(payrollOwner,'joinRequests','personal-worker_farm-b')));
+ await assertSucceeds(updateDoc(doc(env.authenticatedContext('owner-b').firestore(),'joinRequests','personal-worker_farm-b'),{status:'approved'}));
+ await assertFails(setDoc(doc(personal,'joinRequests','personal-worker_farm-b'),{userId:'personal-worker',userName:'Worker',organizationId:'farm-b',status:'pending',createdAt:'2026-11-19'}));
+ // Join approval must be able to atomically read missing canonical identity documents.
+ const joining=env.authenticatedContext('joining-new').firestore(),reviewer=env.authenticatedContext('owner-b').firestore();
+ await assertSucceeds(setDoc(doc(joining,'joinRequests','joining-new_farm-b'),{userId:'joining-new',userName:'New worker',organizationId:'farm-b',status:'pending',createdAt:'2026-11-19'}));
+ await assertSucceeds(runTransaction(reviewer,async tx=>{const membership=doc(reviewer,'memberships','joining-new_farm-b'),employee=doc(reviewer,'employees','joining-new_farm-b'),request=doc(reviewer,'joinRequests','joining-new_farm-b');const m=await tx.get(membership),e=await tx.get(employee),r=await tx.get(request);if(m.exists()||e.exists()||r.data().status!=='pending')throw Error('Identity conflict');tx.set(membership,{userId:'joining-new',organizationId:'farm-b',role:'Employee',status:'active',employeeId:'joining-new_farm-b'});tx.set(employee,{userId:'joining-new',organizationId:'farm-b',name:'New worker',status:'active'});tx.update(request,{status:'approved'});}));
+ await assertSucceeds(getDoc(doc(joining,'employees','joining-new_farm-b')));
+ await assertFails(getDoc(doc(personal,'employees','joining-new_farm-b')));
  const member=env.authenticatedContext('member-a').firestore();
  await assertFails(getDoc(doc(member,'harvestEntries','entry-a')));
  await assertFails(getDoc(doc(member,'harvestEntries','entry-b')));

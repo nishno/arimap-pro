@@ -36,12 +36,12 @@ try{
  for(const name of ['Tasks and Works','Harvest','Market'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0);
  await page.getByText('80.00',{exact:true}).waitFor();
  assert.equal((await context.request.post(origin+'/api/local/documents/read',{headers:{Origin:origin},data:{path:'transactions'}})).status(),403);
- await page.goto(origin+'/modern/worker/dashboard');await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();await page.getByRole('heading',{name:'Planned pruning',exact:true}).waitFor();
- await page.getByRole('button',{name:'My CV, services & reviews',exact:true}).click();await page.getByRole('heading',{name:'My CV & services',exact:true}).waitFor();
+ await page.goto(origin+'/modern/worker/dashboard');await page.getByRole('heading',{name:'Planned work & harvest notifications',exact:true}).waitFor();await page.getByRole('heading',{name:'Planned pruning',exact:true}).waitFor();
+ await page.goto(origin+'/modern/worker/my-work');await page.getByText('My CV, services & reviews',{exact:true}).click();await page.getByRole('heading',{name:'My CV & services',exact:true}).waitFor();
  await page.getByRole('button',{name:'Add recorded experience to my CV',exact:true}).click();await page.getByLabel('Skills',{exact:true}).fill('Pruning');await page.getByLabel('Services offered',{exact:true}).fill('Pruning service');await page.getByLabel('Partners can discover my profile',{exact:false}).check();await page.getByRole('button',{name:'Save CV & services',exact:true}).click();await page.getByText('Profile saved',{exact:true}).waitFor({timeout:8000});
  await page.getByLabel('Review comment',{exact:true}).fill('Good working conditions');await page.getByRole('button',{name:'Submit review',exact:true}).click();await page.getByText('Review saved',{exact:true}).waitFor();
  const directory=docs.read(owner,{path:'partnerProfiles/'+worker.id}).document;assert.equal(directory.cv.experience.length,1);assert(!JSON.stringify(directory).includes('recordedPay'));
- await page.reload();await page.getByRole('heading',{name:'My CV & services',exact:true}).waitFor();assert.equal(await page.getByLabel('Services offered',{exact:true}).inputValue(),'Pruning service');
+ await page.reload();await page.getByText('My CV, services & reviews',{exact:true}).click();await page.getByRole('heading',{name:'My CV & services',exact:true}).waitFor();assert.equal(await page.getByLabel('Services offered',{exact:true}).inputValue(),'Pruning service');
  await page.getByRole('button',{name:'Communicator',exact:true}).click();await page.getByRole('button',{name:'Partners Find',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Forum & Hub',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Google Chat',exact:true}).count(),0);await page.getByRole('heading',{name:'Pruning specialist',exact:true}).waitFor();
  assert.equal(await page.getByRole('button',{name:'Market Intelligence',exact:true}).count(),0);
  await page.getByRole('heading',{name:'Pruning specialist',exact:true}).locator('xpath=../../..').getByRole('button',{name:'Message',exact:true}).click();

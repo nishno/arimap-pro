@@ -41,6 +41,7 @@ import { TerrainSlopeSculptorModal } from './TerrainSlopeSculptorModal';
 import { type CustomTerrainSlope, setActiveSlopesCache } from '../utils/demTerrainViewshed';
 
 interface DesignViewProps {
+  draftOnly?:boolean;
   layers: Layer[];
   plantationFeatures: PlantationFeature[];
   activeDrawingTool: ActiveDrawingTool;
@@ -865,7 +866,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
     // Simulation Drawing & Draft State
     const [isSimulationMode, setIsSimulationMode] = useState<boolean>(false);
     const [draftFeatures, setDraftFeatures] = useState<PlantationFeature[]>(() => {
-        const stored = safeStorage.getItem('agrimap_draft_features');
+        const stored = props.draftOnly?null:safeStorage.getItem('agrimap_draft_features');
         return stored ? safeStorage.safeParse(stored, []) : [];
     });
     // Default collapsed to keep the screen uncluttered and avoid spamming the user
@@ -873,7 +874,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
     const [isSandboxDismissed, setIsSandboxDismissed] = useState<boolean>(false);
 
     useEffect(() => {
-        safeStorage.setItem('agrimap_draft_features', JSON.stringify(draftFeatures));
+        if(!props.draftOnly)safeStorage.setItem('agrimap_draft_features', JSON.stringify(draftFeatures));
     }, [draftFeatures]);
 
     // Combined features for map, tree components, and inspection
@@ -2149,7 +2150,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
         if (isDraft) {
             setDraftFeatures(prev => {
                 const next = prev.map(f => f.id === feature.id ? updated : f);
-                safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
+                if(!props.draftOnly)safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
                 return next;
             });
         } else {
@@ -2303,7 +2304,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
                     } else {
                         next = [...prev, updatedParent];
                     }
-                    safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
+                    if(!props.draftOnly)safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
                     return next;
                 });
                 logMapPlannerAction("Trench Created in Simulator", `Generated ${newTrenches.length} bundled trenches in simulation draft`);
@@ -2424,7 +2425,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
                             next = [...prev, updatedTrench];
                         }
                     }
-                    safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
+                    if(!props.draftOnly)safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
                     return next;
                 });
 
@@ -2473,7 +2474,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
             setDraftFeatures(prev => {
                 const res = updateRecursive(prev);
                 const next = res.found ? res.updated : (isSimulationMode ? [...prev, { ...feature, isDraft: true, isSimulated: true }] : prev);
-                safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
+                if(!props.draftOnly)safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
                 return next;
             });
             logMapPlannerAction("Draft Update", `Updated feature "${feature.name}" in simulation draft`);
@@ -2506,7 +2507,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
                 const lastDraft = draftFeatures[draftFeatures.length - 1];
                 setDraftFeatures(prev => {
                     const next = prev.filter(d => d.id !== lastDraft.id);
-                    safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
+                    if(!props.draftOnly)safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
                     return next;
                 });
                 props.onSelectFeature(null);
@@ -2532,7 +2533,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
                     }
                     return df;
                 });
-                safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
+                if(!props.draftOnly)safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
                 return next;
             });
             logMapPlannerAction("Draft Items Deleted", `Deleted ${draftIdsToDelete.length} draft item(s)`);
@@ -2553,6 +2554,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
 
     // 2. Save: publishes all draft items to live components and commits them to cloud as one document/batch
     const handleSaveDraft = async () => {
+        if(props.draftOnly){toast.info(isKa?'შესანახად ჯერ დაარეგისტრირეთ კომპანია.':'Register a company before saving.');return;}
         if (draftFeatures.length === 0) {
             return;
         }
@@ -2561,7 +2563,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
             if (props.onPublishDraftFeatures) {
                 await props.onPublishDraftFeatures(draftFeatures);
                 setDraftFeatures([]);
-                safeStorage.removeItem('agrimap_draft_features');
+                if(!props.draftOnly)safeStorage.removeItem('agrimap_draft_features');
                 setIsSimulationMode(false);
                 // IMPORTANT TOAST: Crucial user feedback for successful cloud sync
                 toast.success("Document is synced to the cloud successfully!", { duration: 4000 });
@@ -2576,7 +2578,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
                 });
                 setDraftFeatures([]);
                 setIsSimulationMode(false);
-                safeStorage.removeItem('agrimap_draft_features');
+                if(!props.draftOnly)safeStorage.removeItem('agrimap_draft_features');
                 toast.success("Document is synced to the cloud successfully!", { duration: 4000 });
                 logMapPlannerAction("Cloud Synchronization", "Document is synced to the cloud successfully", "success");
             }
@@ -2613,7 +2615,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
         if (window.confirm(`Are you sure you want to discard all ${draftFeatures.length} draft simulation items?`)) {
             const count = draftFeatures.length;
             setDraftFeatures([]);
-            safeStorage.removeItem('agrimap_draft_features');
+            if(!props.draftOnly)safeStorage.removeItem('agrimap_draft_features');
             props.onSelectFeature(null);
             logMapPlannerAction("Draft Discarded", `Discarded ${count} draft simulation items`);
         }
@@ -4351,7 +4353,7 @@ const DesignView: React.FC<DesignViewProps> = (props) => {
                 onSaveFlightPathToDraft={(feature) => {
                     setDraftFeatures(prev => {
                         const next = [feature, ...prev];
-                        safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
+                        if(!props.draftOnly)safeStorage.setItem('agrimap_draft_features', JSON.stringify(next));
                         return next;
                     });
                     logMapPlannerAction("Drone Flight Plan Created", `Flight plan "${feature.name}" saved to simulation draft`);

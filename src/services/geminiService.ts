@@ -1,7 +1,7 @@
 import { aiClient } from './aiClient';
 import { GoogleGenAI, Type } from "@google/genai";
 
-export const PRIMARY_GEMINI_MODEL = "gemini-3.8-flash";
+export const PRIMARY_GEMINI_MODEL = "gemini-2.5-flash";
 export const FALLBACK_GEMINI_MODEL = "gemini-flash-latest";
 
 /** Provider credentials belong only to the AI server. */
@@ -25,7 +25,7 @@ export const testGeminiApiKey = async (_key?: string): Promise<{success:boolean;
 };
 
 /**
- * Standard execution wrapper with automatic model fallback (gemini-3.8-flash -> gemini-flash-latest)
+ * Standard execution wrapper with automatic model fallback (gemini-2.5-flash -> gemini-flash-latest)
  * and rich error diagnostics.
  */
 export const executeGeminiCall = async (params: {
@@ -36,7 +36,7 @@ export const executeGeminiCall = async (params: {
 }): Promise<any> => {
     const ai = getGenAI();
     const targetModel = params.model || PRIMARY_GEMINI_MODEL;
-    const timeout = params.timeoutMs || 12000;
+    const timeout = params.timeoutMs || 50000;
 
     const callWithTimeout = async (modelName: string) => {
         let timer: any;
@@ -121,27 +121,7 @@ export const generateAgriBusinessAnalysis = async (query: string, language: stri
         });
         return JSON.parse(response.text);
     } catch (e: any) {
-        console.warn("[Gemini] Agribusiness analysis remote call unavailable, using local synthesis:", e?.message || e);
-        return {
-            analysis: {
-                summary: `Comprehensive agricultural feasibility and market demand profile for: "${query}". Market indicators project stable berry and orchard pricing across primary export and domestic distribution channels.`,
-                topLocations: ["Georgia (Imereti / Samegrelo / Guria)", "Eastern Europe (EU Export Corridors)", "Middle East Gulf Logistics Hubs"],
-                keyCompanies: ["Georgian Berry Producers Association", "GlobalG.A.P. Certified Logistics Partners", "Regional Agribusiness Cold Chain Aggregators"],
-                marketInsights: {
-                    profitability: "Estimated 32-45% gross operating margins when cold chain triage and tare-calibrated field weigh stations are active.",
-                    statistics: "Regional premium grade blueberries command $5.20 - $7.80/kg in peak EU/Gulf export windows with grade A firm specification."
-                },
-                potentialBuyers: ["Export Supermarket Chains (EU)", "Domestic Retail Distribution (Carrefour / Goodwill)", "Direct Industrial IQF Processors"]
-            },
-            sources: [
-                {
-                    web: {
-                        uri: "https://aistudio.google.com",
-                        title: "AgriMap Regional Agricultural Market Intelligence"
-                    }
-                }
-            ]
-        };
+        throw e;
     }
 };
 
@@ -218,11 +198,10 @@ export const analyzeAgriImage = async (base64Content: string, mimeType: string, 
 /**
  * Compares multiple documents.
  */
-export const generateDocumentComparison = async (documents: any[], language: string): Promise<string> => {
-    const response = await executeGeminiCall({
-        contents: `Compare the following documents and summarize key differences in ${language}: ${JSON.stringify(documents)}`
-    });
-    return response.text;
+export const generateDocumentComparison = async (documents:any[],language:string):Promise<string>=>{
+ const parts:any[]=[{text:`Compare these documents and summarize findings in ${language}. Identify missing data and do not invent values.`}];
+ for(const document of documents){parts.push({text:document.fileName||'Document'});const match=/^data:([^;]+);base64,(.*)$/s.exec(document.content||'');if(match){if(['application/pdf','image/jpeg','image/png','image/webp'].includes(match[1]))parts.push({inlineData:{mimeType:match[1],data:match[2]}});else parts.push({text:new TextDecoder().decode(Uint8Array.from(atob(match[2]),character=>character.charCodeAt(0)))});}else parts.push({text:document.content||''});}
+ const response=await executeGeminiCall({contents:[{role:'user',parts}]});return response.text;
 };
 
 /**

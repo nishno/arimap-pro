@@ -495,10 +495,12 @@ const CustomZoomControls: React.FC = () => {
 const ResizeHandler: React.FC = () => {
     const map = useMap();
     useEffect(() => {
-        const timer = setTimeout(() => {
-            map.invalidateSize();
-        }, 100);
-        return () => clearTimeout(timer);
+        // Leaflet 1.9 leaves a 250ms zoom-transition callback pending after remove().
+        // Disarm it on unload so quick module switches cannot access a removed map pane.
+        const stopZoom = () => { (map as any)._animatingZoom = false; };
+        map.on('unload', stopZoom);
+        const timer = setTimeout(() => { if ((map as any)._loaded) map.invalidateSize(); }, 100);
+        return () => { stopZoom(); map.off('unload', stopZoom); clearTimeout(timer); };
     }, [map]);
     return null;
 };
@@ -1347,6 +1349,7 @@ export interface MapComponentProps {
     onOperationalLogClick?: (log: OperationalLog, latlng: L.LatLng) => void;
     onHarvestLogClick?: (log: HarvestLog, latlng: L.LatLng) => void;
     children?: React.ReactNode;
+    disableAnimations?:boolean;
     currentUser?: User | null;
     appMode?: string;
     onUndo?: () => void;
@@ -2325,7 +2328,7 @@ export const MapComponent: React.FC<MapComponentProps> = (props) => {
                 </div>
             )}
             
-            <MapContainer 
+            <MapContainer zoomAnimation={!props.disableAnimations} fadeAnimation={!props.disableAnimations} markerZoomAnimation={!props.disableAnimations}
                 center={safeCenter} 
                 zoom={safeZoom} 
                 scrollWheelZoom={true} 

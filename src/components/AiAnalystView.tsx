@@ -34,6 +34,8 @@ import { safeStorage } from '../services/storageService';
 
 
 interface AiAnalystViewProps {
+  personalOnly?:boolean;
+  onAddNutritionPlan?:(plan:any)=>Promise<void>;
   onSearch: (query: string) => void;
   loading: boolean;
   error: string | null;
@@ -84,11 +86,12 @@ const AiAnalystView: React.FC<AiAnalystViewProps> = (props) => {
 
     useEffect(() => {
         if (initialTab) {
-            setActiveTab(initialTab);
+            setActiveTab(props.personalOnly&&['cross_module','market'].includes(initialTab)?'agro':initialTab);
         }
     }, [initialTab]);
 
     const handleTabChange = (tab: 'agro' | 'global' | 'market' | 'cross_module' | 'diagnostics') => {
+        if(props.personalOnly&&['cross_module','market'].includes(tab))return;
         setActiveTab(tab);
         if (onTabChange) onTabChange(tab);
     };
@@ -341,7 +344,7 @@ const AiAnalystView: React.FC<AiAnalystViewProps> = (props) => {
 
     const handleSearchSubmit = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) onSearch(searchQuery); };
     
-    const TabButton = ({ id, label, icon }: { id: typeof activeTab, label: string, icon: React.ReactNode }) => (
+    const TabButton = ({ id, label, icon }: { id: typeof activeTab, label: string, icon: React.ReactNode }) => props.personalOnly&&['cross_module','market'].includes(id)?null:(
         <button
             onClick={() => handleTabChange(id)}
             className={`flex-1 flex items-center justify-center gap-2 p-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === id ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500 hover:bg-gray-100'}`}
@@ -370,7 +373,7 @@ const AiAnalystView: React.FC<AiAnalystViewProps> = (props) => {
                         activeOrgId={props.activeOrgId}
                         currentUser={props.currentUser}
                         onAddTask={props.onAddTask}
-                        onAddNutritionPlan={props.onSetNutritionPlans ? (p) => props.onSetNutritionPlans(prev => [p, ...(prev || [])]) : undefined}
+                        onAddNutritionPlan={props.onAddNutritionPlan}
                     />
                 </div>
             ) : (

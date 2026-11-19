@@ -24,7 +24,7 @@
     "test:demo": "node tests/demo-browser.cjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-agrimap --config firebase.emulator.json \"node tests/firestore-security.mjs\"",
     "local:init": "node server/init.mjs",
-    "local:start": "node server/local-server.mjs",
+    "local:start": "node --env-file-if-exists=.env.server server/local-server.mjs",
     "local:backup": "node server/backup.mjs",
     "test:local": "node --test tests/local-server.mjs",
     "test:local:browser": "node tests/local-browser.mjs",
@@ -53,7 +53,11 @@
     "test:module-grants:browser": "node tests/module-grants-browser.mjs",
     "test:worker": "node --experimental-strip-types --test tests/worker-summary.mjs tests/worker-records.mjs tests/worker-activities.mjs",
     "test:worker:browser": "node tests/worker-earnings-browser.mjs",
-    "firebase:target": "node scripts/firebase-target.mjs"
+    "firebase:target": "node scripts/firebase-target.mjs",
+    "test:ai-gateway": "node --test tests/ai-service.mjs",
+    "test:community": "node --test tests/personal-community.mjs",
+    "test:community:browser": "node tests/community-clinical-browser.mjs",
+    "test:planner:preview": "node tests/draft-preview-browser.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

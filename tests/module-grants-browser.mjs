@@ -16,11 +16,11 @@ try{
  const user=await browser.newContext({viewport:{width:1440,height:1000}});await user.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());
  await user.request.post(origin+'/api/local/login',{headers:{Origin:origin},data:{username:'worker',password:'test-worker-password'}});
  page=await user.newPage();page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(60000);
- await page.goto(origin+'/modern/worker/dashboard');await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();
+ await page.goto(origin+'/modern/worker/dashboard');await page.getByRole('heading',{name:'Planned work & harvest notifications',exact:true}).waitFor();
  for(const name of ['Stock','Harvest','Accounts','Market','Tasks and Works'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0,name);
- await page.reload();await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();
- await page.goto(origin+'/modern/farms/'+store.farm().id+'/stock');await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();await page.waitForURL(/\/dashboard$/);
- await grant(['harvesting','stock','tasks']);await page.reload();await page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();
+ await page.reload();await page.getByRole('heading',{name:'Planned work & harvest notifications',exact:true}).waitFor();
+ await page.goto(origin+'/modern/farms/'+store.farm().id+'/stock');await page.getByRole('heading',{name:'Planned work & harvest notifications',exact:true}).waitFor();await page.waitForURL(/\/dashboard$/);
+ await grant(['harvesting','stock','tasks']);await page.reload();await page.getByRole('heading',{name:'Planned work & harvest notifications',exact:true}).waitFor();
  for(const name of ['Stock','Harvest','Tasks and Works'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0,name);
  assert.equal((await user.request.post(origin+'/api/local/documents/read',{headers:{Origin:origin},data:{path:'inventoryItems'}})).status(),403);
  await grant([]);

@@ -182,3 +182,15 @@ Behavior labels distinguish inspection, temporary extraction, source rewriting a
 ## Keeping this guide accurate
 
 Add or update a row when a tracked root code file is added, renamed or removed. Update the folder map when ownership or entry points change. Read actual code and npm wiring when a description and behavior disagree. Historical file presence does not prove that a tool is safe, still functional, or needed by the running application.
+
+## 2026-11-19 — new and updated workspace services
+
+- `server/ai-service.mjs`: authenticated Gemini request handling, server model selection, request limits and private credential use.
+- `.env.server.example`: template for server-only Gemini and Firebase credential configuration. Copy to ignored `.env.server`.
+- `src/worker/CompanyDiscovery.tsx`: company map checkpoints/details, region search, job announcements and company join-request review.
+- `src/worker/DraftPlanner.tsx`: isolates the existing map-planner interface from company persistence for newly registered users.
+- `src/components/assistant-layout.css`: responsive assistant header, visible close controls and stacked suggestion tools.
+- `src/components/clinical-workspace.css`: responsive clinical editor and archive layout.
+- `src/components/AiAnalysisSuite.tsx`: diagnostic uploads, AI/manual/combined prescription workflow and selective archive detail.
+- `src/services/clinicalAnalysisService.ts`: user/company-scoped persisted clinical archive, historical-record import and deletion tombstones.
+- `UPDATE_HISTORY.md`: dated record of each update and its rollout requirements.

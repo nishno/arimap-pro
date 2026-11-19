@@ -1801,6 +1801,7 @@ const permissionMatrix: Record<AppMode, Partial<Record<UserRole, AccessLevel>>> 
 export const checkModuleAccess = (user: User | null, module: AppMode, activeOrg?: Organization, memberships?: Membership[]): AccessLevel => {
     if (user && ['blocked', 'suspended', 'deleted'].includes(user.status)) return 'none';
     if (module === 'my-work') return user && !user.isGuest ? 'full' : 'none';
+    if (module==='design'&&user&&!user.isGuest&&activeMembershipsFor(user,memberships).length===0) return 'full';
     if (isWorkerContext(user, activeOrg?.id, memberships)) return ['dashboard','ai','community','profile','guide','personalization'].includes(module) ? 'full' : 'none';
     // Explicit grants replace role defaults for this farm, including an explicit empty list.
     const scopedMembership = activeOrg ? activeMembershipsFor(user, memberships, activeOrg.id)[0] : undefined;

@@ -1,3 +1,5 @@
+import {DraftPlanner} from './worker/DraftPlanner';
+import {ChooseYourGoalWidget} from './components/ChooseYourGoalWidget';
 import {PersonalDashboard} from './worker/PersonalDashboard';
 import {PersonalProfile} from './worker/PersonalProfile';
 import {PersonalAiTools} from './worker/PersonalAiTools';
@@ -5787,6 +5789,19 @@ const App: React.FC = () => {
         );
     };
 
+    const saveClinicalPlan = async (plan:any) => {
+        if(!canUsePrivilegedTools||!activeOrgId)throw new Error('Management access required');
+        const payload=sanitizeObject({...plan,organizationId:activeOrgId});
+        await setDoc(doc(db,'nutritionPlans',plan.id),payload);
+        setNutritionPlans(previous=>[payload,...previous.filter(row=>row.id!==plan.id)]);
+    };
+    const updatePersonalGoals = async (updated:any) => {
+        const patch={primaryGoal:updated.primaryGoal,servicesOffered:updated.servicesOffered||[]};
+        await setDoc(doc(db,'users',currentUser!.id),patch,{merge:true});
+        setCurrentUser(previous=>previous?{...previous,...patch}:previous);
+    };
+    const savePersonalProfile = async updated=>{const patch={cv:updated.cv,servicesOffered:updated.servicesOffered,publicData:updated.publicData,availability:updated.availability,isProfileDiscoverable:updated.isProfileDiscoverable};const batch=writeBatch(db);batch.set(doc(db,'users',currentUser!.id),sanitizeObject(patch),{merge:true});if(updated.isProfileDiscoverable){batch.set(doc(db,'partnerProfiles',currentUser!.id),sanitizeObject({userId:currentUser!.id,name:currentUser!.name,description:updated.publicData?.description||'',servicesOffered:updated.servicesOffered||[],workingRegions:updated.cv?.preferredRegions||[],availability:updated.availability,isDiscoverable:true,cv:{skills:updated.cv?.skills||[],education:updated.cv?.education||[],experience:(updated.cv?.experience||[]).map(e=>({title:e.title,company:e.company,startDate:e.startDate,endDate:e.endDate||''}))}}));}else batch.delete(doc(db,'partnerProfiles',currentUser!.id));await batch.commit();setCurrentUser({...currentUser,...patch});};
+    const savePersonalReview = async review=>{await setDoc(doc(db,'reviews',review.id),sanitizeObject(review));setReviews(previous=>[...previous.filter(r=>r.id!==review.id),review]);};
     const renderContent = () => {
         if (!isAuthReady) {
             const savedLocalConfig = localStorage.getItem('agrimap-local-config');
@@ -5939,7 +5954,7 @@ const App: React.FC = () => {
                         }}
                     />
                 );
-            case 'profile': if(personalOnly)return <PersonalProfile employeeId={personalWork.employee?.id} key={currentUser!.id} user={currentUser} activities={personalWork.activities} reviews={personalWork.reviews||[]} organization={activeOrg} onSave={async updated=>{const patch={cv:updated.cv,servicesOffered:updated.servicesOffered,publicData:updated.publicData,availability:updated.availability,isProfileDiscoverable:updated.isProfileDiscoverable};const batch=writeBatch(db);batch.set(doc(db,'users',currentUser!.id),sanitizeObject(patch),{merge:true});if(updated.isProfileDiscoverable){batch.set(doc(db,'partnerProfiles',currentUser!.id),sanitizeObject({userId:currentUser!.id,name:currentUser!.name,description:updated.publicData?.description||'',servicesOffered:updated.servicesOffered||[],workingRegions:updated.cv?.preferredRegions||[],availability:updated.availability,isDiscoverable:true,cv:{skills:updated.cv?.skills||[],education:updated.cv?.education||[],experience:(updated.cv?.experience||[]).map(e=>({title:e.title,company:e.company,startDate:e.startDate,endDate:e.endDate||''}))}}));}else batch.delete(doc(db,'partnerProfiles',currentUser!.id));await batch.commit();setCurrentUser({...currentUser,...patch});}} onReview={async review=>{await setDoc(doc(db,'reviews',review.id),sanitizeObject(review));setReviews(previous=>[...previous.filter(r=>r.id!==review.id),review]);}}/>;
+            case 'profile': if(personalOnly)return <div className="flex-1 overflow-y-auto p-4"><ChooseYourGoalWidget currentUser={currentUser} organizations={organizations} discoverableOrganizations={discoverableOrganizations} memberships={memberships} onAddOrg={handleAddOrg} onSwitchOrg={handleSwitchOrg} onUpdateUser={updatePersonalGoals} onNavigateMode={mode=>{if(checkPermission(mode as AppMode))setAppMode(mode as AppMode);}}/><PersonalProfile employeeId={personalWork.employee?.id} key={currentUser!.id} user={currentUser} activities={personalWork.activities} reviews={personalWork.reviews||[]} organization={activeOrg} onSave={savePersonalProfile} onReview={savePersonalReview}/></div>;
             return (
                 <ProfileView 
                     currentUser={currentUser!} 
@@ -6136,8 +6151,8 @@ const App: React.FC = () => {
                     onResetPassword={handleResetPassword}
                 />
             );
-            case 'ai': if(personalOnly)return <PersonalAiTools/>; return (
-                <AiAnalystView 
+            case 'ai': return (
+                <AiAnalystView personalOnly={personalOnly} onAddNutritionPlan={personalOnly?undefined:saveClinicalPlan}
                     onSearch={handleMarketAnalysis} 
                     loading={isAiLoading} 
                     error={aiError} 
@@ -6152,12 +6167,12 @@ const App: React.FC = () => {
                     mapProps={{
                         center: mapCenter, 
                         zoom: mapZoom, 
-                        plantationFeatures: currentOrgFeatures, 
-                        layers: currentOrgLayers, 
+                        plantationFeatures: personalOnly?[]:currentOrgFeatures,
+                        layers: personalOnly?[]:currentOrgLayers,
                         onSelectFeature: handleSelectFeature,
-                        onSetActiveDrawingTool: setActiveDrawingTool,
-                        onUpdateFeature: handleUpdateFeature,
-                        onEditGeometry: setEditingGeometryId,
+                        onSetActiveDrawingTool: personalOnly?()=>{}:setActiveDrawingTool,
+                        onUpdateFeature: personalOnly?()=>{}:handleUpdateFeature,
+                        onEditGeometry: personalOnly?()=>{}:setEditingGeometryId,
                         editingGeometryId,
                         flyToBounds: flyToBounds,
                         onSetMapCenter: setMapCenter,
@@ -6165,14 +6180,14 @@ const App: React.FC = () => {
                     }} 
                     isMapFullScreen={false} 
                     onSetIsMapFullScreen={() => {}} 
-                    onSetNutritionPlans={setNutritionPlans}
+                    onSetNutritionPlans={personalOnly?undefined:setNutritionPlans}
                     allUsers={users}
                     organizations={organizations}
                     crops={crops}
                     forwardedPartnerData={forwardedPartnerData}
-                    activeOrgId={activeOrgId}
+                    activeOrgId={personalOnly?undefined:activeOrgId}
                     currentUser={currentUser}
-                    onAddTask={handleAddTask}
+                    onAddTask={personalOnly?undefined:handleAddTask}
                 />
             );
             case 'marketplace': return <MarketplaceView currentUser={currentUser} listings={listings || []} bids={bids || []} reviews={reviews || []} onSetReviews={setReviews} onSaveListing={handleSaveListing} onAddBid={handleAddBid} mapProps={mapProps} onSetRoute={() => {}} onSetFlyToBounds={setFlyToBounds} />;
@@ -6279,12 +6294,12 @@ const App: React.FC = () => {
                 notes={notes || []}
                 currentUser={currentUser}
             />;
-            case 'my-work': return <MyWorkView data={personalWork} tasks={personalOnly?[]:workAssignments||[]} organization={activeOrg} />;
+            case 'my-work': return <div className="flex-1 overflow-y-auto"><MyWorkView data={personalWork} tasks={personalOnly?[]:workAssignments||[]} organization={activeOrg} onFindWork={personalOnly?()=>{sessionStorage.setItem('agrimap_community_work','1');setAppMode('community');}:undefined} personalTools={personalOnly?<><PersonalProfile user={currentUser} activities={personalWork.activities} reviews={personalWork.reviews} organization={activeOrg} employeeId={personalWork.employee?.id} onSave={savePersonalProfile} onReview={savePersonalReview}/></>:undefined}/></div>;
             case 'community': return (
                 <CommunicationHubPanel 
-                    partnersOnly={personalOnly}
+                    partnersOnly={personalOnly} canManageAnnouncements={canUsePrivilegedTools} activeOrganization={activeOrg}
                     partnerRecipientIds={[currentUser?.id||'',...(!personalOnly&&activeOrgId?[activeOrgId]:[])]}
-                    canUseGoogleTools={canUsePrivilegedTools}
+                    canUseGoogleTools={false}
                     currentUser={currentUser}
                     forumPosts={personalOnly?personalWork.messages:[...new Map([...(forumPosts||[]),...personalWork.messages].map(row=>[row.id,row])).values()]}
                     onAddPost={handleAddPost} 
@@ -6446,7 +6461,7 @@ const App: React.FC = () => {
                 crops={crops}
             />;
             case 'onboarding':
-            case 'design': return <DesignView 
+            case 'design': if(personalOnly)return <DraftPlanner onAddOrg={handleAddOrg} onSwitchOrg={handleSwitchOrg} mapProps={mapProps} user={currentUser} onRegister={()=>setAppMode('profile')}/>; return <DesignView
                 layers={currentOrgLayers} 
                 plantationFeatures={currentOrgFeatures} 
                 activeDrawingTool={activeDrawingTool} 
@@ -6645,9 +6660,9 @@ const App: React.FC = () => {
                         </div>
                     </main>
                 );
-            default: if(personalOnly)return <PersonalDashboard key={`${currentUser!.id}:${activeOrgId}`} user={currentUser} data={personalWork} organization={activeOrg} onNavigate={setAppMode}/>;
+            default:
             return (
-                <Dashboard 
+                <Dashboard personalOnly={personalOnly} personalNotices={personalOnly?<PersonalDashboard noticesOnly user={currentUser} data={personalWork} organization={activeOrg} onNavigate={setAppMode}/>:undefined}
                     {...mapProps}
                     plantationFeatures={currentOrgFeatures} 
                     workAssignments={workAssignments || []} 
@@ -6664,7 +6679,7 @@ const App: React.FC = () => {
                     isMapFullScreen={isMapFullScreen} 
                     onSetIsMapFullScreen={setIsMapFullScreen} 
                     assistantMessages={assistantMessages} 
-                    onSendCommand={(cmd) => handleSendCommand(cmd, personalOnly?{assistantMode:'standard',currentUser,harvestEntries:personalWork.entries,workAssignments:[],inventoryItems:[],employees:[],plantationFeatures:[],notes:[],organizations:[],setAppMode:(mode)=>{if(checkPermission(mode))setAppMode(mode);}}:{ onAddTask: handleAddTask })}
+                    onSendCommand={(cmd) => handleSendCommand(cmd, personalOnly?{assistantMode:'standard',personalOnly:true,activeOrgName:'Personal workspace',ownPayroll:personalWork.payments,ownActivities:personalWork.activities,currentUser,harvestEntries:personalWork.entries,workAssignments:[],inventoryItems:[],employees:[],plantationFeatures:[],notes:[],organizations:[],setAppMode:(mode)=>{if(checkPermission(mode))setAppMode(mode);}}:{ onAddTask: handleAddTask })}
                     isAssistantLoading={isAssistantLoading} 
                     harvestEntries={harvestEntries || []}
                     users={users}
@@ -6673,7 +6688,7 @@ const App: React.FC = () => {
                     memberships={memberships}
                     onAddOrg={handleAddOrg}
                     onSwitchOrg={handleSwitchOrg}
-                    onUpdateUser={handleUpdateUser}
+                    onUpdateUser={personalOnly?updatePersonalGoals:handleUpdateUser}
                     crops={crops}
                     activeOrgId={activeOrgId}
                     onOpenMeet={handleOpenMeetHub}
@@ -6852,7 +6867,7 @@ const App: React.FC = () => {
                             canUseManagementTools={canUsePrivilegedTools}
                             isPlatformAdmin={isSystemAdmin}
                             messages={assistantMessages}
-                            onSendCommand={(cmd) => handleSendCommand(cmd, personalOnly?{assistantMode:'standard',currentUser,harvestEntries:personalWork.entries,workAssignments:[],inventoryItems:[],employees:[],plantationFeatures:[],notes:[],organizations:[],setAppMode:(mode)=>{if(checkPermission(mode))setAppMode(mode);}}:{
+                            onSendCommand={(cmd) => handleSendCommand(cmd, personalOnly?{assistantMode:'standard',personalOnly:true,activeOrgName:'Personal workspace',ownPayroll:personalWork.payments,ownActivities:personalWork.activities,currentUser,harvestEntries:personalWork.entries,workAssignments:[],inventoryItems:[],employees:[],plantationFeatures:[],notes:[],organizations:[],setAppMode:(mode)=>{if(checkPermission(mode))setAppMode(mode);}}:{
                                 onAddTask: handleAddTask,
                                 onAddNote: handleAddNote,
                                 onAddReminder: handleAddReminder,
@@ -6894,7 +6909,7 @@ const App: React.FC = () => {
                             nutritionPlans={personalOnly?[]:nutritionPlans || []}
                             onNavigateToTasks={personalOnly?undefined:()=>setAppMode('tasks')}
                             onAddTask={personalOnly?undefined:handleAddTask}
-                            onAddNutritionPlan={personalOnly?undefined:(plan) => setNutritionPlans(prev => [plan, ...(prev || [])])}
+                            onAddNutritionPlan={personalOnly?undefined:saveClinicalPlan}
                         />
                     </div>
                 </div>

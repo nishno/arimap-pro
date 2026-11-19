@@ -171,9 +171,16 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function managerReviewingJoin(id) {
+      return exists(/databases/$(database)/documents/joinRequests/$(id)) &&
+        get(/databases/$(database)/documents/joinRequests/$(id)).data.status == 'pending' &&
+        isOrgAdmin(get(/databases/$(database)/documents/joinRequests/$(id)).data.organizationId);
+    }
+
     match /memberships/{membershipId} {
       allow read: if isAuthenticated() &&
-        (resource.data.userId == request.auth.uid || isOrgAdmin(resource.data.organizationId));
+        ((resource == null && managerReviewingJoin(membershipId)) ||
+         (resource != null && (resource.data.userId == request.auth.uid || isOrgAdmin(resource.data.organizationId))));
       allow create: if isAuthenticated() &&
         membershipId == request.resource.data.userId + '_' + request.resource.data.organizationId &&
         request.resource.data.role in ['Founder', 'Co-Founder', 'Admin', 'Manager', 'Field Manager', 'Employee', 'worker', 'Agronomist', 'Accountant', 'Guest'] &&
@@ -194,6 +201,25 @@ service cloud.firestore {
       allow create: if isOrgAdmin(request.resource.data.get('organizationId',''));
       allow update: if isOrgAdmin(resource.data.get('organizationId','')) && request.resource.data.get('organizationId','') == resource.data.get('organizationId','');
       allow delete: if isOrgAdmin(resource.data.get('organizationId',''));
+    }
+
+    match /clinicalRecords/{id} {
+      allow read: if isOwner(resource.data.ownerId) || isOrgAdmin(resource.data.get('organizationId',''));
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid && (request.resource.data.get('organizationId','') == '' || isOrgAdmin(request.resource.data.organizationId)) && request.resource.data.sourceCategory in ['AI-generated','Agronomist-created','Combined'];
+      allow update: if (isOwner(resource.data.ownerId) || isOrgAdmin(resource.data.get('organizationId',''))) && request.resource.data.ownerId == resource.data.ownerId && request.resource.data.organizationId == resource.data.organizationId && request.resource.data.sourceCategory in ['AI-generated','Agronomist-created','Combined'];
+      allow delete: if isOwner(resource.data.ownerId) || isOrgAdmin(resource.data.get('organizationId',''));
+    }
+    match /jobAnnouncements/{id} {
+      allow read: if isAuthenticated() && (resource.data.status == 'published' || isOrgAdmin(resource.data.organizationId));
+      allow create: if isOrgAdmin(request.resource.data.organizationId) && request.resource.data.authorId == request.auth.uid && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 160 && request.resource.data.description is string && request.resource.data.description.size() <= 4000;
+      allow update: if isOrgAdmin(resource.data.organizationId) && request.resource.data.organizationId == resource.data.organizationId && request.resource.data.authorId == resource.data.authorId;
+      allow delete: if isOrgAdmin(resource.data.organizationId);
+    }
+    match /joinRequests/{id} {
+      allow read: if isOwner(resource.data.userId) || isOrgAdmin(resource.data.organizationId);
+      allow create: if isAuthenticated() && id == request.auth.uid + '_' + request.resource.data.organizationId && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'pending' && request.resource.data.keys().hasOnly(['userId','userName','organizationId','status','createdAt']);
+      allow update: if (isOrgAdmin(resource.data.organizationId) && request.resource.data.userId == resource.data.userId && request.resource.data.organizationId == resource.data.organizationId) || (isOwner(resource.data.userId) && resource.data.status in ['pending','declined'] && request.resource.data.userId == resource.data.userId && request.resource.data.organizationId == resource.data.organizationId && request.resource.data.status == 'pending' && request.resource.data.keys().hasOnly(['userId','userName','organizationId','status','createdAt']));
+      allow delete: if isOrgAdmin(resource.data.organizationId) || isOwner(resource.data.userId);
     }
 
     match /workerActivities/{id} {
@@ -272,7 +298,7 @@ service cloud.firestore {
 
     // Employee module assignments are authority-bearing: ordinary members cannot edit them.
     match /employees/{id} {
-      allow read: if isOrgAdmin(resource.data.get('organizationId','')) || (isMemberOf(resource.data.get('organizationId','')) && resource.data.get('userId','') == request.auth.uid) || ownEmployee(resource.data.get('organizationId',''),id);
+      allow read: if (resource == null && managerReviewingJoin(id)) || (resource != null && (isOrgAdmin(resource.data.get('organizationId','')) || (isMemberOf(resource.data.get('organizationId','')) && resource.data.get('userId','') == request.auth.uid) || ownEmployee(resource.data.get('organizationId',''),id)));
       allow delete: if isOrgAdmin(resource.data.get('organizationId', ''));
       allow create: if isOrgAdmin(request.resource.data.get('organizationId', ''));
       allow update: if isOrgAdmin(resource.data.get('organizationId', '')) &&

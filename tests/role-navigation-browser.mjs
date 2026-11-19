@@ -32,7 +32,7 @@ try {
  assert.equal(await owner.page.getByTitle('Google Meet Video Call',{exact:true}).count(),1);
  assert.equal(await owner.page.getByTitle('Agronomy PM Intelligence Console',{exact:true}).count(),1);
  await owner.page.getByRole('button',{name:'Communicator',exact:true}).click();
- await owner.page.getByRole('button',{name:'Google Chat',exact:true}).waitFor();
+ assert.equal(await owner.page.getByRole('button',{name:'Google Chat',exact:true}).count(),0);
  // The weather tool can be collapsed without losing typed coordinates.
  console.log('Weather panel');
  await owner.page.getByRole('button',{name:'Labs',exact:true}).click();
@@ -56,7 +56,7 @@ try {
   for(const name of ['Stock','Accounts','Map Planner','Labs','Admin']) assert.equal(await worker.page.getByRole('button',{name,exact:true}).count(),0,name);
   for(const title of ['Google Meet Video Call','Google Chat Workspace Hub','Agronomy PM Intelligence Console']) assert.equal(await worker.page.getByTitle(title,{exact:true}).count(),0,title);
   await worker.page.goto(origin+'/modern/farms/'+store.farm().id+'/accounting');
-  await worker.page.getByRole('heading',{name:'My dashboard',exact:true}).waitFor();
+  await worker.page.getByRole('heading',{name:'Planned work & harvest notifications',exact:true}).waitFor();
   await worker.page.waitForURL(/\/modern\/worker\/dashboard$/);
   await worker.page.getByRole('button',{name:'Communicator',exact:true}).click();
   assert.equal(await worker.page.getByRole('button',{name:'Forum & Hub',exact:true}).count(),0);

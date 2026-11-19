@@ -2,7 +2,7 @@ import {moduleAccess,COLLECTION_MODULES} from './module-access.mjs';
 import { FarmError } from "./farm-store.mjs";
 import { randomUUID } from "node:crypto";
 const collections = new Set(
-  "plantationFeatures layers inventoryItems harvestEvents accounts transactions workAssignments employees machinery projects harvestEntries pallets harvestLogs operationalLogs inventoryTransactions employeeGroups dailyLogs nutritionPlans planExecutions forumPosts listings bids reviews alerts purchaseOrders suppliers notes checkpoints systemLogs partnerProfiles workerActivities crops stockTransactions harvestedProduce cropVarieties roles systemSettings conversations messages agronomicLedger agronomistDiagnoses _connection_test_".split(
+  "plantationFeatures layers inventoryItems harvestEvents accounts transactions workAssignments employees machinery projects harvestEntries pallets harvestLogs operationalLogs inventoryTransactions employeeGroups dailyLogs nutritionPlans planExecutions forumPosts listings bids reviews alerts purchaseOrders suppliers notes checkpoints systemLogs clinicalRecords jobAnnouncements joinRequests partnerProfiles workerActivities crops stockTransactions harvestedProduce cropVarieties roles systemSettings conversations messages agronomicLedger agronomistDiagnoses _connection_test_".split(
     " ",
   ),
 );
@@ -168,7 +168,7 @@ export function documentStore(store) {
         `Collection ${col} is not a local farm collection`,
       );
     if(user.role!=='owner'){
-      if(['reviews','forumPosts','partnerProfiles'].includes(col)) return;
+      if(['clinicalRecords','jobAnnouncements','joinRequests','reviews','forumPosts','partnerProfiles'].includes(col)) return;
       throw new FarmError(403,'Company management access required');
     }
 
@@ -203,6 +203,9 @@ export function documentStore(store) {
           .prepare("SELECT path,body,revision FROM documents WHERE path LIKE ?")
           .all(`${parts[0]}/%`)
           .map((r) => ({ ...JSON.parse(r.body), id: r.path.split("/")[1] }));
+      if(parts[0]==='clinicalRecords')rows=rows.filter(row=>row.ownerId===user.id||user.role==='owner');
+      if(parts[0]==='jobAnnouncements')rows=rows.filter(row=>row.status==='published'||user.role==='owner');
+      if(parts[0]==='joinRequests')rows=rows.filter(row=>row.userId===user.id||user.role==='owner');
       if(parts[0]==='forumPosts')rows=rows.filter(row=>row.isDirectMessage?(row.authorId===user.id||row.recipientId===user.id||user.role==='owner'&&row.recipientId===store.farm().id):user.role==='owner');
       if(parts[0]==='partnerProfiles')rows=rows.filter(row=>row.isDiscoverable===true||row.userId===user.id||user.role==='owner');
       if (parts.length === 2) {
@@ -287,6 +290,7 @@ export function documentStore(store) {
             .prepare("SELECT body FROM documents WHERE path=?")
             .get(operation.path);
           const collectionName=operation.path.split('/')[0];
+          if(['clinicalRecords','jobAnnouncements','joinRequests'].includes(collectionName)){if(collectionName==='jobAnnouncements'&&user.role!=='owner')throw new FarmError(403,'Management access required');if(existing&&user.role!=='owner'&&JSON.parse(existing.body)[collectionName==='clinicalRecords'?'ownerId':'userId']!==user.id)throw new FarmError(403,'You can only change your own records');}
           if(collectionName==='forumPosts'&&existing){const previous=JSON.parse(existing.body);if(previous.isDirectMessage&&previous.authorId!==user.id)throw new FarmError(403,'Only the sender can change a direct message');}
           if(user.role!=='owner'&&collectionName==='partnerProfiles'&&operation.path.split('/')[1]!==user.id)throw new FarmError(403,'Only your own profile can be changed');
           if(user.role!=='owner'&&['reviews','forumPosts','partnerProfiles'].includes(collectionName)&&existing){const previous=JSON.parse(existing.body);if((collectionName==='partnerProfiles'?previous.userId:previous.authorId)!==user.id)throw new FarmError(403,'You can only change your own personal content');}
@@ -316,6 +320,8 @@ export function documentStore(store) {
             throw new FarmError(404, "Document not found");
           let payload = operation.data;
           const kind = operation.path.split("/")[0];
+          if(kind==='clinicalRecords'&&payload.ownerId!==user.id&&user.role!=='owner')throw new FarmError(403,'Invalid archive owner');
+          if(kind==='joinRequests'&&user.role!=='owner'&&(payload.userId!==user.id||payload.status!=='pending'))throw new FarmError(403,'Invalid join request');
           if(user.role!=='owner'){
             if(kind==='forumPosts'&&(payload.authorId!==user.id||payload.isDirectMessage!==true||typeof payload.recipientId!=='string'||!payload.recipientId))throw new FarmError(403,'Only your own direct partner messages are allowed');
             if(kind==='reviews'&&(payload.authorId!==user.id||typeof payload.rating!=='number'||payload.rating<1||payload.rating>5))throw new FarmError(403,'Invalid personal review');
@@ -376,7 +382,7 @@ export function documentStore(store) {
                   "language",
                   "currency",
                   "country",
-                  "preferences", "cv", "servicesOffered", "publicData", "availability", "isProfileDiscoverable",
+                  "primaryGoal", "preferences", "cv", "servicesOffered", "publicData", "availability", "isProfileDiscoverable",
                 ].includes(key),
               ),
             );

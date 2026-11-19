@@ -184,7 +184,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                                     {isKa ? 'AI აგრო დიაგნოსტიკა & კლინიკური კონსოლი' : 'AI Agro Diagnostics & Clinical Console'}
                                 </h2>
                                 <span className="hidden sm:inline-flex text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-700/50 font-bold">
-                                    {isKa ? 'ვერსია v3.8 Flash' : 'v3.8 Flash'}
+                                    Gemini
                                 </span>
                             </div>
                             <p className="text-[10px] sm:text-xs text-slate-300 flex items-center gap-2 truncate">

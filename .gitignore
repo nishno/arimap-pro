@@ -40,3 +40,5 @@ tmp/
 # Never commit Firebase Admin service-account credentials
 *service-account*.json
 *firebase-adminsdk*.json
+
+!.env.server.example

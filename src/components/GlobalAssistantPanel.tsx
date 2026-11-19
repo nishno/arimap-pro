@@ -1,3 +1,4 @@
+import './assistant-layout.css';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { AssistantMessage, Note, User } from '../types';
 import { SparklesIcon, CommandLineIcon, ArrowUpCircleIcon, MicrophoneIcon, XIcon, ChevronDownIcon, ChevronUpIcon, ChatBubbleLeftRightIcon, PaperAirplaneIcon, StopIcon, DocumentTextIcon } from './Icons';
@@ -139,7 +140,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
   currentUser = null,
   onOpenChat,
   onOpenMeet,
-  currentAiMode = 'standard',
+  currentAiMode: configuredAiMode = 'standard',
   onSetAiMode,
   organizations = [],
   workAssignments = [],
@@ -152,6 +153,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
   onAddTask,
   onAddNutritionPlan
 }) => {
+  const currentAiMode=personalOnly?'standard':configuredAiMode;
   const { language } = useLanguage();
   const isKa = language === 'ka';
   const [inputValue, setInputValue] = useState('');
@@ -549,7 +551,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
     }
   };
 
-  if (isCollapsed) {
+  if (isCollapsed && !isAnalysisModalOpen) {
     return (
       <>
         <div 
@@ -642,7 +644,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                 <button
                     onClick={() => setIsCollapsed(false)}
                     className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white shadow-xl shadow-emerald-950/50 flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 cursor-pointer border border-emerald-300/40"
-                    title={isKa ? "Gemini 2.5 Knowledge Engine - AI სისტემის ნავიგატორი & Copilot" : "Gemini 2.5 Knowledge Engine - AI System Navigator & Copilot"}
+                    title={isKa ? "Gemini 2.5 Knowledge Engine - Gemini ასისტენტი" : "Gemini 2.5 Knowledge Engine - Gemini assistant"}
                 >
                     <Sparkles className="w-6 h-6 text-white" />
                 </button>
@@ -684,6 +686,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
       <div 
         ref={commsContainerRef}
         style={{
+          display:isAnalysisModalOpen?'none':undefined,
           position: 'fixed',
           left: commsPos ? `${Math.max(8, Math.min((typeof window !== 'undefined' ? window.innerWidth : 1200) - panelSize.width - 8, commsPos.x))}px` : undefined,
           top: commsPos ? `${Math.max(8, Math.min((typeof window !== 'undefined' ? window.innerHeight : 800) - panelSize.height - 8, commsPos.y))}px` : undefined,
@@ -695,10 +698,10 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
           maxHeight: 'calc(100vh - 24px)',
           zIndex: 8500
         }}
-        className="bg-white flex flex-col rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 origin-bottom-right relative pointer-events-auto transition-[box-shadow,border-color] duration-150"
+        className="assistant-shell bg-white flex flex-col rounded-2xl shadow-2xl border border-slate-200 overflow-hidden relative pointer-events-auto"
       >
         {/* Header */}
-        <div className="p-2.5 sm:p-3 border-b bg-slate-50 flex justify-between items-center select-none shrink-0 gap-2">
+        <div className="assistant-header p-2.5 border-b bg-slate-50 select-none shrink-0">
           <div className="flex items-center gap-2 min-w-0">
               <div 
                 onPointerDown={handleCommsPointerDown}
@@ -712,7 +715,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
               <SparklesIcon className="h-5 w-5 text-emerald-500 shrink-0" />
               <div className="min-w-0">
                 <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight truncate">
-                  {isKa ? 'AI სისტემის ნავიგატორი & Copilot' : 'AI System Navigator & Copilot'}
+                  {isKa ? 'Gemini ასისტენტი' : 'Gemini assistant'}
                 </h3>
                 <div className="flex items-center gap-1 flex-wrap mt-0.5">
                   <span className="text-[9px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded tracking-wide border border-emerald-300">
@@ -834,7 +837,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
               >
                 {isKa ? 'სტანდარტული' : 'Standard'}
               </button>
-              <button
+              {!personalOnly&&(<button
                 type="button"
                 onClick={() => onSetAiMode?.('expert')}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
@@ -846,7 +849,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
               >
                 <Leaf size={10} />
                 <span>Expert PM</span>
-              </button>
+              </button>)}
               {isSystemAdmin && (
                 <button
                   type="button"
@@ -894,7 +897,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
           <div className="px-3 py-1.5 bg-emerald-950/95 border-b border-emerald-800/80 text-[10px] text-emerald-200 flex items-center justify-between shrink-0">
             <span className="flex items-center gap-1.5 truncate">
               <Leaf size={12} className="text-emerald-400 shrink-0" />
-              <span><strong className="font-bold text-white">Attached Company Radius:</strong> {activeOrgName || activeOrgId || 'Active Enterprise'}</span>
+              <span><strong className="font-bold text-white">Attached Company Radius:</strong> {personalOnly?(isKa?'პირადი სამუშაო სივრცე':'Personal workspace'):activeOrgName || activeOrgId || 'Active Enterprise'}</span>
             </span>
             <span className="text-[9px] bg-emerald-800/90 px-1.5 py-0.5 rounded text-emerald-100 uppercase tracking-wider font-mono shrink-0 ml-1 border border-emerald-600/40">
               Attached Scope
@@ -905,10 +908,10 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
           <div className="px-3 py-1.5 bg-slate-900 border-b border-slate-800 text-[10px] text-slate-300 flex items-center justify-between shrink-0">
             <span className="flex items-center gap-1.5 truncate">
               <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
-              <span><strong className="font-bold text-slate-300">Attached Company Radius:</strong> <span className="text-emerald-300 font-bold">{activeOrgName || activeOrgId || 'Active Enterprise'}</span></span>
+              <span><strong className="font-bold text-slate-300">Attached Company Radius:</strong> <span className="text-emerald-300 font-bold">{personalOnly?(isKa?'პირადი სამუშაო სივრცე':'Personal workspace'):activeOrgName || activeOrgId || 'Active Enterprise'}</span></span>
             </span>
             <span className="text-[9px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300 uppercase tracking-wider font-mono shrink-0 ml-1 border border-slate-700">
-              Copilot Radius
+              Company scope
             </span>
           </div>
         )}
@@ -924,8 +927,11 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
           </div>
         )}
 
+        <details className="assistant-suggestions"><summary>{isKa?'შემოთავაზებები':'Suggestions'}</summary>
         {/* Quick Suggestion Chips */}
-        <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[10px] shrink-0">
+        <div className="assistant-suggestion-list">
+          {personalOnly?<>{[isKa?'როგორ ვნახო ჩემი ნამუშევარი და გადახდები?':'How do I view my work and payments?',isKa?'როგორ მოვძებნო კომპანია ან სამუშაო?':'How do I find a company or work?',isKa?'როგორ შევავსო ჩემი CV და მომსახურებები?':'How do I manage my CV and services?'].map(prompt=><button key={prompt} className="border rounded p-2 bg-white" onClick={()=>onSendCommand(prompt)}>{prompt}</button>)}</>:<>
+
           <button
             type="button"
             onClick={() => onSendCommand("Explain the whole application architecture, GIS cadastral workflow, and 16-step SOP directives for our attached company.")}
@@ -983,8 +989,10 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
           >
             <Sparkles size={10} className="text-amber-600" /> Console
           </button>)}
+          </>}
         </div>
         
+        </details>
         {isSettingsOpen && (
             <div className="absolute inset-0 bg-white z-20 p-5 flex flex-col overflow-y-auto">
                  <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
@@ -1005,126 +1013,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                      </button>
                  </div>
                  
-                 <div className="space-y-4 text-xs">
-                     {/* Active Status Card */}
-                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                         <div className="flex items-center justify-between">
-                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Current Status</span>
-                             {getActiveGeminiApiKey() ? (
-                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                     <ShieldCheck className="w-3 h-3" /> Key Detected
-                                 </span>
-                             ) : (
-                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                                     <AlertTriangle className="w-3 h-3" /> No Key
-                                 </span>
-                             )}
-                         </div>
-                         <div className="text-[11px] text-slate-600 flex items-center justify-between">
-                             <span>Model Tier:</span>
-                             <span className="font-mono text-slate-800 font-medium">gemini-3.8-flash (auto-fallback)</span>
-                         </div>
-                     </div>
-
-                     {/* API Key Input */}
-                     <div className="space-y-1.5">
-                         <div className="flex items-center justify-between">
-                             <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-                                 Gemini API Key
-                             </label>
-                             <a 
-                                 href="https://aistudio.google.com/apikey" 
-                                 target="_blank" 
-                                 rel="noopener noreferrer"
-                                 className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1"
-                             >
-                                 Get Free Key <ExternalLink className="w-2.5 h-2.5" />
-                             </a>
-                         </div>
-                         <input 
-                             type="password"
-                             value={apiKeyInput}
-                             onChange={(e) => setApiKeyInput(e.target.value)}
-                             className="w-full p-2.5 text-xs font-mono border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50"
-                             placeholder="AIzaSy..."
-                         />
-                         <p className="text-[10px] text-slate-400 leading-relaxed">
-                             Stored securely in your local browser storage. Allows AI assistance even on custom domains or offline testing servers.
-                         </p>
-                     </div>
-
-                     {/* Test Result Message */}
-                     {testStatus && (
-                         <div className={`p-3 rounded-xl border text-xs leading-relaxed ${
-                             testStatus.ok 
-                                 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                                 : 'bg-red-50 border-red-200 text-red-800'
-                         }`}>
-                             <div className="flex items-start gap-2">
-                                 {testStatus.ok ? (
-                                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                                 ) : (
-                                     <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                                 )}
-                                 <div>
-                                     <div className="font-bold">{testStatus.ok ? 'Connection Successful' : 'Connection Failed'}</div>
-                                     <div className="mt-0.5 text-[11px] whitespace-pre-wrap">{testStatus.message}</div>
-                                     {testStatus.latencyMs && (
-                                         <div className="mt-1 text-[10px] text-emerald-700 font-mono">
-                                             Model: {testStatus.model} | Latency: {testStatus.latencyMs}ms
-                                         </div>
-                                     )}
-                                 </div>
-                             </div>
-                         </div>
-                     )}
-
-                     {/* Save Status Alert */}
-                     {saveStatus && (
-                         <div className={`p-2.5 rounded-xl border text-xs ${
-                             saveStatus.type === 'success' 
-                                 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                                 : 'bg-blue-50 border-blue-200 text-blue-800'
-                         }`}>
-                             {saveStatus.message}
-                         </div>
-                     )}
-
-                     {/* Action Buttons */}
-                     <div className="grid grid-cols-2 gap-2 pt-1">
-                         <button 
-                             onClick={handleTestConnection}
-                             disabled={isTestingKey}
-                             className="py-2.5 px-3 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition disabled:opacity-50"
-                         >
-                             <RefreshCw className={`w-3.5 h-3.5 ${isTestingKey ? 'animate-spin text-emerald-600' : ''}`} />
-                             {isTestingKey ? 'Testing...' : 'Test Connection'}
-                         </button>
-                         <button 
-                             onClick={handleSaveApiKey}
-                             className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm"
-                         >
-                             <Key className="w-3.5 h-3.5" />
-                             Save Key
-                         </button>
-                     </div>
-
-                     {/* Clear Key Option */}
-                     {apiKeyInput && (
-                         <button 
-                             onClick={handleClearApiKey}
-                             className="w-full py-1.5 text-center text-[11px] text-slate-400 hover:text-red-600 transition flex items-center justify-center gap-1"
-                         >
-                             <Trash2 className="w-3 h-3" /> Remove Browser Key & Reset
-                         </button>
-                     )}
-
-                     {/* Server Deployment Note */}
-                     <div className="mt-3 pt-3 border-t border-slate-100 text-[10px] text-slate-400 leading-relaxed space-y-1">
-                         <div className="font-semibold text-slate-600">Production / Local Server Tip:</div>
-                         <div>Add <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700">GEMINI_API_KEY=your_key</code> to your server <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700">.env</code> so you do not have to enter it in each browser.</div>
-                     </div>
-                 </div>
+                 <div className="space-y-4 text-sm"><p>{isKa?'Gemini მუშაობს ავტორიზებული სერვერის მეშვეობით. გასაღები ბრაუზერში არ ინახება.':'Gemini uses an authenticated server. API keys are not stored in this browser.'}</p><p>{isKa?'კავშირის მდგომარეობა შეამოწმეთ ქვემოთ.':'Check the actual connection below.'}</p><button className="border rounded-lg p-3" disabled={isTestingKey} onClick={handleTestConnection}>{isTestingKey?'Testing…':'Test Gemini connection'}</button>{testStatus&&<p role="status">{testStatus.message}</p>}<button className="border rounded-lg p-3" onClick={()=>setIsSettingsOpen(false)}>{isKa?'დახურვა':'Close settings'}</button></div>
             </div>
         )}
 
@@ -1200,7 +1089,7 @@ const GlobalAssistantPanel: React.FC<GlobalAssistantPanelProps> = ({
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder={isKa ? "ჰკითხეთ AI-ს ან მოიძიეთ კლინიკური დიაგნოსტიკა..." : "Ask Gemini 2.5 AI Navigator & Copilot..."}
+                placeholder={isKa ? "ჰკითხეთ AI-ს ან მოიძიეთ კლინიკური დიაგნოსტიკა..." : "Ask Gemini…"}
                 className="flex-grow p-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:outline-none bg-white transition-all"
                 disabled={isListening}
               />

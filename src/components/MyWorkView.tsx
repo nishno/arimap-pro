@@ -2,13 +2,15 @@ import {personalTasks} from '../worker/activities';
 import React from 'react';
 import {useLanguage} from '../contexts/LanguageContext';
 import {summarizeWorker} from '../worker/summary';
-export default function MyWorkView({data,tasks=[],organization}:{data:any;tasks?:any[];organization?:any}){
+export default function MyWorkView({data,tasks=[],organization,personalTools,onFindWork}:{onFindWork?:()=>void;data:any;tasks?:any[];organization?:any;personalTools?:React.ReactNode}){
  const {language}=useLanguage(),ka=language==='ka';const t=(ge:string,en:string)=>ka?ge:en;
  const summary=summarizeWorker(data.employee?.id||'',data.entries,data.payments,personalTasks(data.employee?.id||'',tasks.filter(task=>task.organizationId===organization?.id),data.activities||[]),organization?.currency,data.activities||[]);
  const payrollReady=data.loaded.paymentCredits&&data.loaded.paymentDebits&&!data.errors.transactions;
  return <section className="p-4 md:p-8 max-w-5xl mx-auto w-full space-y-5">
   <h1 className="text-2xl font-semibold">{t('ჩემი სამუშაო და ანაზღაურება','My work & earnings')}</h1>
   <p>{organization?.name}</p>
+  {onFindWork&&<button className="border rounded-xl p-3 bg-white" onClick={onFindWork}>{t('პარტნიორისა და სამუშაოს მოძიება','Find partner & work')}</button>}
+  {personalTools&&<details className="border rounded-xl p-4 bg-white"><summary className="cursor-pointer font-semibold">{t('ჩემი CV, მომსახურებები და შეფასებები','My CV, services & reviews')}</summary>{personalTools}</details>}
   {Object.entries(data.errors).filter(([key])=>!['paymentCredits','paymentDebits'].includes(key)).map(([key,value])=><p role="alert" key={key}>{!ka?String(value):key==='transactions'?'გადახდების ჩანაწერები მიუწვდომელია. ადმინისტრატორმა უნდა შეამოწმოს წვდომის წესები.':key==='harvestEntries'?'კრეფის ჩანაწერები მიუწვდომელია.':String(value).includes('Multiple')?'ანგარიში რამდენიმე თანამშრომელს უკავშირდება. დამსაქმებელმა კავშირი უნდა გადაამოწმოს.':'თანამშრომლის კავშირის წაკითხვა ვერ მოხერხდა. მიმართეთ კომპანიის ადმინისტრატორს.'}</p>)}
   {data.loading?<p role="status">{t('თანამშრომლის ანგარიშის შემოწმება…','Checking your employee link…')}</p>:!data.employee?<p role="status">{t('ამ კომპანიაში თქვენი ანგარიში თანამშრომლის ჩანაწერს ჯერ არ უკავშირდება. სთხოვეთ დამსაქმებელს HR ჩანაწერში აირჩიოს თქვენი ანგარიში და შეინახოს მოდულების უფლებები.','Your login is not linked to an employee record in this company. Ask your employer to select your account in the HR record and save its module access.')}</p>:<>
    <p>{data.employee.name}</p>

@@ -35,3 +35,7 @@ Active membership allowlists now replace default worker navigation. HR grants pe
 ## 2026-11-18 — personal workspace and management-only operations
 
 Ordinary accounts now use personal dashboard notices, own earnings, editable CV/services/reviews, personal AI tools and Find Partner/direct messages. Removed Market and company operational navigation for these accounts regardless of historical grants. Added scoped read-only workerActivities projections, an opt-in public partner directory, manager-triggered assignment backfill, LAN API restrictions and matching tested Firestore rules. Cloud rules still require deployment to the configured target; see USER_ACCESS.md.
+
+## 2026-11-19 — restore familiar screens and organize clinical workflows
+
+Restored the original Dashboard and AI Analyst layouts with role-specific widget/tool filtering. Moved personal CV/services/reviews into My work & earnings, retained profile onboarding and added durable join requests. Added company map checkpoints, region filters, company details and job announcements; removed duplicate Google tabs from Communicator. Fixed assistant controls and diagnostic popup overlap. Replaced canned chat fallbacks with explicit Gemini errors and added an authenticated server gateway. Reorganized prescription planning and a categorized, dated, persisted archive. Full rollout/configuration notes: root UPDATE_HISTORY.md.

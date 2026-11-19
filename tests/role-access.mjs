@@ -61,3 +61,10 @@ test('a canonical revoked membership cannot be revived by a stale legacy members
   assert.equal(checkModuleAccess(user,'stock',org,snapshot),'none');
  }
 });
+
+test('new registered users may preview the planner without gaining company writes',()=>{
+ assert.equal(checkModuleAccess(user,'design',undefined,[]),'full');
+ assert.equal(checkModuleAccess(user,'design',org,[membership]),'none');
+ assert.equal(checkModuleAccess(user,'stock',undefined,[]),'none');
+ for(const module of ['profile','dashboard','ai','community'])assert.equal(checkModuleAccess(user,module,undefined,[]),'full');
+});

@@ -54,6 +54,8 @@ import { toast } from 'sonner';
 export type DashboardMapPosition = 'top' | 'with_profile' | 'upper' | 'bottom' | 'floating';
 
 interface DashboardProps extends Omit<MapComponentProps, 'onUpdateFeature' | 'activeDrawingTool' | 'onFeatureDrawn'> {
+  personalOnly?: boolean;
+  personalNotices?: React.ReactNode;
   currentUser?: User | null;
   onNavigateMode?: (mode: string) => void;
   onOpenProfile?: () => void;
@@ -729,8 +731,8 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
               layout.push(dw);
           }
       });
-      return layout.filter(w => w.isVisible !== false).sort((a, b) => a.order - b.order);
-  }, [dashboardLayout]);
+      return layout.filter(w => w.isVisible !== false && (!props.personalOnly||['daily_news','guest_stats'].includes(w.type)||w.type==='choose_goal'&&!(props.memberships||[]).some(member=>member.userId===props.currentUser?.id&&member.status==='active'))).sort((a, b) => a.order - b.order);
+  }, [dashboardLayout,props.personalOnly,props.memberships,props.currentUser?.id]);
 
   // Drag-and-drop state for dashboard widgets
   const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null);
@@ -1146,34 +1148,34 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
                       <button
                         type="button"
                         onClick={() => { handleSetMapPosition('top'); setIsDashboardMapToolsOpen(false); }}
-                        className={`px-2 py-1.5 rounded-lg font-bold text-left transition-colors cursor-pointer flex items-center justify-between ${mapPosition === 'top' ? 'bg-emerald-600 text-white' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}`}
+                        className={`px-2 py-1.5 rounded-lg font-bold text-left transition-colors cursor-pointer flex items-center justify-between ${!props.personalOnly && mapPosition === 'top' ? 'bg-emerald-600 text-white' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}`}
                       >
                         <span>{isKa ? '1. თავში' : '1. Top'}</span>
-                        {mapPosition === 'top' && <Check size={11} />}
+                        {!props.personalOnly && mapPosition === 'top' && <Check size={11} />}
                       </button>
                       <button
                         type="button"
                         onClick={() => { handleSetMapPosition('with_profile'); setIsDashboardMapToolsOpen(false); }}
-                        className={`px-2 py-1.5 rounded-lg font-bold text-left transition-colors cursor-pointer flex items-center justify-between ${mapPosition === 'with_profile' ? 'bg-emerald-600 text-white' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}`}
+                        className={`px-2 py-1.5 rounded-lg font-bold text-left transition-colors cursor-pointer flex items-center justify-between ${!props.personalOnly && mapPosition === 'with_profile' ? 'bg-emerald-600 text-white' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}`}
                       >
                         <span>{isKa ? '2. პროფილით' : '2. Profile'}</span>
-                        {mapPosition === 'with_profile' && <Check size={11} />}
+                        {!props.personalOnly && mapPosition === 'with_profile' && <Check size={11} />}
                       </button>
                       <button
                         type="button"
                         onClick={() => { handleSetMapPosition('upper'); setIsDashboardMapToolsOpen(false); }}
-                        className={`px-2 py-1.5 rounded-lg font-bold text-left transition-colors cursor-pointer flex items-center justify-between ${mapPosition === 'upper' ? 'bg-emerald-600 text-white' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}`}
+                        className={`px-2 py-1.5 rounded-lg font-bold text-left transition-colors cursor-pointer flex items-center justify-between ${!props.personalOnly && mapPosition === 'upper' ? 'bg-emerald-600 text-white' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}`}
                       >
                         <span>{isKa ? '3. ზემოთ' : '3. Upper'}</span>
-                        {mapPosition === 'upper' && <Check size={11} />}
+                        {!props.personalOnly && mapPosition === 'upper' && <Check size={11} />}
                       </button>
                       <button
                         type="button"
                         onClick={() => { handleSetMapPosition('bottom'); setIsDashboardMapToolsOpen(false); }}
-                        className={`px-2 py-1.5 rounded-lg font-bold text-left transition-colors cursor-pointer flex items-center justify-between ${mapPosition === 'bottom' ? 'bg-emerald-600 text-white' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}`}
+                        className={`px-2 py-1.5 rounded-lg font-bold text-left transition-colors cursor-pointer flex items-center justify-between ${!props.personalOnly && mapPosition === 'bottom' ? 'bg-emerald-600 text-white' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}`}
                       >
                         <span>{isKa ? '4. ქვემოთ' : '4. Bottom'}</span>
-                        {mapPosition === 'bottom' && <Check size={11} />}
+                        {!props.personalOnly && mapPosition === 'bottom' && <Check size={11} />}
                       </button>
                     </div>
                   </div>
@@ -1217,20 +1219,20 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
                         <h2 className="text-2xl md:text-4xl font-black tracking-tighter uppercase" style={{textShadow: '0 4px 12px rgba(0,0,0,0.5)'}}>{t('dash.title')}</h2>
                         <p className="mt-2 text-sm md:text-lg text-white/90 font-medium max-w-lg" style={{textShadow: '0 2px 6px rgba(0,0,0,0.5)'}}>{t('dash.subtitle')}</p>
                     </div>
-                    <button onClick={() => setIsManageModalOpen(true)} className="absolute bottom-6 right-6 bg-white/20 hover:bg-white/40 backdrop-blur-xl border border-white/30 text-white px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl cursor-pointer">
+                    {!props.personalOnly&&<button onClick={() => setIsManageModalOpen(true)} className="absolute bottom-6 right-6 bg-white/20 hover:bg-white/40 backdrop-blur-xl border border-white/30 text-white px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl cursor-pointer">
                         <WrenchScrewdriverIcon className="h-4 w-4 mr-2 inline-block" /> {t('dash.layout.btn')}
-                    </button>
+                    </button>}
                 </div>
             </div>
 
             {/* TOP POSITION MAP */}
-            {mapPosition === 'top' && renderMapSection()}
+            {!props.personalOnly && mapPosition === 'top' && renderMapSection()}
 
             {/* WITH PROFILE POSITION MAP (UPPER WITH PROFILE TOOL WIDGET!) */}
-            {mapPosition === 'with_profile' && renderMapSection()}
+            {!props.personalOnly && mapPosition === 'with_profile' && renderMapSection()}
 
             {/* Profile Management, Next-Step Guidance & System Operation Hub */}
-            <DashboardProfileManager
+            {!props.personalOnly&&<DashboardProfileManager
                 currentUser={props.currentUser}
                 activeOrgId={props.activeOrgId}
                 plantationFeatures={props.plantationFeatures}
@@ -1256,20 +1258,21 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
                     else if (props.onNavigateMode) props.onNavigateMode('guide');
                     else window.dispatchEvent(new CustomEvent('agrimap_set_mode', { detail: 'guide' }));
                 }}
-            />
+            />}
 
             {/* AI Autonomous Stream & Anomaly Engine Panel */}
-            <DashboardAiStream
+            {!props.personalOnly&&<DashboardAiStream
                 anomalies={anomalies}
                 latestReport={latestReport}
                 config={aiConfig}
                 onOpenAiHub={handleOpenAiHub}
                 onRefreshAnalysis={handleRefreshAnalysis}
                 isLoading={isAiLoading}
-            />
+            />}
 
+            {props.personalNotices}
             {/* UPPER POSITION MAP (MOVED UPPER ABOVE WIDGETS!) */}
-            {mapPosition === 'upper' && renderMapSection()}
+            {!props.personalOnly && mapPosition === 'upper' && renderMapSection()}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {sortedWidgets.map(widget => (
@@ -1293,15 +1296,15 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
             </div>
 
             {/* BOTTOM POSITION MAP */}
-            {mapPosition === 'bottom' && renderMapSection()}
+            {!props.personalOnly && mapPosition === 'bottom' && renderMapSection()}
             </>
           )}
         </div>
         
         {/* Detached Movable Floating Map Window */}
-        {mapPosition === 'floating' && !isMapFullScreen && (
+        {!props.personalOnly && mapPosition === 'floating' && !isMapFullScreen && (
           <FloatingWidgetWindow
-            isOpen={mapPosition === 'floating'}
+            isOpen={!props.personalOnly && mapPosition === 'floating'}
             onClose={() => handleSetMapPosition('with_profile')}
             title={isKa ? "რუკის სამუშაო სივრცე (მოძრავი)" : "Live Map Workspace (Floating)"}
             icon={<Compass className="w-4 h-4 text-emerald-600" />}

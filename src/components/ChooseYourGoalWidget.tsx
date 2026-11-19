@@ -1,3 +1,5 @@
+import {db,doc,setDoc} from '../firebase';
+import {isLocalRuntime} from '../local/runtime';
 import React, { useState, useMemo } from 'react';
 import type { User, Organization, Membership, UserGoal } from '../types';
 import { 
@@ -15,7 +17,7 @@ export interface ChooseYourGoalWidgetProps {
     organizations?: Organization[];
     discoverableOrganizations?: Organization[];
     memberships?: Membership[];
-    onUpdateUser?: (user: User) => void;
+    onUpdateUser?: (user: User) => void | Promise<void>;
     onAddOrg?: (org: Organization, mem: Membership, selectedCrops?: any[]) => void;
     onSwitchOrg?: (orgId: string) => void;
     onNavigateMode?: (mode: string) => void;
@@ -47,32 +49,29 @@ export const ChooseYourGoalWidget: React.FC<ChooseYourGoalWidgetProps> = ({
     const defaultServices = ['Field Worker', 'Tractor Operator', 'Agronomist', 'Pruning Specialist', 'General Labor'];
     const userServices = currentUser?.servicesOffered || [];
 
-    const toggleQuickService = (service: string) => {
+    const toggleQuickService = async (service: string) => {
         if (!currentUser || !onUpdateUser) return;
         const currentList = currentUser.servicesOffered || [];
         const updated = currentList.includes(service)
             ? currentList.filter(s => s !== service)
             : [...currentList, service];
         
-        onUpdateUser({
+        try{await onUpdateUser({
             ...currentUser,
             primaryGoal: 'OFFER_SERVICE',
             servicesOffered: updated,
-            roles: (currentUser.roles || []).includes('Independent') 
-                ? currentUser.roles 
-                : [...(currentUser.roles || []), 'Independent']
         });
-        toast.success(`Updated services: ${service}`);
+        toast.success(`Updated services: ${service}`);}catch{toast.error('Services could not be saved.');}
     };
 
-    const handleSelectGoal = (goal: UserGoal) => {
+    const handleSelectGoal = async (goal: UserGoal) => {
         setActiveGoalTab(goal);
         if (currentUser && onUpdateUser && currentUser.primaryGoal !== goal) {
-            onUpdateUser({
+            try{await onUpdateUser({
                 ...currentUser,
                 primaryGoal: goal
             });
-            toast.success(`Primary goal updated to ${goal.replace('_', ' ')}`);
+            toast.success(`Primary goal updated to ${goal.replace('_', ' ')}`);}catch{toast.error('Profile choice could not be saved.');}
         }
     };
 
@@ -93,8 +92,10 @@ export const ChooseYourGoalWidget: React.FC<ChooseYourGoalWidgetProps> = ({
         ).slice(0, 4);
     }, [discoverableOrganizations, orgSearchQuery]);
 
-    const handleSendJoinRequest = (org: Organization) => {
-        toast.success(`Join request sent to ${org.name}! The company founder will review your request.`);
+    const handleSendJoinRequest = async (org: Organization) => {
+        if(!currentUser)return;
+        if(isLocalRuntime){toast.info('Ask the local farm owner to link your account to an employee record.');return;}
+        try{await setDoc(doc(db,'joinRequests',`${currentUser.id}_${org.id}`),{userId:currentUser.id,userName:currentUser.name,organizationId:org.id,status:'pending',createdAt:new Date().toISOString()});toast.success(`Join request sent to ${org.name}.`);}catch{toast.error('Join request could not be saved. Please check access rules.');}
     };
 
     return (

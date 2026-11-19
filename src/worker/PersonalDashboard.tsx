@@ -1,14 +1,13 @@
 import React,{useState} from 'react';
 import {useLanguage} from '../contexts/LanguageContext';
 import {completedActivity} from './activities';
-export function PersonalDashboard({user,data,organization,onNavigate}:{user:any;data:any;organization:any;onNavigate:(mode:any)=>void}){
+export function PersonalDashboard({user,data,organization,onNavigate,noticesOnly=false}:{noticesOnly?:boolean;user:any;data:any;organization:any;onNavigate:(mode:any)=>void}){
  const {language}=useLanguage(),ka=language==='ka',t=(ge:string,en:string)=>ka?ge:en;
  const scope=`personal-notices:${user.id}:${organization?.id||'personal'}`;
  const [read,setRead]=useState<Record<string,string>>(()=>{try{return JSON.parse(localStorage.getItem(scope)||'{}');}catch{return {};}});
  const items=(data.activities||[]).filter((a:any)=>!['withdrawn','cancelled','deleted'].includes(a.status.toLowerCase())&&!completedActivity(a)).sort((a:any,b:any)=>a.scheduledAt.localeCompare(b.scheduledAt));
  function mark(item:any){const next={...read,[item.id]:item.contentHash};setRead(next);try{localStorage.setItem(scope,JSON.stringify(next));}catch{}}
- return <section className="p-4 md:p-8 max-w-5xl w-full mx-auto space-y-6"><h1 className="text-2xl font-semibold">{t('ჩემი მართვის პანელი','My dashboard')}</h1><p>{user.name} · {organization?.name}</p>
- <div className="grid gap-3 sm:grid-cols-2">{[['my-work',t('ჩემი სამუშაო და ანაზღაურება','My work & earnings')],['profile',t('ჩემი CV, მომსახურებები და შეფასებები','My CV, services & reviews')],['ai',t('AI ხელსაწყოები','AI tools')],['community',t('პარტნიორის მოძიება','Find partner')]].map(([mode,label])=><button key={mode} className="border rounded-xl bg-white text-slate-800 text-left p-5 min-h-16" onClick={()=>onNavigate(mode)}>{label}</button>)}</div>
+ return <section className="p-4 md:p-8 max-w-5xl w-full mx-auto space-y-6">{!noticesOnly&&<h1 className="text-2xl font-semibold">{t('ჩემი მართვის პანელი','My dashboard')}</h1>}
  <h2 className="text-xl font-semibold">{t('დაგეგმილი სამუშაოებისა და კრეფის შეტყობინებები','Planned work & harvest notifications')}</h2>
  {!data.employee&&<p>{t('დამსაქმებელმა თქვენი ანგარიში თანამშრომლის ჩანაწერს უნდა დაუკავშიროს.','Your employer needs to link your account to your employee record.')}</p>}
  {data.errors.activities&&<p role="alert">{t('დავალებები ჯერ ვერ ჩაიტვირთა. მიმართეთ მენეჯერს.','Assignments could not be loaded. Please contact your manager.')}</p>}

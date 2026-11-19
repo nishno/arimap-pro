@@ -138,7 +138,7 @@ const generateAutonomousAssistantResponse = (
             return {
                 text: `🔒 **Tenant Radius & Scope Boundary Notice**
 
-I am currently operating as the **AI System Navigator & Copilot** strictly within the operational radius of your attached company: **"${orgName}"**.
+I am currently operating as the **Gemini assistant** strictly within the operational radius of your attached company: **"${orgName}"**.
 
 - **Scope Perimeter**: Attached Company Only (**${orgName}**)
 - **Data Protection**: Multi-tenant isolation is strictly enforced. In this mode, I cannot disclose, compare, or analyze data from other registered companies.
@@ -378,7 +378,7 @@ Download full slide presentations in **PDF**, **PowerPoint PPTX**, or **Interact
     const notesCount = (context?.notes || []).length;
 
     return {
-        text: `🌾 **Gemini 2.5 Knowledge Engine — AI System Navigator & Copilot**
+        text: `🌾 **Gemini 2.5 Knowledge Engine — Gemini assistant**
 
 Connected to attached company: **${orgName}** (Operating within company data radius).
 
@@ -404,7 +404,7 @@ export const useAiAssistant = (language: string) => {
         { 
             id: '1', 
             type: 'bot', 
-            text: 'Hello! I am your Gemini 2.5 Knowledge Engine AI System Navigator & Copilot. I can guide you through the entire application, GIS cadastral mapping, active standing register (vehicles & materials), 6 electronic scale protocols, inventory FIFO, piece-rate tariffs, and agronomic management for your attached enterprise. How can I assist you today?', 
+            text: 'Hello! I am your Gemini 2.5 Knowledge Engine Gemini assistant. I can guide you through the entire application, GIS cadastral mapping, active standing register (vehicles & materials), 6 electronic scale protocols, inventory FIFO, piece-rate tariffs, and agronomic management for your attached enterprise. How can I assist you today?',
             timestamp: new Date().toISOString() 
         }
     ]);
@@ -428,7 +428,7 @@ export const useAiAssistant = (language: string) => {
         } else if (mode === 'god_ai') {
             introText = '👑 Switched to Root AI Assistant (Omniscient God AI). Multi-company oversight active across all registered enterprises for Super Admins. Synthesizing cross-enterprise benchmarks and macro heuristics.';
         } else {
-            introText = '🤖 Switched to AI System Navigator & Copilot (Standard Mode). Operating within attached company radius. Ready to assist with technical protocols, SOPs, tasks, and field operations.';
+            introText = '🤖 Switched to Gemini assistant (Standard Mode). Operating within attached company radius. Ready to assist with technical protocols, SOPs, tasks, and field operations.';
         }
         
         setAssistantMessages(prev => [
@@ -511,7 +511,7 @@ export const useAiAssistant = (language: string) => {
                 Learned Agronomic Heuristics: ${JSON.stringify(topHeuristics)}
                 `;
 
-                modeRolePrompt = `You are the GEMINI 2.5 KNOWLEDGE ENGINE — AI SYSTEM NAVIGATOR & COPILOT operating in COMPANY EXPERT MODE attached to "${context?.activeOrgName || 'the assigned enterprise'}". 
+                modeRolePrompt = `You are the GEMINI 2.5 KNOWLEDGE ENGINE — GEMINI ASSISTANT operating in COMPANY EXPERT MODE attached to "${context?.activeOrgName || 'the assigned enterprise'}".
                 You have an extensive background in orchard & berry agronomy (blueberries, hazelnuts, vineyards), precision GIS mapping, drip irrigation hydraulics, crop protection schedules (Bt bio-pesticides, copper fungicides, pruning windows), and project delivery.
                 TENANT RADIUS RESTRICTION: You operate strictly within the operational perimeter and data radius of the attached enterprise ("${context?.activeOrgName || 'Attached Enterprise'}"). If the user inquires about other companies, competitors, or cross-enterprise datasets, explain that cross-company analysis is strictly restricted to the Root AI Assistant (Super Admin).
                 Directly monitor work designs, task velocity, labor allocations, delays, and harvest synchronization. Provide clear, mathematically sound, actionable advice.`;
@@ -544,11 +544,11 @@ export const useAiAssistant = (language: string) => {
                     You possess authorized Root / Super Admin oversight across ALL registered companies in the system. 
                     You analyze cross-enterprise benchmarks, multi-company yield averages, systemic bottlenecks across multiple farms, cross-enterprise labor efficiency percentiles, and regional pathogen curves. Provide high-level, authoritative strategic counsel across all companies.`;
                 } else {
-                    modeRolePrompt = `You are the GEMINI 2.5 KNOWLEDGE ENGINE — AI SYSTEM NAVIGATOR & COPILOT. 
+                    modeRolePrompt = `You are the GEMINI 2.5 KNOWLEDGE ENGINE — GEMINI ASSISTANT.
                     NOTICE: You are attached to company "${context?.activeOrgName || 'Current Enterprise'}". Cross-company multi-tenant analysis is restricted exclusively to the Root AI Assistant for authorized Super Admins. Politely guide the user within the operational radius of their attached company.`;
                 }
             } else {
-                modeRolePrompt = `You are the GEMINI 2.5 KNOWLEDGE ENGINE — AI SYSTEM NAVIGATOR & COPILOT. 
+                modeRolePrompt = `You are the GEMINI 2.5 KNOWLEDGE ENGINE — GEMINI ASSISTANT.
                 You operate strictly within the operational radius of the attached company: "${context?.activeOrgName || 'Current Enterprise'}". 
                 You provide deep technical guidance on all application modules (KYC, GIS Map & Cadastre, Active Standing Register with Vehicles and Materials, 6 Electronic Scale Protocols, Warehouse FIFO, HR piece-rate tariffs, and agronomy). If the user asks about other companies, inform them that cross-company analysis is restricted strictly to the Root AI Assistant (Super Admin).`;
             }
@@ -560,38 +560,23 @@ export const useAiAssistant = (language: string) => {
             - Global Field & Voice Notes Index (${notesList.length} notes total): ${JSON.stringify(notesList)}
             - Harvest Entries: ${JSON.stringify(context.harvestEntries || [])}
             - Current Work Assignments: ${JSON.stringify(context.workAssignments || [])}
+            - Own payroll records (only if provided): ${JSON.stringify(context.ownPayroll||[])}
+            - Own assignments: ${JSON.stringify(context.ownActivities||[])}
             - System Harvest Sales / Produce Record Count: ${produceLength}
             - Current Date: ${new Date().toISOString().split('T')[0]}
             ${modeContextStr}
             ` : '';
 
-            const sopGuidance = `
-            TECHNICAL DIRECTIVES & SOP ARCHITECTURE:
-            1. Profile & KYC Verification: Access user profile, set agronomic authority (Founder, Agronomist, Manager, Worker, Buyer), upload national ID/passport for 100% verification.
-            2. Company Registration: Configure tax ID, banking & partner equity in Founders Hub.
-            3. GIS Satellite Mapping: Search by GPS coordinates (lat, lng), Cadastral Parcel Code (e.g. 05.24.03.112), or locality. Toggle Satellite View (Google/ESRI). Trace boundary with Polygon Tool; engine auto-calculates geodesic Hectares (ha) and perimeter. Layer planting trenches and drip irrigation vectors.
-            4. Crop Catalog: Blueberry (Duke, Legacy, Bluecrop, Draper), Hazelnut, Vineyard, rootstock & density metrics.
-            5. Active Standing Register: Located in Tasks & Works header. Features "Add Vehicles" (🚜 - model, plate, driver, payload capacity, route) and "Add Materials" (📦 - crates, punnets, pallet wraps, drip lines, fertilizers) directly linked to active tasks.
-            6. Harvest Live Monitoring & 6 Digital Scale Protocols:
-               - Protocol 1: Continuous Broadcast Stream (serial/Bluetooth streaming).
-               - Protocol 2: On-Demand Query Poll (weight command polling).
-               - Protocol 3: Auto-Tare Deduction (0.35kg baseline crate subtraction for 100% net weight accuracy).
-               - Protocol 4: Dual Weighmaster Verification (sign-off for export batches).
-               - Protocol 5: High-Speed Batch Palletizing (QR pallet batch stamping).
-               - Protocol 6: Offline Resilient Local Cache (encrypted browser storage auto-syncing upon reconnection).
-               - Sub-second picker QR badge scanning, real-time piece-rate tariff wage calculation, 45-minute cold chain timer.
-            7. Stock & Warehouse: Automated FIFO deduction (weighing crates depletes packaging; executing sprays depletes agro-chemicals).
-            8. HR Workforce: Piece-rate compensation tariffs ($/kg, $/box) vs daily wages, attendance sheets, automated payroll export.
-            9. Agronomic Disease Suite & Soil Nutrition: Anthracnose, powdery mildew, phytophthora, botrytis; Bt spray timing (late afternoon/overcast), copper intervals and withholding periods.
-            `;
+            const sopGuidance = `Application guidance: profiles and services; company registration and invitations; company-scoped planning, harvest, inventory and agronomy; personal work/payroll history; company and job discovery in Communicator. Only management may operate company modules. Newly registered users can preview drawings before registering a company. Respect the provided role and data scope. If a user is in a personal workspace, refer them to My work & earnings for CV, services, reviews and individual work records. Do not invent saved records, payments, crop diagnoses, device connectivity, recovery rates, market statistics or completed actions. Mark missing information clearly and ask a relevant follow-up when needed. Never claim a treatment is legally authorized or safe without evidence and specialist review.`;
 
             const response = await executeGeminiCall({
                 contents: `${modeRolePrompt}
-                The user says: "${command}". 
+                Conversation so far: ${JSON.stringify(assistantMessages.slice(-12).map(message=>({role:message.type,text:message.text})))}
+                Respond in ${language==='ka'?'Georgian':'English'}. The user says: "${command}".
                 ${contextStr}
                 ${sopGuidance}
                 
-                You are the GEMINI 2.5 KNOWLEDGE ENGINE AI System Navigator & Copilot:
+                You are the GEMINI 2.5 KNOWLEDGE ENGINE Gemini assistant:
                 - If the user asks about technical or application details, provide precise, step-by-step guidance referencing the relevant module and protocols.
                 - TENANT RADIUS: Remember that in Standard and Expert mode, you operate strictly within the radius of attached company "${context?.activeOrgName || 'Current Enterprise'}". Only the ROOT AI ASSISTANT (God AI mode, authorized for Root / Super Admins) can analyze details of other companies.
                 - If they ask to generate a harvest sale Excel: Set 'action.type' to 'excel_export'.
@@ -644,33 +629,8 @@ export const useAiAssistant = (language: string) => {
             }
         } catch (error: any) {
             const errStr = error?.message || String(error);
-            console.warn("[AI Assistant] Remote Gemini call unavailable, falling back to autonomous local agronomy engine:", errStr);
-            
-            const autonomous = generateAutonomousAssistantResponse(command, context, effectiveMode, errStr);
-            
-            const botMsg: AssistantMessage = { 
-                id: (Date.now() + 1).toString(), 
-                type: 'bot', 
-                text: autonomous.text 
-            };
-            setAssistantMessages(prev => [...prev, botMsg]);
-
-            if (autonomous.action && autonomous.action.type !== 'none') {
-                const title = autonomous.action.title || command;
-                if (autonomous.action.type === 'task') {
-                    if (context?.onAddTask) context.onAddTask(title);
-                } else if (autonomous.action.type === 'reminder') {
-                    if (context?.onAddReminder) context.onAddReminder(title);
-                    else if (context?.onAddTask) context.onAddTask(title);
-                } else if (autonomous.action.type === 'note') {
-                    if (context?.onAddNote) context.onAddNote(title);
-                } else if (autonomous.action.type === 'excel_export') {
-                    triggerHarvestSalesExcelExport(context);
-                    if (context?.setAppMode) {
-                        context.setAppMode('stock');
-                    }
-                }
-            }
+            console.warn('[Gemini] Request unavailable:',errStr);
+            setAssistantMessages(prev=>[...prev,{id:crypto.randomUUID(),type:'bot',text:language==='ka'?`Gemini-სთან კავშირი ვერ დამყარდა. ${errStr}`:`Gemini could not answer this request. ${errStr}`}]);
         } finally {
             setIsAssistantLoading(false);
         }

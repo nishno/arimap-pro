@@ -1,3 +1,4 @@
+import {createAiService,readAiInput} from './ai-service.mjs';
 import {moduleAccess} from './module-access.mjs';
 import {weighTerminal} from './weigh-terminal.mjs';
 import {createCloudServer} from './cloud-server.mjs';
@@ -11,6 +12,7 @@ import { openFarm, FarmError } from './farm-store.mjs';
 
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export function createLocalServer({ directory, origin = 'http://localhost:3100', tls, cloudUrl = null, dist = path.join(project, 'dist') }) {
+  const generateAi=createAiService();
   const expected = new URL(origin);
   if (!['https:', 'http:'].includes(expected.protocol) || expected.origin !== origin) throw new Error('LOCAL_ORIGIN must be an exact HTTP(S) origin');
   if (expected.protocol !== 'https:' && !['localhost', '127.0.0.1', '[::1]'].includes(expected.hostname)) throw new Error('LAN access requires HTTPS. Configure TLS or a trusted HTTPS reverse proxy.');
@@ -58,6 +60,7 @@ export function createLocalServer({ directory, origin = 'http://localhost:3100',
       const token = /(?:^|;\s*)agrimap_local_session=([a-f0-9]{64})(?:;|$)/.exec(req.headers.cookie || '')?.[1];
       if (route === '/api/local/logout' && req.method === 'POST') { store.logout(token); return json(res, 200, { ok: true }, { 'Set-Cookie': cookie('', true) }); }
       const user = store.authenticate(token);
+      if(route==='/api/local/ai'&&req.method==='POST')return json(res,200,await generateAi(user.id,await readAiInput(req)));
       if(route==='/api/local/module-access'&&req.method==='GET'){
         const userId=url.searchParams.get('userId')||user.id;
         if(userId!==user.id&&user.role!=='owner')throw new FarmError(403,'Owner access required');
