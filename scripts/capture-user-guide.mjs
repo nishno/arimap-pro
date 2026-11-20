@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 import {createLocalServer} from '../server/local-server.mjs';
 import {createCloudServer} from '../server/cloud-server.mjs';
 import {documentStore} from '../server/documents.mjs';
-const out='docs/user-guide',local='http://127.0.0.1:3184',cloud='http://127.0.0.1:3185',directory=mkdtempSync('/tmp/agrimap-guide-');
+const out='documents/user-guide',local='http://127.0.0.1:3184',cloud='http://127.0.0.1:3185',directory=mkdtempSync('/tmp/agrimap-guide-');
 const {server,store}=createLocalServer({directory,origin:local,cloudUrl:cloud}),cloudServer=createCloudServer({origin:cloud});
 await store.initialize({name:'Training Farm · Guria',timezone:'Asia/Tbilisi',ownerName:'Training Manager',ownerUsername:'manager',password:'training-owner-password'});
 const owner=(await store.login('manager','training-owner-password')).user,worker=await store.createWorker(owner,{name:'Training Picker',username:'picker',password:'training-picker-password'}),org=store.farm().id,docs=documentStore(store),date='2026-11-19';

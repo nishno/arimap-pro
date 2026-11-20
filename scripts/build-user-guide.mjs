@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {createServer} from 'node:http';
 import {marked} from 'marked';
 import {chromium} from 'playwright';
-const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),directory=resolve(root,'docs/user-guide');
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),directory=resolve(root,'documents/user-guide');
 const manifest=JSON.parse(readFileSync(resolve(directory,'screenshots/manifest.json'),'utf8'));
 if(manifest.errors.length)throw Error('Resolve screenshot capture failures before building the guide');
 const guide=readFileSync(resolve(directory,'README.md'),'utf8'),sop=readFileSync(resolve(directory,'SOP-CHECKLISTS.md'),'utf8');

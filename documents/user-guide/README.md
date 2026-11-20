@@ -459,13 +459,13 @@ The [capture manifest](screenshots/manifest.json) lists every screenshot, viewpo
 
 The guide was checked against current screens and these repository documents. Historical plans describe intentions and are not evidence that an integration is operational:
 
-- [User access policy](../../USER_ACCESS.md)
-- [Registration and data authority](../../UI_MODERNIZATION/REGISTRATION_AND_DATA_AUTHORITY.md)
-- [Local server operations](../LOCAL_SERVER.md)
-- [Weigh terminal pilot boundaries](../../HARDWARE_MODULARIZATION/WEIGH_TERMINAL.md)
-- [Guria pilot](../GURIA_PILOT.md)
-- [Weather and camera integration planning](../WEATHER_AND_CAMERAS.md)
-- [Code file guide](../../CODE_FILE_GUIDE.md)
-- [Update history](../../UPDATE_HISTORY.md)
+- [User access policy](../USER_ACCESS.md)
+- [Registration and data authority](../ui-modernization/REGISTRATION_AND_DATA_AUTHORITY.md)
+- [Local server operations](../operations/LOCAL_SERVER.md)
+- [Weigh terminal pilot boundaries](../hardware/WEIGH_TERMINAL.md)
+- [Guria pilot](../operations/GURIA_PILOT.md)
+- [Weather and camera integration planning](../operations/WEATHER_AND_CAMERAS.md)
+- [Code file guide](../CODE_FILE_GUIDE.md)
+- [Update history](../UPDATE_HISTORY.md)
 
 **Maintenance:** update this guide when a workflow changes, record the date/source commit, recapture the affected screenshots and rebuild HTML/PDF. Screenshot reproduction uses an isolated temporary farm through `scripts/capture-user-guide.mjs`; it does not connect to production accounts or devices.

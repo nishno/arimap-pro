@@ -30,7 +30,7 @@ See [User access and workspaces](../USER_ACCESS.md) for the role matrix, test co
 
 ## 2026-11-18 — persist explicitly assigned company modules
 
-Active membership allowlists now replace default worker navigation. HR grants persist through invitation activation, live snapshots and reload. Canonical IDs, changed-only acknowledged writes and legacy label normalization prevent grants from disappearing. See [module access](../HARDWARE_MODULARIZATION/MODULE_ACCESS.md).
+Active membership allowlists now replace default worker navigation. HR grants persist through invitation activation, live snapshots and reload. Canonical IDs, changed-only acknowledged writes and legacy label normalization prevent grants from disappearing. See [module access](../hardware/MODULE_ACCESS.md).
 
 ## 2026-11-18 — personal workspace and management-only operations
 
@@ -46,4 +46,4 @@ Adapted agrimap_new's Announcements & Plantations interface to the existing safe
 
 ## 2026-11-21 — illustrated Help and operational SOPs
 
-Added in-app bilingual quick guides, training screenshots, permission-filtered navigation, shareable guide links and session-scoped practice SOP checklists. Packaged the reviewed English manual, PDF and detailed SOP reference for local/cloud serving. Navigation can open allowlisted existing options without saving records. Advanced Help remains opt-in for management. See UPDATE_HISTORY.md for scope and validation.
+Added in-app bilingual quick guides, training screenshots, permission-filtered navigation, shareable guide links and session-scoped practice SOP checklists. Packaged the reviewed English manual, PDF and detailed SOP reference for local/cloud serving. Navigation can open allowlisted existing options without saving records. Advanced Help remains opt-in for management. See documents/UPDATE_HISTORY.md for scope and validation.

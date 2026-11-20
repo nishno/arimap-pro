@@ -63,7 +63,8 @@
     "prebuild": "node scripts/prepare-help-assets.mjs",
     "predev": "node scripts/prepare-help-assets.mjs",
     "help:assets": "node scripts/prepare-help-assets.mjs",
-    "test:help": "node tests/illustrated-help-browser.mjs"
+    "test:help": "node tests/illustrated-help-browser.mjs",
+    "presentation:build": "node scripts/build-product-presentation.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

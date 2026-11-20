@@ -14,7 +14,7 @@ Dates use Asia/Tbilisi. Each implementation update receives a dated entry here; 
 
 - **2026-11-17 — contextual module navigation and toolbar controls**: Added a personal work/earnings view, hidden denied desktop/mobile modules, contextual active-membership checks, management-only Meet/Chat and AI console entries, workspace URLs and a reversible weather-panel hide control. Removed stale permission retention across account/role changes. Platform administration uses verified claims, not profile role labels.
 
-- **2026-11-18 — persist explicitly assigned company modules**: Active membership allowlists now replace default worker navigation. HR grants persist through invitation activation, live snapshots and reload. Canonical IDs, changed-only acknowledged writes and legacy label normalization prevent grants from disappearing. See [module access](../HARDWARE_MODULARIZATION/MODULE_ACCESS.md).
+- **2026-11-18 — persist explicitly assigned company modules**: Active membership allowlists now replace default worker navigation. HR grants persist through invitation activation, live snapshots and reload. Canonical IDs, changed-only acknowledged writes and legacy label normalization prevent grants from disappearing. See [module access](hardware/MODULE_ACCESS.md).
 
 ## 2026-11-18 — personal workspace and company access
 
@@ -80,7 +80,7 @@ Analyzed agrimap_new at commit 19d4bbd and adapted its unified feed and restrain
 
 Rebuilt My work & earnings around four summary cards, currency-separated balances, Activities/Harvest/Payroll tabs and the existing expandable CV/service tools. Restyled clinical diagnosis and prescription screens with the same spacing, typography, card surfaces and action hierarchy. Earnings calculations, account links, clinical archive persistence and company permissions remain unchanged.
 
-Detailed analysis, reference source and adaptation boundaries: UI_MODERNIZATION/REFERENCE_STYLE_2026-11-19.md. No database migration or production deployment is part of this update.
+Detailed analysis, reference source and adaptation boundaries: documents/ui-modernization/REFERENCE_STYLE_2026-11-19.md. No database migration or production deployment is part of this update.
 
 ## 2026-11-19 — illustrated user guide and daily SOPs
 
@@ -97,3 +97,11 @@ Module links use the current workspace and existing permission checks. An allowl
 Reference reviewed: `nishno/agrimap_new` commit `97fdc2b` (RootDocsSopManual and its structured procedures), adapted to this application's actual role policy and workflows. Kept the real fictional-data screenshots from the reviewed manual rather than illustrative mock screenshots. Images and reviewed English content retain their original language; Georgian quick steps and checklists are localized. Device/verification/offline limitations remain explicit.
 
 Build preparation copies the versioned guide/screenshots/PDF to generated public assets for Vite and local/cloud static serving. PWA precaches the guide JSON and PNGs; PDF download needs a cached or online copy. Includes browser coverage for role filtering, option navigation, shared-topic authorization, scoped checklist persistence/reset, image dialog, search, assets, mobile layout and Georgian UI.
+
+## 2026-11-21 — Georgian product presentation and centralized documents
+
+Created a 16-slide Georgian product introduction for approximately 15 minutes, using reviewed guides and fictional-data application screenshots. Deliverables include editable PowerPoint with speaker notes, a font-embedded PDF, a browser version, Georgian speaker notes, editable slide content and screenshot provenance. Separates current workflows from planned sensor integration, hardware compatibility and incomplete universal offline merge; includes no unverified accuracy or revenue claims.
+
+Moved project documentation and guide assets under `documents/`, organized into user-guide, presentations, operations, ui-modernization, hardware, engine and development. Added a central Georgian/English navigation index and a machine-readable old-to-new relocation map. Kept a short repository README as the entry point and retained source code and license locations. Updated local startup documentation references, screenshot capture/manual generators and Help asset preparation to the new paths. Rebuilt the illustrated guide so its links point to current locations. Historical commit-linked records retain their original source provenance.
+
+Validation: 16-page PDF with embedded Georgian fonts; valid PowerPoint package with 16 slides and 16 speaker-note parts; all 270 local documentation references resolve. Application production build, TypeScript checking and owner/worker/mobile/Georgian Help browser coverage pass after relocation.

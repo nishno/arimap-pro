@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-21",
+  "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+  "trainingData": true,
+  "liveHardware": false,
+  "screenshots": [
+    {
+      "slide": 1,
+      "screenshot": "documents/user-guide/screenshots/36-earnings.png",
+      "caption": "მუშის პირადი სამუშაო სივრცე · სასწავლო მონაცემები",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 4,
+      "screenshot": "documents/user-guide/screenshots/08-company.png",
+      "caption": "კომპანიის რეგისტრაციის ფორმა",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 5,
+      "screenshot": "documents/user-guide/screenshots/09-map-planner.png",
+      "caption": "რუკის დამგეგმავი · გარე რუკის ფენა ამ გადაღებაში გათიშულია",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 6,
+      "screenshot": "documents/user-guide/screenshots/10-workers.png",
+      "caption": "თანამშრომლებისა და გუნდების მართვა",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 7,
+      "screenshot": "documents/user-guide/screenshots/32-announcements.png",
+      "caption": "განცხადებები და პლანტაციების მოძიება",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 8,
+      "screenshot": "documents/user-guide/screenshots/40-session-form.png",
+      "caption": "ახალი კრეფის სესიის გამართვა",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 9,
+      "screenshot": "documents/user-guide/screenshots/19-weigh.png",
+      "caption": "საოპერაციო აწონვის სადგური კრეფის სესიაში",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 10,
+      "screenshot": "documents/user-guide/screenshots/36-earnings.png",
+      "caption": "მუშის პირადი ანგარიში · გამოგონილი სასწავლო მონაცემები",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 11,
+      "screenshot": "documents/user-guide/screenshots/12-stock.png",
+      "caption": "მარაგების კატალოგი და საწყობები",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 12,
+      "screenshot": "documents/user-guide/screenshots/31-prescription.png",
+      "caption": "დასკვნისა და დანიშნულების სამუშაო სივრცე",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    },
+    {
+      "slide": 15,
+      "screenshot": "documents/presentations/assets/help-georgian.png",
+      "caption": "აპლიკაციის ქართული დახმარების მოდული",
+      "sourceCommit": "0d052fb1206bd28c555e81d0c2805923ec8c10de",
+      "trainingData": true
+    }
+  ]
+}

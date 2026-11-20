@@ -1,6 +1,6 @@
 # Local farm server — updated runtime
 
-**2026-10-18:** The full original application now uses authenticated local document storage on this server. `/modern` and `/classic` share the same local session and data. See [the current runtime guide](../UI_MODERNIZATION/LOCAL_RUNTIME.md) and [startup instructions](../UI_MODERNIZATION/README.md). The older quick field/harvest forms remain available in `/local` as account/compatibility controls. The historical first-stage description below is retained for context and no longer describes the full application runtime.
+**2026-10-18:** The full original application now uses authenticated local document storage on this server. `/modern` and `/classic` share the same local session and data. See [the current runtime guide](../ui-modernization/LOCAL_RUNTIME.md) and [startup instructions](../ui-modernization/README.md). The older quick field/harvest forms remain available in `/local` as account/compatibility controls. The historical first-stage description below is retained for context and no longer describes the full application runtime.
 
 # Local farm server — first migration stage
 
@@ -83,4 +83,4 @@ Vercel hosts the static demo and cloud client. It cannot host this persistent LA
 
 After `npm run build`, `npm run local:start` serves the existing local farm on port 3100 and the separate Firebase application on port 3101. Open `/local` for local sign-in/account setup; the Firebase registration button opens the separate origin with `?register=1`. This isolates browser storage and does not merge the local farm into a cloud workspace. Set `CLOUD_PORT` if 3101 is occupied. LAN access requires the documented trusted HTTPS setup; the cloud listener uses the same host/TLS settings. Both listeners stop together. Never rerun initialization or delete an existing farm to switch modes.
 
-Initial local owners are created once on the server with `npm run local:init`. Existing owners create workers through Farm users. Public self-registration into an existing local farm remains disabled. See `UI_MODERNIZATION/REGISTRATION_AND_DATA_AUTHORITY.md` for identity linking, manual backup and the future synchronization plan.
+Initial local owners are created once on the server with `npm run local:init`. Existing owners create workers through Farm users. Public self-registration into an existing local farm remains disabled. See `documents/ui-modernization/REGISTRATION_AND_DATA_AUTHORITY.md` for identity linking, manual backup and the future synchronization plan.

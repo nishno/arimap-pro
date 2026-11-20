@@ -11,7 +11,7 @@ This document presents a comprehensive, folder-by-folder and file-by-file archit
 ├── .env.example                          # Environment variable declaration template
 ├── .firebaserc                           # Firebase target project mapping
 ├── .gitignore                            # VCS ignore definitions
-├── AGRIMAP_PRO_ARCHITECTURE_V18.md       # Architectural specification documentation v18
+├── documents/AGRIMAP_PRO_ARCHITECTURE_V18.md       # Architectural specification documentation v18
 ├── app/                                  # Mobile / native container build artifacts
 ├── bun.lock                              # Bun lockfile (alternative package runner)
 ├── diagnose-repair.ts                    # Diagnostic & system auto-repair script
