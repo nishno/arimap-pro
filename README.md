@@ -57,3 +57,11 @@ The local server defaults to local mode and supports fields, harvest records, ow
 ### Update record — 2026-11-19
 
 See [UPDATE_HISTORY.md](UPDATE_HISTORY.md) for dated changes, role behavior and rollout requirements. Server-only Gemini configuration is documented there and in [.env.server.example](.env.server.example).
+
+## In-app illustrated Help (21 November 2026)
+
+Open **Help** in the application header. Choose a module, follow its illustrated guide or switch to **SOP & checklist**. **Open module** uses your current company and permissions; **Open this option** opens the relevant existing form or tab without saving anything. **Copy guide link** shares a specific chapter. Workers see their personal guides; operational and administrative guides follow current access policy.
+
+Quick instructions and practice checklists are available in English and Georgian. Screenshots and the full reviewed reference/PDF are English. Practice ticks are local to the current browser session, user and company; they do not complete actual farm work.
+
+`npm run build` and `npm run dev` prepare guide assets automatically from `docs/user-guide/`. After changing the reviewed documentation, rebuild; do not edit generated `public/help-guide/` files. Validate the workflow with `npm run test:help` after building. The guide JSON and screenshots are included in the PWA precache; availability offline requires a completed app installation/cache. The PDF is a separate download.

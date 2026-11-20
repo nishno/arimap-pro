@@ -42,3 +42,6 @@ tmp/
 *firebase-adminsdk*.json
 
 !.env.server.example
+
+# Generated from the reviewed user manual by prebuild/predev
+/public/help-guide/

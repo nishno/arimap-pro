@@ -34,6 +34,7 @@ import AdminView from './components/AdminView';
 import LogsView from './components/LogsView';
 import ProfileView from './components/ProfileView'; 
 import HelpAndGuideView from './components/HelpAndGuideView';
+import {useGuideNavigation} from './help/useGuideNavigation';
 import LoginModal from './components/LoginModal';
 import RegistrationModal from './components/RegistrationModal';
 import WelcomeModal from './components/WelcomeModal';
@@ -2025,6 +2026,8 @@ const App: React.FC = () => {
 
         return access !== 'none';
     }, [currentUser, activeOrg, activeOrgId, membershipsReady, isAuthReady, memberships, currentUserPermissions, isSystemAdmin]);
+
+    const guideNavigation=useGuideNavigation(appMode,setAppMode,checkPermission,`${currentUser?.id||'guest'}:${activeOrg?.id||'personal'}`);
 
     useEffect(() => {
         const navigate = () => {
@@ -5946,6 +5949,10 @@ const App: React.FC = () => {
             case 'guide': 
                 return (
                     <HelpAndGuideView 
+                        canNavigate={checkPermission}
+                        onOpenAction={guideNavigation.open}
+                        management={canUsePrivilegedTools}
+                        scope={`${currentUser?.id||'guest'}:${activeOrg?.id||'personal'}`}
                         currentUser={currentUser}
                         onSetAppMode={setAppMode} 
                         onTriggerIdentityPopup={() => {
@@ -6844,6 +6851,7 @@ const App: React.FC = () => {
                     }}
                     onOpenGlobalSearch={personalOnly?undefined:()=>setIsSpotlightOpen(true)}
                 />
+                {guideNavigation.notice&&<div className="help-navigation-notice" role="status">{language==='ka'?'მოდული გაიხსნა. მოქმედება ამ ეკრანზე მიუწვდომელია; აირჩიეთ საჭირო ჩანაწერი ან გამოიყენეთ მოდულის მენიუ.':'Module opened. This option is not available on the current screen; select the required record or use the module menu.'}<button onClick={guideNavigation.dismiss}>{language==='ka'?'დახურვა':'Dismiss'}</button></div>}
                 <div className="flex-1 flex flex-col min-h-0 overflow-auto">
                     <Toaster position="top-right" richColors />
                     {currentUser && !currentUser.isGuest && currentUser.verificationStatus === 'unverified' && (

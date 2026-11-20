@@ -43,3 +43,7 @@ Restored the original Dashboard and AI Analyst layouts with role-specific widget
 ## 2026-11-19 — reference-style discovery, earnings and clinical workspaces
 
 Adapted agrimap_new's Announcements & Plantations interface to the existing safe data sources. Added a unified filtered feed and synchronized map checkpoints. Rebuilt personal earnings presentation with a KPI strip, balance cards and tabbed history. Applied the same visual system to diagnostic/prescription cards and actions. Reference analysis and scope: REFERENCE_STYLE_2026-11-19.md; root update summary: UPDATE_HISTORY.md.
+
+## 2026-11-21 — illustrated Help and operational SOPs
+
+Added in-app bilingual quick guides, training screenshots, permission-filtered navigation, shareable guide links and session-scoped practice SOP checklists. Packaged the reviewed English manual, PDF and detailed SOP reference for local/cloud serving. Navigation can open allowlisted existing options without saving records. Advanced Help remains opt-in for management. See UPDATE_HISTORY.md for scope and validation.

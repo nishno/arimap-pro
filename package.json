@@ -59,7 +59,11 @@
     "test:community:browser": "node tests/community-clinical-browser.mjs",
     "test:planner:preview": "node tests/draft-preview-browser.mjs",
     "test:discovery": "node --experimental-strip-types --test tests/discovery.mjs",
-    "test:reference-ui": "node tests/reference-style-browser.mjs"
+    "test:reference-ui": "node tests/reference-style-browser.mjs",
+    "prebuild": "node scripts/prepare-help-assets.mjs",
+    "predev": "node scripts/prepare-help-assets.mjs",
+    "help:assets": "node scripts/prepare-help-assets.mjs",
+    "test:help": "node tests/illustrated-help-browser.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",
@@ -98,6 +102,7 @@
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "firebase-tools": "^15.33.0",
+    "marked": "13.0.3",
     "playwright": "^1.64.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",

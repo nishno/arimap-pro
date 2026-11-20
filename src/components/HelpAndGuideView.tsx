@@ -11,9 +11,15 @@ import { getDefaultScreenshotForStep } from '../utils/defaultScreenshots';
 import { AiModuleArchitectureAnalyzer } from './AiModuleArchitectureAnalyzer';
 import { AiSopGenerator } from './Help/AiSopGenerator';
 import { HelpAiAssistantChat } from './Help/HelpAiAssistantChat';
+import {IllustratedHelp} from './Help/IllustratedHelp';
+import type {GuideAction} from '../help/catalog';
 
 interface HelpAndGuideViewProps {
     onSetAppMode: (mode: AppMode) => void;
+    canNavigate: (mode: AppMode) => boolean;
+    onOpenAction: (action: GuideAction) => void;
+    management: boolean;
+    scope: string;
     onTriggerIdentityPopup?: () => void;
     currentUser?: User | null;
 }
@@ -806,7 +812,7 @@ const StepMockup: React.FC<{ stepId: string; t: (key: any) => string }> = ({ ste
     }
 };
 
-const HelpAndGuideView: React.FC<HelpAndGuideViewProps> = ({ onSetAppMode, onTriggerIdentityPopup, currentUser }) => {
+const LegacyHelpAndGuideView: React.FC<HelpAndGuideViewProps> = ({ onSetAppMode, onTriggerIdentityPopup, currentUser }) => {
     const { t, language } = useLanguage();
     const isKa = language === 'ka';
     const isSopAdmin = currentUser?.email?.toLowerCase() === 'magrakvelidzesopio@gmail.com' ||
@@ -1404,4 +1410,10 @@ const HelpAndGuideView: React.FC<HelpAndGuideViewProps> = ({ onSetAppMode, onTri
     );
 };
 
+const HelpAndGuideView:React.FC<HelpAndGuideViewProps>=(props)=>{
+ const [advanced,setAdvanced]=useState(false);const {language}=useLanguage();
+ const navigate=(mode:AppMode)=>{if(props.canNavigate(mode))props.onSetAppMode(mode);};
+ if(advanced&&props.management)return <div className="flex-1 flex flex-col min-h-0"><button className="p-3 text-emerald-800 bg-white border-b text-left" onClick={()=>setAdvanced(false)}>{language==='ka'?'← ილუსტრირებული გზამკვლევები':'← Illustrated guides'}</button><LegacyHelpAndGuideView {...props} onSetAppMode={navigate}/></div>;
+ return <IllustratedHelp canNavigate={props.canNavigate} onNavigate={navigate} onOpenAction={props.onOpenAction} management={props.management} scope={props.scope} onLegacy={()=>setAdvanced(true)}/>;
+};
 export default HelpAndGuideView;

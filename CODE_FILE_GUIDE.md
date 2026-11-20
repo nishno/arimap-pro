@@ -211,3 +211,13 @@ Add or update a row when a tracked root code file is added, renamed or removed. 
 - `docs/user-guide/screenshots/`: PNG captures and a manifest recording capture time, application source commit, routes and fixture/provider boundaries.
 - `scripts/capture-user-guide.mjs`: launches isolated temporary local/cloud UI servers and a fictional SQLite farm, captures management/worker/mobile screens using Chromium, then removes the temporary database. Does not use production accounts or connect hardware/providers. Requires a built application and Playwright/Chromium; run from repository root.
 - `scripts/build-user-guide.mjs`: validates local Markdown references, generates the HTML guide and prints the PDF through Chromium. Run from repository root with `node scripts/build-user-guide.mjs` after editing the Markdown.
+
+## 2026-11-21 — in-app illustrated Help
+
+- `src/components/Help/IllustratedHelp.tsx`: searchable bilingual guide, permission-filtered topics, practice SOPs, reviewed English reference, shareable topic URLs and accessible screenshot enlargement.
+- `src/components/Help/illustrated-help.css`: responsive Help library, sidebar, screenshots, checklists and enlarged-image dialog.
+- `src/help/catalog.ts`: bilingual module procedures, access requirements, screenshots and reviewed manual/SOP associations.
+- `src/help/useGuideNavigation.ts`: authorized navigation to existing opening controls only; cancels on workspace changes and reports unavailable options.
+- `scripts/prepare-help-assets.mjs`: prebuild/predev packaging of reviewed documentation into static guide assets. Generated `public/help-guide/` is ignored in Git; source assets remain in `docs/user-guide/`.
+- `tests/illustrated-help-browser.mjs`: real-browser local owner/worker coverage for Help, navigation, practice state, screenshots and localization.
+- `src/components/HelpAndGuideView.tsx`: now defaults to the illustrated manual; preserves legacy advanced Help behind a management-only opt-in entry.
