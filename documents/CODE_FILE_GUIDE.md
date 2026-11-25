@@ -230,3 +230,9 @@ Add or update a row when a tracked root code file is added, renamed or removed. 
 - `scripts/build-product-presentation.mjs`: builds editable PowerPoint, PDF, HTML and speaker notes from the same slide model; validates screenshots and captures preview slides.
 - `documents/presentations/`: presentation artifacts, Georgian speaker notes, build instructions and screenshot source manifest.
 - `scripts/build-user-guide.mjs`, `scripts/capture-user-guide.mjs`, `scripts/prepare-help-assets.mjs`: updated to read the reviewed manual and screenshots from `documents/user-guide/`.
+
+## 2026-11-24 — accelerator pitch
+
+- `documents/presentations/accelerator-ka/`: agreed Georgian pitch, editable model, PowerPoint/PDF, speaker notes, source boundaries and optional technical appendix.
+- `documents/presentations/accelerator-ka/market-sharing-prototype.html`: isolated fictional-data market/camera sharing concept; no production persistence or access enforcement.
+- `scripts/build-accelerator-presentation.mjs`: builds this deck through the shared configurable presentation renderer.

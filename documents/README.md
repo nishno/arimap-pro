@@ -4,6 +4,8 @@
 
 ## პრეზენტაცია და მომხმარებლის დახმარება
 
+- [ქართული პიჩი აქსელერაციის პროგრამისთვის](presentations/accelerator-ka/README.md)
+
 - [ქართული პროდუქტის პრეზენტაცია — PowerPoint, PDF და სასაუბრო ჩანაწერები](presentations/README.md)
 - [ილუსტრირებული მომხმარებლის გზამკვლევი (English)](user-guide/README.md)
 - [დასაბეჭდი გზამკვლევი](user-guide/AgriMap-Pro-User-Guide-en.pdf)
