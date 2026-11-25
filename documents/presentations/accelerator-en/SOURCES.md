@@ -12,3 +12,7 @@ This English edition follows the user-approved Georgian pitch. Only the presenta
 - A team member's banking position is professional experience, not a bank partnership or endorsement.
 
 International identifiers and brand/variety names (GEL, QR, AI, AgriMap, Duke) retain their standard spelling. Screenshot currency amounts remain in the recorded GEL currency; language switching does not convert them.
+
+## Field-record workflow addition
+
+The founder reports the LoRaWAN ID Tracker badges as operational: movement is visible after work starts and a sector is selected. The pitch links this to tasks, attendance and working-time review. Hardware was not independently tested for this presentation; no new live telemetry screenshot or automatic financial-posting claim is added. Payroll is based on reviewed work records and agreed rates.

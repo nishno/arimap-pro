@@ -18,7 +18,7 @@ The founder supplied the six-year experience statement. Answer public questions 
 
 ## 4. Connect the steps of one working process
 
-This diagram represents the business workflow. It does not certify universal automatic posting between every module. Inspect the resulting inventory and financial records. About 50 seconds.
+This diagram represents the business workflow. It does not certify universal automatic posting between every module. Inspect the resulting inventory and financial records. About 50 seconds. Badge operation is reported by the founder; hardware was not independently tested while preparing this presentation.
 
 ## 5. Harvest records you can trace
 
@@ -26,7 +26,7 @@ Show the actual operational interface. Do not promise universal scanner, scale o
 
 ## 6. Workers can see what they earned
 
-The displayed amounts are fictional training data. A login must be linked to the correct employee record. A role does not authorize access to everyone else’s payroll. About 50 seconds.
+The displayed amounts are fictional training data. A login must be linked to the correct employee record. A role does not authorize access to everyone else’s payroll. About 50 seconds. The founder reports the LoRaWAN ID Tracker badge feature as operational: after starting a task and selecting a sector, movement is visible in the application. Presence or movement alone does not establish work quality or automatically determine pay. No claim is made that AI movement analysis is operational.
 
 ## 7. Built for more than one crop
 
@@ -68,9 +68,9 @@ This is a proposed plan, not a claim about achieved customers, revenue or retent
 
 The program grant has not been presented as awarded funding. Do not invent spending splits or headcount. Prepare the detailed budget from real costs and program eligibility. This ends the core pitch; the next three slides support questions. About 55 seconds.
 
-## 17. What information connects the modules?
+## 17. From field work to payroll records
 
-organizationId is the workspace boundary; employeeId/userId identifies the person; harvestEventId links weighings to a session. Replacing a stale whole array is not a universal safe merge. The separate terminal does not post operational payroll or stock. Appendix; outside the core timing.
+organizationId is the workspace boundary; employeeId/userId identifies the person; harvestEventId links weighings to a session. Replacing a stale whole array is not a universal safe merge. The separate terminal does not post operational payroll or stock. Appendix; outside the core timing. The badge link describes the business workflow; it does not assert an unverified database schema or automatic financial posting of every telemetry event. Do not treat badge history as payroll without review.
 
 ## 18. Share a controlled projection
 

@@ -55,11 +55,11 @@
       "title": "Connect the steps of one working process",
       "subtitle": "Plan → Execute → Harvest → Inventory → Results",
       "bullets": [
-        "Records link to the company, employee and source activity",
+        "Tasks and sectors connect to employee records from LoRaWAN badges",
         "Planning, actual execution and payment are separate events",
         "Goal: decisions that can be checked against source records"
       ],
-      "notes": "This diagram represents the business workflow. It does not certify universal automatic posting between every module. Inspect the resulting inventory and financial records. About 50 seconds.",
+      "notes": "This diagram represents the business workflow. It does not certify universal automatic posting between every module. Inspect the resulting inventory and financial records. About 50 seconds. Badge operation is reported by the founder; hardware was not independently tested while preparing this presentation.",
       "flow": [
         "Sector and crop",
         "Team and task",
@@ -85,14 +85,14 @@
     {
       "section": "People and finance",
       "title": "Workers can see what they earned",
-      "subtitle": "A shared source of work and payment history",
+      "subtitle": "Start work → Assigned sector → Movement → Reviewed time → Payroll",
       "bullets": [
-        "Picked quantities and recorded hours",
-        "Accrued, paid and outstanding amounts shown separately",
-        "CV, services, availability and reviews",
-        "Personal records limited to the authorized user"
+        "After starting work and assigning a sector, view movement through the LoRaWAN badge",
+        "Movement history links to attendance and working time",
+        "Picked quantities, accruals and real payments remain separate",
+        "Review working time before approving payroll"
       ],
-      "notes": "The displayed amounts are fictional training data. A login must be linked to the correct employee record. A role does not authorize access to everyone else’s payroll. About 50 seconds.",
+      "notes": "The displayed amounts are fictional training data. A login must be linked to the correct employee record. A role does not authorize access to everyone else’s payroll. About 50 seconds. The founder reports the LoRaWAN ID Tracker badge feature as operational: after starting a task and selecting a sector, movement is visible in the application. Presence or movement alone does not establish work quality or automatically determine pay. No claim is made that AI movement analysis is operational.",
       "image": "36-earnings",
       "caption": "Worker workspace · Fictional payroll records"
     },
@@ -258,21 +258,21 @@
     },
     {
       "section": "Appendix A · Data flow",
-      "title": "What information connects the modules?",
-      "subtitle": "Keep each relationship tied to its source and company",
+      "title": "From field work to payroll records",
+      "subtitle": "Badge history connects to the task through a review step",
       "bullets": [
-        "Map data supplies sector, crop and variety to work and harvest",
-        "Worker identity links operational records to personal history",
-        "Harvest finalization determines inventory or sales handling",
-        "Accruals, payments and material movements remain separate checks"
+        "Sector and employee identity link the task to badge history",
+        "Movement in the assigned sector is visible after work starts",
+        "Review attendance, working time and harvest records together",
+        "Payroll uses reviewed records and the agreed payment model"
       ],
-      "notes": "organizationId is the workspace boundary; employeeId/userId identifies the person; harvestEventId links weighings to a session. Replacing a stale whole array is not a universal safe merge. The separate terminal does not post operational payroll or stock. Appendix; outside the core timing.",
+      "notes": "organizationId is the workspace boundary; employeeId/userId identifies the person; harvestEventId links weighings to a session. Replacing a stale whole array is not a universal safe merge. The separate terminal does not post operational payroll or stock. Appendix; outside the core timing. The badge link describes the business workflow; it does not assert an unverified database schema or automatic financial posting of every telemetry event. Do not treat badge history as payroll without review.",
       "flow": [
-        "Company and map",
-        "Employee / team",
-        "Work / harvest",
-        "Movement / accrual",
-        "Personal history"
+        "Task and sector",
+        "Start work",
+        "Badge and movement",
+        "Review working time",
+        "Payroll record"
       ]
     },
     {
