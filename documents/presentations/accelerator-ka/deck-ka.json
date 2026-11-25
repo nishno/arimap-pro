@@ -6,8 +6,12 @@
   "durationMinutes": 15,
   "coreSlideCount": 16,
   "fileBase": "AgriMap-Pro-Accelerator-Pitch-ka",
-  "sourceCommit": "e9b3dc4b67c455a5738fe5aaef1d02633f08a9e5",
+  "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
   "imageSources": {
+    "19-weigh": "documents/presentations/screenshots/ka/19-weigh.png",
+    "31-prescription": "documents/presentations/screenshots/ka/31-prescription.png",
+    "32-announcements": "documents/presentations/screenshots/ka/32-announcements.png",
+    "36-earnings": "documents/presentations/screenshots/ka/36-earnings.png",
     "market-preview": "documents/presentations/accelerator-ka/assets/market-preview.png"
   },
   "slides": [
@@ -298,5 +302,6 @@
   ],
   "imageKinds": {
     "market-preview": "concept"
-  }
+  },
+  "screenshotLanguage": "ka"
 }

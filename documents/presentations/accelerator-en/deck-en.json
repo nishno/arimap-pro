@@ -1,0 +1,307 @@
+{
+  "title": "AgriMap Pro — Accelerator Pitch",
+  "kind": "Accelerator pitch",
+  "date": "2026-11-24",
+  "language": "en",
+  "durationMinutes": 15,
+  "coreSlideCount": 16,
+  "fileBase": "AgriMap-Pro-Accelerator-Pitch-en",
+  "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+  "imageSources": {
+    "19-weigh": "documents/presentations/screenshots/en/19-weigh.png",
+    "31-prescription": "documents/presentations/screenshots/en/31-prescription.png",
+    "32-announcements": "documents/presentations/screenshots/en/32-announcements.png",
+    "36-earnings": "documents/presentations/screenshots/en/36-earnings.png",
+    "market-preview": "documents/presentations/accelerator-en/assets/market-preview.png"
+  },
+  "slides": [
+    {
+      "section": "Accelerator pitch",
+      "title": "AgriMap Pro",
+      "subtitle": "From plantation operations to transparent records and market connections",
+      "bullets": [
+        "Workforce, field work, harvest and finance in one workflow",
+        "For vineyards, hazelnuts, citrus, blueberries and other crops"
+      ],
+      "notes": "Introduce the platform as a connected operational workspace. The screenshot uses fictional training records, not verified customer or revenue metrics. About 35 seconds.",
+      "image": "36-earnings",
+      "caption": "Personal work and earnings · Actual UI with fictional training data"
+    },
+    {
+      "section": "Problem",
+      "title": "Fragmented records make accountability difficult",
+      "subtitle": "Workforce, harvest and payments often live in separate records",
+      "bullets": [
+        "Reconciling employee hours with harvested quantities",
+        "Connecting inventory, actual consumption and costs",
+        "Separating agreed rates, earned amounts and real payments",
+        "Finding buyers and available workers"
+      ],
+      "notes": "Describe problems observed in practice. Do not claim all farms use paper or that competing systems do not exist. Loss amounts and market-wide prevalence have not been measured. About 50 seconds."
+    },
+    {
+      "section": "Why us",
+      "title": "Built from day-to-day plantation experience",
+      "subtitle": "Domain knowledge and development alongside users",
+      "bullets": [
+        "Needs identified through six years of agricultural experience",
+        "Development shaped by real users and their requirements",
+        "Focus: clear records, harvest control and employee trust"
+      ],
+      "notes": "The founder supplied the six-year experience statement. Answer public questions using only facts approved for sharing. About 45 seconds."
+    },
+    {
+      "section": "Solution",
+      "title": "Connect the steps of one working process",
+      "subtitle": "Plan → Execute → Harvest → Inventory → Results",
+      "bullets": [
+        "Records link to the company, employee and source activity",
+        "Planning, actual execution and payment are separate events",
+        "Goal: decisions that can be checked against source records"
+      ],
+      "notes": "This diagram represents the business workflow. It does not certify universal automatic posting between every module. Inspect the resulting inventory and financial records. About 50 seconds.",
+      "flow": [
+        "Sector and crop",
+        "Team and task",
+        "Harvest and weighing",
+        "Inventory and sale",
+        "Payroll and analysis"
+      ]
+    },
+    {
+      "section": "Product in action",
+      "title": "Harvest records you can trace",
+      "subtitle": "Worker, crate, weight, sector and agreed rate",
+      "bullets": [
+        "Configure a session for the actual harvesting method",
+        "Identify worker and crate; verify gross, tare and net",
+        "Review individual records before payroll",
+        "Test scanner and scale compatibility on the intended device"
+      ],
+      "notes": "Show the actual operational interface. Do not promise universal scanner, scale or NFC compatibility. Passive NFC cards do not supply GPS themselves. The separate terminal pilot stages records only. About 55 seconds.",
+      "image": "19-weigh",
+      "caption": "Operational harvest Weigh Station · Training screen"
+    },
+    {
+      "section": "People and finance",
+      "title": "Workers can see what they earned",
+      "subtitle": "A shared source of work and payment history",
+      "bullets": [
+        "Picked quantities and recorded hours",
+        "Accrued, paid and outstanding amounts shown separately",
+        "CV, services, availability and reviews",
+        "Personal records limited to the authorized user"
+      ],
+      "notes": "The displayed amounts are fictional training data. A login must be linked to the correct employee record. A role does not authorize access to everyone else’s payroll. About 50 seconds.",
+      "image": "36-earnings",
+      "caption": "Worker workspace · Fictional payroll records"
+    },
+    {
+      "section": "Customers",
+      "title": "Built for more than one crop",
+      "subtitle": "Initial sales focus on selected commercial farms",
+      "bullets": [
+        "Vineyards, hazelnuts, citrus, orchards, blueberries and other crops",
+        "Proposed paying segment: plantations above 3 hectares",
+        "The free tier connects workers, specialists and companies",
+        "Size the addressable market by crop, area and willingness to pay"
+      ],
+      "notes": "Total agricultural holdings are not the paying market. Supplied market figures have not been checked against primary sources. A 1–5 hectare band cannot identify the exact number above 3 hectares. No unverified TAM or revenue forecast is printed. About 50 seconds."
+    },
+    {
+      "section": "Market and partners",
+      "title": "Find companies, workers and offers",
+      "subtitle": "Regional discovery and communication in one platform",
+      "bullets": [
+        "Search companies, crops and job announcements",
+        "Offer services and agree terms directly",
+        "Make batch information clearer during the sales process"
+      ],
+      "notes": "This is the existing announcements and plantation-discovery screen. Do not promise guaranteed employment, sales or price stabilization. The next slide introduces a separately labeled planned sharing feature. About 45 seconds.",
+      "image": "32-announcements",
+      "caption": "Existing announcements and plantation discovery · Training screen"
+    },
+    {
+      "section": "Product roadmap",
+      "title": "Farmers decide what to share—and with whom",
+      "subtitle": "Preview and edit before sharing: a planned feature concept",
+      "bullets": [
+        "Three modes: live harvest, completed batch or manually prepared offer",
+        "Public visibility or selected companies and users",
+        "Control each camera’s access separately",
+        "Changing offered quantity does not overwrite harvest records"
+      ],
+      "notes": "This is an interactive UI concept, not a production integration. Server authorization, verified identities and video-gateway access are required. A completion timestamp alone is not independent proof of freshness. About 60 seconds.",
+      "image": "market-preview",
+      "caption": "Planned feature · Concept UI; no connected live cameras"
+    },
+    {
+      "section": "Positioning",
+      "title": "The value is in connected workflows",
+      "subtitle": "Combine farm operations with a useful partner network",
+      "bullets": [
+        "Connected work history instead of isolated records",
+        "An employee view alongside the management workspace",
+        "Partner and job discovery alongside farm management",
+        "Validate differentiation and benefits through real pilots"
+      ],
+      "notes": "This is positioning, not an independently verified competitor comparison. Georgian and international farm-management systems exist. Avoid unique/only claims and unsupported competitor limitations. Eye2Eye informed the narrative structure, not AgriMap facts. About 45 seconds."
+    },
+    {
+      "section": "Revenue model",
+      "title": "Free entry; paid commercial use",
+      "subtitle": "Proposed prices to validate with customers",
+      "bullets": [
+        "Core platform free for plantations up to 3 hectares",
+        "Above 3 hectares: GEL 150 per month per farm workspace",
+        "AI packages: GEL 10–150; AI included in the GEL 150 subscription",
+        "Pricing and AI usage conditions still need validation"
+      ],
+      "notes": "These are proposed prices, not achieved revenue or evidence of deployed billing. Unlimited AI needs separate cost and fair-use analysis. Local knowledge retrieval is not the same as proven model training. About 55 seconds.",
+      "callout": "GEL 150 / month = GEL 1,800 / year per farm"
+    },
+    {
+      "section": "Go to market",
+      "title": "From interest to active use",
+      "subtitle": "Start onboarding before peak season with a small, testable workflow",
+      "bullets": [
+        "Targeted social campaigns and product demonstrations",
+        "Sales team follows up inquiries and prepares offers",
+        "Initial setup, training and a first complete session",
+        "Support and development driven by user feedback"
+      ],
+      "notes": "Do not fix the number of new staff. The rollout accounts for seasonal workload and time needed for training. About 50 seconds.",
+      "flow": [
+        "Interest",
+        "Demonstration",
+        "Trial onboarding",
+        "Active use",
+        "Paid subscription"
+      ]
+    },
+    {
+      "section": "Readiness and development",
+      "title": "From working software to measurable growth",
+      "subtitle": "Software and screens exist; commercial outcomes need pilot evidence",
+      "bullets": [
+        "Modules for harvest, workforce, inventory, finance, agronomy and communication",
+        "Documented workflows, illustrated help and access tests",
+        "Planned AI assistant to analyze user problems and feature requests",
+        "Automated testing and auditing developed with human oversight"
+      ],
+      "notes": "Screens and tests do not establish complete commercial readiness or universal integration support. Measure onboarding time, active use, corrections and willingness to pay. Do not claim unmeasured 10× speed or 100% improvement from bots. About 50 seconds.",
+      "image": "31-prescription",
+      "caption": "Existing agronomy prescription UI · No live AI diagnosis performed"
+    },
+    {
+      "section": "Team",
+      "title": "Domain experience + technical development",
+      "subtitle": "Built with practitioners and users",
+      "bullets": [],
+      "notes": "Names and professional experience were supplied by the founder; English names are transliterations. Davit Sikharulidze works remotely from the UK. A team member’s banking role is personal experience and does not imply TBC Bank partnership, endorsement or investment. About 60 seconds.",
+      "layout": "team",
+      "cards": [
+        {
+          "title": "Giorgi Nishnianidze",
+          "text": "Product creation and development. Translates user requirements into software features."
+        },
+        {
+          "title": "Davit Sikharulidze",
+          "text": "IT specialist and technical development. Remote collaboration from the United Kingdom."
+        },
+        {
+          "title": "Davit Morchiladze",
+          "text": "Agronomy and business workflows. Plantation owner and TBC Bank branch manager; financial experience."
+        },
+        {
+          "title": "Maizer Jijeishvili",
+          "text": "Testing and issue identification. Six years of plantation-management experience; verifies fixes."
+        }
+      ]
+    },
+    {
+      "section": "Next stage",
+      "title": "Pilot, measure and repeat onboarding",
+      "subtitle": "Proposed stages after a grant award—not completed milestones",
+      "bullets": [
+        "Measure: interest → trial onboarding → active use → subscription",
+        "Strengthen support and collect real feedback",
+        "Adjust the plan to team capacity and agricultural seasonality"
+      ],
+      "notes": "This is a proposed plan, not a claim about achieved customers, revenue or retention. Validate commercial and technical targets with participating farms. About 45 seconds.",
+      "cards": [
+        {
+          "title": "Onboard",
+          "text": "Select farms, understand needs and prepare a repeatable demonstration."
+        },
+        {
+          "title": "Use",
+          "text": "Complete one full operational workflow and verify resulting records."
+        },
+        {
+          "title": "Evaluate",
+          "text": "Onboarding time, corrections and willingness to adopt paid service."
+        }
+      ]
+    },
+    {
+      "section": "Accelerator support",
+      "title": "GEL 25,000 to strengthen market entry",
+      "subtitle": "Program grant purpose: marketing, sales and farmer onboarding",
+      "bullets": [
+        "Strengthen sales and farmer-onboarding capabilities",
+        "Targeted marketing and demonstration materials",
+        "Move interested farms from demos into active use",
+        "Accelerator support with sales channels and marketing"
+      ],
+      "notes": "The program grant has not been presented as awarded funding. Do not invent spending splits or headcount. Prepare the detailed budget from real costs and program eligibility. This ends the core pitch; the next three slides support questions. About 55 seconds."
+    },
+    {
+      "section": "Appendix A · Data flow",
+      "title": "What information connects the modules?",
+      "subtitle": "Keep each relationship tied to its source and company",
+      "bullets": [
+        "Map data supplies sector, crop and variety to work and harvest",
+        "Worker identity links operational records to personal history",
+        "Harvest finalization determines inventory or sales handling",
+        "Accruals, payments and material movements remain separate checks"
+      ],
+      "notes": "organizationId is the workspace boundary; employeeId/userId identifies the person; harvestEventId links weighings to a session. Replacing a stale whole array is not a universal safe merge. The separate terminal does not post operational payroll or stock. Appendix; outside the core timing.",
+      "flow": [
+        "Company and map",
+        "Employee / team",
+        "Work / harvest",
+        "Movement / accrual",
+        "Personal history"
+      ]
+    },
+    {
+      "section": "Appendix B · Planned access",
+      "title": "Share a controlled projection",
+      "subtitle": "A public offer must not expose internal company data",
+      "bullets": [
+        "Keep the source harvest and marketplace offer separate",
+        "Server verifies the owner, company and recipient identity",
+        "Camera access requires permission to both the batch and that camera",
+        "Plan revocation, expiry, audit records and short-lived video access"
+      ],
+      "notes": "This is planned architecture, not an implemented production whitelist in current Firestore rules. Display IDs must map to verified identities. Do not place authentication tokens or RTSP passwords in URLs or public documents. Client-side hiding is not access control. A timestamp is not a quality certificate. Appendix."
+    },
+    {
+      "section": "Appendix C · Readiness boundaries",
+      "title": "Cloud, LAN and offline—with clear limits",
+      "subtitle": "Distinguish operational workflows from planned integrations",
+      "bullets": [
+        "Cloud and local accounts are independent identities",
+        "Cloud backup is manual; universal automatic two-way merging is incomplete",
+        "Weather, cameras and sensors require gateways and tested integrations",
+        "AI recommendations require agronomist review"
+      ],
+      "notes": "Do not present planned expansion as a completed autonomous system. LoRaWAN carries small sensor messages, not video. Live AI needs a configured server and authorization. Local knowledge lookup is not model training. The mentor video exceeded the transfer limit and the shared-chat text was unavailable; neither was analyzed. Appendix."
+    }
+  ],
+  "imageKinds": {
+    "market-preview": "concept"
+  },
+  "screenshotLanguage": "en"
+}

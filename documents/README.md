@@ -4,7 +4,8 @@
 
 ## პრეზენტაცია და მომხმარებლის დახმარება
 
-- [ქართული პიჩი აქსელერაციის პროგრამისთვის](presentations/accelerator-ka/README.md)
+- [ქართული პიჩი ქართული ეკრანებით](presentations/accelerator-ka/README.md)
+- [English accelerator pitch with English screenshots](presentations/accelerator-en/README.md)
 
 - [ქართული პროდუქტის პრეზენტაცია — PowerPoint, PDF და სასაუბრო ჩანაწერები](presentations/README.md)
 - [ილუსტრირებული მომხმარებლის გზამკვლევი (English)](user-guide/README.md)

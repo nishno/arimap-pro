@@ -236,3 +236,12 @@ Add or update a row when a tracked root code file is added, renamed or removed. 
 - `documents/presentations/accelerator-ka/`: agreed Georgian pitch, editable model, PowerPoint/PDF, speaker notes, source boundaries and optional technical appendix.
 - `documents/presentations/accelerator-ka/market-sharing-prototype.html`: isolated fictional-data market/camera sharing concept; no production persistence or access enforcement.
 - `scripts/build-accelerator-presentation.mjs`: builds this deck through the shared configurable presentation renderer.
+
+## 2026-11-24 — presentation language editions
+
+- `documents/presentations/accelerator-en/`: English accelerator deck, notes, conceptual UI and source boundaries.
+- `documents/presentations/screenshots/{ka,en}/`: actual app-language captures, localized fictional fixtures and per-language provenance.
+- `scripts/capture-presentation-languages.mjs`: isolated bilingual capture and UI-language/file-picker checks.
+- `scripts/localize-market-prototype.mjs`: generates the English planned-feature prototype from the reviewed Georgian version.
+- `scripts/capture-pitch-prototypes.mjs`: captures and checks both language versions of the isolated market-sharing concept.
+- `scripts/build-accelerator-presentation.mjs`: accepts `ka` or `en`; shared renderer sets slide, PDF, HTML and speaker-note language consistently.

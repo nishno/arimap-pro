@@ -1,0 +1,53 @@
+{
+  "capturedAt": "2026-11-25T07:13:36.489Z",
+  "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+  "language": "en",
+  "sourceWorktreeDirty": true,
+  "trainingData": true,
+  "liveHardware": false,
+  "externalProvidersBlocked": true,
+  "applicationLanguage": true,
+  "syntheticTranslationOverlay": false,
+  "entries": [
+    {
+      "id": "19-weigh",
+      "file": "19-weigh.png",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "captureRegion": "weigh-modal"
+    },
+    {
+      "id": "31-prescription",
+      "file": "31-prescription.png",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "captureRegion": "viewport"
+    },
+    {
+      "id": "32-announcements",
+      "file": "32-announcements.png",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "captureRegion": "viewport"
+    },
+    {
+      "id": "36-earnings",
+      "file": "36-earnings.png",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "captureRegion": "viewport"
+    }
+  ]
+}

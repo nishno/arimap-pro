@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-24",
+  "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+  "trainingData": true,
+  "liveHardware": false,
+  "screenshots": [
+    {
+      "slide": 1,
+      "screenshot": "documents/presentations/screenshots/en/36-earnings.png",
+      "caption": "Personal work and earnings · Actual UI with fictional training data",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "en",
+      "sourceType": "application-training-screen",
+      "trainingData": true
+    },
+    {
+      "slide": 5,
+      "screenshot": "documents/presentations/screenshots/en/19-weigh.png",
+      "caption": "Operational harvest Weigh Station · Training screen",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "en",
+      "sourceType": "application-training-screen",
+      "trainingData": true
+    },
+    {
+      "slide": 6,
+      "screenshot": "documents/presentations/screenshots/en/36-earnings.png",
+      "caption": "Worker workspace · Fictional payroll records",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "en",
+      "sourceType": "application-training-screen",
+      "trainingData": true
+    },
+    {
+      "slide": 8,
+      "screenshot": "documents/presentations/screenshots/en/32-announcements.png",
+      "caption": "Existing announcements and plantation discovery · Training screen",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "en",
+      "sourceType": "application-training-screen",
+      "trainingData": true
+    },
+    {
+      "slide": 9,
+      "screenshot": "documents/presentations/accelerator-en/assets/market-preview.png",
+      "caption": "Planned feature · Concept UI; no connected live cameras",
+      "sourceCommit": null,
+      "screenshotLanguage": "en",
+      "sourceType": "planned-ui-concept",
+      "trainingData": true
+    },
+    {
+      "slide": 13,
+      "screenshot": "documents/presentations/screenshots/en/31-prescription.png",
+      "caption": "Existing agronomy prescription UI · No live AI diagnosis performed",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "en",
+      "sourceType": "application-training-screen",
+      "trainingData": true
+    }
+  ]
+}

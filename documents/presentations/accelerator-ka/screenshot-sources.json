@@ -1,38 +1,42 @@
 {
   "date": "2026-11-24",
-  "sourceCommit": "e9b3dc4b67c455a5738fe5aaef1d02633f08a9e5",
+  "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
   "trainingData": true,
   "liveHardware": false,
   "screenshots": [
     {
       "slide": 1,
-      "screenshot": "documents/user-guide/screenshots/36-earnings.png",
+      "screenshot": "documents/presentations/screenshots/ka/36-earnings.png",
       "caption": "პირადი სამუშაო და შემოსავალი · რეალური ინტერფეისი, სასწავლო მონაცემები",
-      "sourceCommit": "e9b3dc4b67c455a5738fe5aaef1d02633f08a9e5",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "ka",
       "sourceType": "application-training-screen",
       "trainingData": true
     },
     {
       "slide": 5,
-      "screenshot": "documents/user-guide/screenshots/19-weigh.png",
+      "screenshot": "documents/presentations/screenshots/ka/19-weigh.png",
       "caption": "კრეფის საოპერაციო აწონვის სადგური · სასწავლო ეკრანი",
-      "sourceCommit": "e9b3dc4b67c455a5738fe5aaef1d02633f08a9e5",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "ka",
       "sourceType": "application-training-screen",
       "trainingData": true
     },
     {
       "slide": 6,
-      "screenshot": "documents/user-guide/screenshots/36-earnings.png",
+      "screenshot": "documents/presentations/screenshots/ka/36-earnings.png",
       "caption": "მუშის პირადი სამუშაო სივრცე · სასწავლო ფინანსური მონაცემები",
-      "sourceCommit": "e9b3dc4b67c455a5738fe5aaef1d02633f08a9e5",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "ka",
       "sourceType": "application-training-screen",
       "trainingData": true
     },
     {
       "slide": 8,
-      "screenshot": "documents/user-guide/screenshots/32-announcements.png",
+      "screenshot": "documents/presentations/screenshots/ka/32-announcements.png",
       "caption": "არსებული განცხადებები და პლანტაციების მოძიება · სასწავლო ეკრანი",
-      "sourceCommit": "e9b3dc4b67c455a5738fe5aaef1d02633f08a9e5",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "ka",
       "sourceType": "application-training-screen",
       "trainingData": true
     },
@@ -41,14 +45,16 @@
       "screenshot": "documents/presentations/accelerator-ka/assets/market-preview.png",
       "caption": "დაგეგმილი ფუნქცია · კონცეფციური ინტერფეისი, არა მოქმედი კამერები",
       "sourceCommit": null,
+      "screenshotLanguage": "ka",
       "sourceType": "planned-ui-concept",
       "trainingData": true
     },
     {
       "slide": 13,
-      "screenshot": "documents/user-guide/screenshots/31-prescription.png",
+      "screenshot": "documents/presentations/screenshots/ka/31-prescription.png",
       "caption": "არსებული აგრონომიული დანიშნულების ინტერფეისი · ცოცხალი AI ანალიზი არ ჩატარებულა",
-      "sourceCommit": "e9b3dc4b67c455a5738fe5aaef1d02633f08a9e5",
+      "sourceCommit": "1da3b59244de16fa6db0c89c4fe0eed0ff8754c6",
+      "screenshotLanguage": "ka",
       "sourceType": "application-training-screen",
       "trainingData": true
     }

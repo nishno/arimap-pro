@@ -12,3 +12,5 @@
 .clinical-panel-heading>div{min-width:0;flex:1}.clinical-panel-heading h3{white-space:normal;overflow-wrap:anywhere}
 .ad-composer label{display:block;color:#64748b;font-size:11px;font-weight:550}.ad-composer label input{margin-top:5px}.ad-compose-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media(max-width:480px){.ad-compose-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:480px){.clinical-editor .clinical-panel-heading>div{padding-right:36px}}
+
+.clinical-workspace .clinical-file-picker{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:12px;border:1px dashed #cbd5e1;border-radius:9px;background:#f8fafc;padding:18px 12px;cursor:pointer}.clinical-file-picker>span:first-child{padding:7px 10px;background:white;border:1px solid #e2e8f0;border-radius:7px}.clinical-workspace .clinical-file-input{position:absolute;width:1px;height:1px;min-width:0;opacity:0;padding:0;overflow:hidden}.clinical-file-picker:focus-within{outline:2px solid #059669;outline-offset:2px}
