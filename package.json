@@ -67,7 +67,8 @@
     "presentation:build": "node scripts/build-product-presentation.mjs",
     "presentation:accelerator": "node scripts/build-accelerator-presentation.mjs",
     "presentation:accelerator:en": "node scripts/build-accelerator-presentation.mjs en",
-    "presentation:captures": "node scripts/capture-presentation-languages.mjs"
+    "presentation:captures": "node scripts/capture-presentation-languages.mjs",
+    "presentation:founder": "node scripts/build-founder-restyled-presentation.mjs"
   },
   "dependencies": {
     "@google/genai": "1.42.0",

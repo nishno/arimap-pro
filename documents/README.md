@@ -4,6 +4,8 @@
 
 ## პრეზენტაცია და მომხმარებლის დახმარება
 
+- [27.11.2026 — თქვენი 15-სლაიდიანი დეკი ჩვენს დიზაინში, ქართული ეკრანებით და ანალიზით](presentations/founder-restyled-ka/README.md)
+
 - [ქართული პიჩი ქართული ეკრანებით](presentations/accelerator-ka/README.md)
 - [English accelerator pitch with English screenshots](presentations/accelerator-en/README.md)
 

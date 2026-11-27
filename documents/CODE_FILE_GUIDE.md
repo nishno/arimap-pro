@@ -245,3 +245,8 @@ Add or update a row when a tracked root code file is added, renamed or removed. 
 - `scripts/localize-market-prototype.mjs`: generates the English planned-feature prototype from the reviewed Georgian version.
 - `scripts/capture-pitch-prototypes.mjs`: captures and checks both language versions of the isolated market-sharing concept.
 - `scripts/build-accelerator-presentation.mjs`: accepts `ka` or `en`; shared renderer sets slide, PDF, HTML and speaker-note language consistently.
+
+## 2026-11-27 — founder-authored presentation redesign
+
+- `scripts/build-founder-restyled-presentation.mjs`: independent renderer for the uploaded 15-slide Georgian founder deck; builds editable PowerPoint, PDF/HTML, notes and text/screenshot validation artifacts without changing previous presentation renderers. Run `npm run presentation:founder`.
+- `documents/presentations/founder-restyled-ka/`: extracted original source text, editable slide model, generated presentation and separate editorial recommendations. Screenshots reuse Georgian training captures from `documents/presentations/screenshots/ka/`.

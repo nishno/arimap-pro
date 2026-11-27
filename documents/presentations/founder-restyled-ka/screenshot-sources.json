@@ -1,0 +1,42 @@
+{
+  "language": "ka",
+  "trainingData": true,
+  "sourceCommit": "13a51d3",
+  "screenshots": [
+    {
+      "slide": 1,
+      "path": "documents/presentations/screenshots/ka/32-announcements.png",
+      "language": "ka",
+      "sourceType": "actual-application-training-screen",
+      "trainingData": true
+    },
+    {
+      "slide": 5,
+      "path": "documents/presentations/screenshots/ka/19-weigh.png",
+      "language": "ka",
+      "sourceType": "actual-application-training-screen",
+      "trainingData": true
+    },
+    {
+      "slide": 7,
+      "path": "documents/presentations/screenshots/ka/32-announcements.png",
+      "language": "ka",
+      "sourceType": "actual-application-training-screen",
+      "trainingData": true
+    },
+    {
+      "slide": 7,
+      "path": "documents/presentations/screenshots/ka/31-prescription.png",
+      "language": "ka",
+      "sourceType": "actual-application-training-screen",
+      "trainingData": true
+    },
+    {
+      "slide": 10,
+      "path": "documents/presentations/screenshots/ka/36-earnings.png",
+      "language": "ka",
+      "sourceType": "actual-application-training-screen",
+      "trainingData": true
+    }
+  ]
+}
